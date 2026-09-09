@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 2.1
-**Last updated:** 2026-09-09 (Phase 02 FINAL GATE)
-**Updated by:** AI Agent (Phase 02 Final Gate Verification)
+**Version:** 2.2
+**Last updated:** 2026-09-09 (Phase 02 FINAL GATE — documentation reconciliation)
+**Updated by:** AI Agent (Phase 02 Documentation Reconciliation)
 
 ---
 
@@ -17,7 +17,7 @@
 | **Active Work** | None — Phase 03 (Skates Module) ready to begin |
 | **Blocked Work** | None |
 | **Last Verification** | 2026-09-09 — FINAL GATE: API build ✅, Web build ✅, `npm test` 18/18 PASS ✅, DB migration applied ✅, Seed applied (40 perms, 3 roles, 1 admin) ✅, Login API 200 ✅, Refresh rotation ✅, Logout revocation ✅, 401/403 enforced ✅, Browser: login ✅, protected routes ✅, users/roles pages ✅, logout ✅. |
-| **Last Git Commit** | `c63a4c2` — test(auth): Phase 02 Final Gate — 18/18 integration tests pass |
+| **Last Git Commit** | `647817c` — fix(test): remove invalid 'dotenv' option from vitest.config.ts |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Begin Phase 03 — Skates Module |
 
@@ -47,7 +47,7 @@
 |---|---|---|---|
 | Phase 00 | Governance & Documentation | COMPLETED | This initialization |
 | Phase 01 | Foundation & Project Setup | COMPLETED | FINAL GATE: APPROVED. Commits `f7d2810`, `35cc75a`. |
-| Phase 02 | Authentication & Permissions | **FINAL GATE PASSED** | JWT auth, RBAC, 18/18 tests pass. Commits `67726c5`, `a1d7250`, `b27bf55` + Final Gate commit. |
+| Phase 02 | Authentication & Permissions | **FINAL GATE PASSED** | JWT auth, RBAC, 18/18 tests pass. Latest commit `647817c`. |
 | Phase 03 | Skates Module | PLANNED | Depends on Phase 02 |
 | Phase 04 | Customers Module | PLANNED | Depends on Phase 02 |
 | Phase 05 | Rental POS (Core) | PLANNED | Depends on Phases 03, 04 |
