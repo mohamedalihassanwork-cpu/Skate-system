@@ -1,25 +1,21 @@
 # Frontend Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** PLANNED — No frontend code exists yet.  
-**Last updated:** 2026-09-09
+**Last updated:** 2026-09-09 (reconciled)
 
 ---
 
-## Framework
+## Framework — APPROVED
 
-**Status: UNKNOWN — pending technology decision (DEC-014)**
+**React + Vite + TypeScript** (DEC-019)
 
-**Candidates:**
-- React + Vite
-- Vue.js + Vite
-- Next.js (React SSR/SSG)
+**Rationale:** Approved by project owner.
 
 **Constraints:**
-- Must support Arabic RTL natively (CSS `dir="rtl"`)
-- Must be hostable on Hostinger
-- Must be responsive (desktop, tablet, mobile)
-- Must support the KOSHK SKATE design system
+- Must support Arabic/RTL (native via CSS `dir="rtl"`)
+- Must be responsive
+- Must be compatible with the KOSHK SKATE design system (navy/gold/white, Cairo/Tajawal font)
 
 ---
 
@@ -41,13 +37,11 @@
 
 ---
 
-## Build System
+## Build System — APPROVED
 
-**Status: UNKNOWN — pending framework decision**
+**Vite** (part of DEC-019)
 
-**Target:**
-- Vite (if React or Vue)
-- Node.js-compatible build output
+Node.js-compatible build output. Development server with HMR.
 
 ---
 
@@ -194,13 +188,12 @@ Based on: `KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md`
 
 ## State Management
 
-**Status: UNKNOWN — pending framework decision**
+**Status: PENDING — decision required once Phase 01 begins**
 
-**Candidates:**
-- Zustand (React)
-- Pinia (Vue)
-- React Context + useReducer
-- Redux Toolkit
+**Recommended options for React:**
+- Zustand (lightweight, minimal boilerplate)
+- Redux Toolkit (structured, scalable)
+- React Context + useReducer (no extra dependency, suitable for simpler state)
 
 **Key state domains:**
 - `auth` — current user, token, permissions

@@ -1,29 +1,25 @@
 # Backend Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** PLANNED — No backend code exists yet.  
-**Last updated:** 2026-09-09
+**Last updated:** 2026-09-09 (reconciled)
 
 ---
 
-## Runtime
+## Runtime — APPROVED
 
-**Target:** Node.js  
-**Status:** PLANNED — specific version pending (recommend LTS, e.g., Node 20.x)
+**Node.js** (LTS, recommend v20.x) — part of DEC-020
 
 ---
 
-## Framework
+## Framework — APPROVED
 
-**Status: UNKNOWN — pending decision (DEC-014)**
+**Express + TypeScript** (DEC-020)
 
-**Candidates:**
-- Express.js (lightweight, widely supported)
-- Fastify (performant, good TypeScript support)
-- NestJS (structured, opinionated)
+**Rationale:** Approved by project owner.
 
 **Constraints:**
-- Must be deployable on Hostinger Node.js hosting
+- Must be deployable on Hostinger (Node.js)
 - Must support REST API
 - Must support middleware
 - Must support background jobs
@@ -34,23 +30,23 @@
 
 ```
 apps/api/src/
-├── app.js                  — App entry point
-├── server.js               — HTTP server start
+├── app.ts                  — App entry point
+├── server.ts               — HTTP server start
 ├── config/
-│   ├── database.js         — DB connection config
-│   ├── auth.js             — JWT/session config
-│   └── app.js              — General config
+│   ├── database.ts         — DB connection config
+│   ├── auth.ts             — JWT/session config
+│   └── app.ts              — General config
 ├── middleware/
-│   ├── auth.js             — Authentication middleware
-│   ├── permission.js       — Permission check middleware
-│   ├── validate.js         — Input validation middleware
-│   ├── audit.js            — Audit log middleware
-│   └── error.js            — Error handling middleware
+│   ├── auth.ts             — Authentication middleware
+│   ├── permission.ts       — Permission check middleware
+│   ├── validate.ts         — Input validation middleware
+│   ├── audit.ts            — Audit log middleware
+│   └── error.ts            — Error handling middleware
 ├── modules/
 │   ├── auth/
-│   │   ├── auth.routes.js
-│   │   ├── auth.controller.js
-│   │   └── auth.service.js
+│   │   ├── auth.routes.ts
+│   │   ├── auth.controller.ts
+│   │   └── auth.service.ts
 │   ├── users/
 │   ├── skates/
 │   ├── customers/
@@ -69,14 +65,14 @@ apps/api/src/
 │   ├── audit-log/
 │   └── settings/
 ├── db/
-│   ├── connection.js       — DB pool/connection
+│   ├── connection.ts       — DB pool/connection
 │   ├── migrations/         — Migration files
 │   └── seeds/              — Seed data
 ├── jobs/
-│   └── rental-expiry.js    — Scheduled: check expiring rentals
+│   └── rental-expiry.ts    — Scheduled: check expiring rentals
 └── utils/
-    ├── errors.js           — Error classes
-    ├── validation.js       — Validation helpers
+    ├── errors.ts           — Error classes
+    ├── validation.ts       — Validation helpers
     └── financial.js        — Financial calculation utilities
 ```
 

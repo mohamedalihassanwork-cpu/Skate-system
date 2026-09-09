@@ -1,8 +1,8 @@
 # Project Map — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.  
-**Last updated:** 2026-09-09
+**Last updated:** 2026-09-09 (reconciled)
 
 > [!IMPORTANT]
 > **PROJECT STATE: PRE-IMPLEMENTATION (GREENFIELD)**
@@ -17,13 +17,19 @@
 d:/Skate system/
 ├── docs/                        — All project documentation
 │   ├── 00-governance/           — AI rules, process, DoD
+│   │   ├── AI_AGENT_RULES.md      — VERIFIED
+│   │   ├── AI_AGENT_WORKFLOW_AR.md — VERIFIED (created reconciliation)
+│   │   ├── SOURCE_OF_TRUTH.md     — VERIFIED
+│   │   ├── DEFINITION_OF_DONE.md  — VERIFIED
+│   │   ├── CHANGE_REQUEST_PROCESS.md — VERIFIED
+│   │   └── DOCUMENTATION_RULES.md — VERIFIED
 │   ├── architecture/            — Technical architecture docs
 │   ├── modules/                 — Per-module documentation
 │   ├── phases/                  — Phase plans
 │   ├── quality/                 — QA strategy and test matrix
 │   ├── decisions/               — Decision log
-│   ├── product/                 — (placeholder for spec copy)
-│   ├── design/                  — (placeholder for design doc copy)
+│   ├── product/                 — Master Business Spec copy (VERIFIED)
+│   ├── design/                  — Visual Design Reference copy (VERIFIED)
 │   ├── PROJECT_MAP.md           — THIS FILE
 │   ├── PROJECT_STATE.md         — Current project status
 │   ├── CHANGELOG.md             — Change history
@@ -391,12 +397,12 @@ For each module: where to find code, documentation, database tables, and API rou
 | Design system CSS | `apps/web/src/styles/` | PLANNED |
 | Shared UI components | `apps/web/src/components/` | PLANNED |
 | API client | `apps/web/src/services/api.js` | PLANNED |
-| Auth middleware | `apps/api/src/middleware/auth.js` | PLANNED |
-| Permission middleware | `apps/api/src/middleware/permission.js` | PLANNED |
-| DB connection | `apps/api/src/db/connection.js` | PLANNED |
-| Audit service | `apps/api/src/modules/audit-log/audit.service.js` | PLANNED |
-| Financial utilities | `apps/api/src/utils/financial.js` | PLANNED |
-| Error classes | `apps/api/src/utils/errors.js` | PLANNED |
+| Auth middleware | `apps/api/src/middleware/auth.ts` | PLANNED |
+| Permission middleware | `apps/api/src/middleware/permission.ts` | PLANNED |
+| DB connection | `apps/api/src/db/connection.ts` | PLANNED |
+| Audit service | `apps/api/src/modules/audit-log/audit.service.ts` | PLANNED |
+| Financial utilities | `apps/api/src/utils/financial.ts` | PLANNED |
+| Error classes | `apps/api/src/utils/errors.ts` | PLANNED |
 
 ---
 
@@ -410,4 +416,17 @@ For each module: where to find code, documentation, database tables, and API rou
 
 ---
 
-*Last updated: 2026-09-09*
+## Approved Technology (reference)
+
+| Layer | Approved Technology |
+|---|---|
+| Frontend | React + Vite + TypeScript |
+| Backend | Node.js + Express + TypeScript |
+| Database | MySQL / MariaDB |
+| Source control | GitHub (`mohamedalihassanwork-cpu/Skate-system`, branch: `master`) |
+| ORM | PENDING decision |
+| Auth | PENDING decision |
+
+---
+
+*Last updated: 2026-09-09 (reconciled)*

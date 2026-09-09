@@ -1,8 +1,8 @@
 # Deployment Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** PLANNED — No deployment exists. No production environment exists.  
-**Last updated:** 2026-09-09
+**Last updated:** 2026-09-09 (reconciled)
 
 > [!CAUTION]
 > No deployment exists. This document describes the target deployment architecture only.
@@ -72,9 +72,12 @@
 **Target:** GitHub-based deployment  
 **Status:** PLANNED
 
+GitHub repository: `https://github.com/mohamedalihassanwork-cpu/Skate-system`  
+Default branch: `master`
+
 Target workflow:
-1. Code pushed to GitHub `main` branch
-2. Hostinger pulls from GitHub (manual or webhook)
+1. Code pushed to GitHub `master` branch
+2. Hostinger pulls from GitHub (manual or webhook — mechanism TBD)
 3. `npm install` runs
 4. Database migrations run (`npm run migrate`)
 5. Application starts (or restarts via PM2 or Hostinger process manager)

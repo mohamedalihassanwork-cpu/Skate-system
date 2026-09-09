@@ -1,6 +1,6 @@
 # Decision Log — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Purpose:** Record all significant business and technical decisions.
 
 Every decision recorded here is part of the project's institutional memory. Future AI agents must read this log before making changes in related areas.
@@ -205,11 +205,11 @@ Every decision recorded here is part of the project's institutional memory. Futu
 
 **Date:** 2026-09-09  
 **Category:** Technology  
-**Decision:** UNKNOWN — No technology stack has been selected or implemented. Technology decisions (language, framework, ORM, database engine) are pending.  
-**Reason:** No code exists yet. Greenfield project.  
+**Decision:** SUPERSEDED — Replaced by DEC-019 and DEC-020. The original entry recorded that no technology had been selected.  
+**Reason:** Technology decisions have since been made by the project owner.  
 **Impact:** All architecture.  
 **Affected Modules:** All  
-**Status:** PENDING — REQUIRES HUMAN DECISION  
+**Status:** SUPERSEDED (see DEC-019, DEC-020)  
 **Source:** Repository inspection 2026-09-09
 
 ---
@@ -270,9 +270,49 @@ Every decision recorded here is part of the project's institutional memory. Futu
 
 | ID | Description | Status |
 |---|---|---|
-| DEC-014 | Technology stack selection | PENDING |
-| DEC-018 (partial) | Notification delivery mechanism | PENDING |
+| DEC-018 (partial) | Notification delivery mechanism (SSE/WebSocket/polling?) | PENDING |
+| UNK-003 | ORM / Database driver selection | PENDING |
+| UNK-004 | Authentication mechanism (JWT stateless / JWT+refresh / Session) | PENDING |
 
 ---
 
-*Last updated: 2026-09-09*
+### DEC-019
+
+**Date:** 2026-09-09 (reconciled)  
+**Category:** Technology — Frontend Stack  
+**Decision:** The frontend is implemented with **React + Vite + TypeScript**.  
+**Reason:** Approved by the project owner as the frontend technology direction.  
+**Impact:** All frontend implementation, component structure, build system, state management library selection.  
+**Affected Modules:** All (frontend)  
+**Status:** ACTIVE  
+**Source:** Project owner decision (reconciliation task 2026-09-09)
+
+---
+
+### DEC-020
+
+**Date:** 2026-09-09 (reconciled)  
+**Category:** Technology — Backend Stack  
+**Decision:** The backend is implemented with **Node.js + Express + TypeScript**.  
+**Reason:** Approved by the project owner as the backend technology direction.  
+**Impact:** All backend implementation, middleware, route structure, service layers, error handling.  
+**Affected Modules:** All (backend)  
+**Status:** ACTIVE  
+**Source:** Project owner decision (reconciliation task 2026-09-09)
+
+---
+
+### DEC-021
+
+**Date:** 2026-09-09 (reconciled)  
+**Category:** Technology — Source Control  
+**Decision:** The project uses **GitHub** for source control. Repository: `https://github.com/mohamedalihassanwork-cpu/Skate-system`. Default branch: `master`.  
+**Reason:** Project owner created and configured the repository.  
+**Impact:** All deployment workflows, collaboration, CI/CD (when configured).  
+**Affected Modules:** All (infrastructure)  
+**Status:** ACTIVE  
+**Source:** Verified from local git configuration 2026-09-09
+
+---
+
+*Last updated: 2026-09-09 (reconciled) by AI Governance Agent*

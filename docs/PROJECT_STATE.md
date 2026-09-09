@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 1.0  
-**Last updated:** 2026-09-09  
-**Updated by:** AI Governance Agent (Documentation Initialization)
+**Version:** 1.1  
+**Last updated:** 2026-09-09 (reconciled)  
+**Updated by:** AI Governance Agent (Documentation Reconciliation)
 
 ---
 
@@ -14,12 +14,12 @@
 | **Current Phase** | Phase 00 — Governance & Documentation |
 | **Current Milestone** | Documentation initialization complete |
 | **Last Completed Phase** | Phase 00 (documentation only) |
-| **Active Work** | None — awaiting project owner approval of next phase |
-| **Blocked Work** | Technology stack selection (DEC-014) |
-| **Last Verification** | 2026-09-09 — repository inspection confirmed no code exists |
-| **Last Git Commit** | docs: establish project governance and architecture documentation |
-| **Last Deployment** | NONE — no deployment exists |
-| **Recommended Next Action** | Project owner reviews documentation, makes technology decisions, approves Phase 01 |
+| **Active Work** | None — awaiting project owner approval of Phase 01 |
+| **Blocked Work** | ORM/DB driver selection (DEC-014 partially resolved), Authentication mechanism, Notification delivery |
+| **Last Verification** | 2026-09-09 — repository inspection confirmed no application code exists |
+| **Last Git Commit** | `36a2c48` docs: establish project governance and architecture documentation |
+| **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
+| **Recommended Next Action** | Project owner approves Phase 01 scope; resolves remaining PENDING decisions (ORM, auth mechanism, notification delivery) |
 
 ---
 
@@ -38,7 +38,7 @@
 | Backend | NONE |
 | Tests | NONE |
 | Deployment | NONE |
-| Git repository | Initialized (local only, no remote) |
+| Git repository | VERIFIED — local + GitHub remote (`https://github.com/mohamedalihassanwork-cpu/Skate-system`) |
 
 ---
 
@@ -96,21 +96,32 @@
 
 ---
 
-## TECHNOLOGY DECISIONS PENDING (BLOCKING)
+## TECHNOLOGY DECISIONS
 
-These decisions must be made before Phase 01 can begin:
+### APPROVED (no longer blocking)
 
-| Decision | Options | Blocking |
+| Decision | Approved Choice | Decision ID |
 |---|---|---|
-| Frontend framework | React+Vite / Vue+Vite / Next.js | Phase 01 |
-| Backend framework | Express / Fastify / NestJS | Phase 01 |
+| Frontend framework | React + Vite + TypeScript | DEC-019 |
+| Backend framework | Node.js + Express + TypeScript | DEC-020 |
+| Database engine | MySQL / MariaDB | DEC-015 (existing) |
+| Architecture style | Modular Monolith | DEC-015 (existing) |
+| Source control | GitHub | DEC-021 |
+
+### PENDING (still require human decision)
+
+| Decision | Options | Blocks |
+|---|---|---|
 | ORM / Database driver | Prisma / TypeORM / Knex / Sequelize | Phase 01 |
 | Authentication mechanism | JWT stateless / JWT+refresh / Session | Phase 02 |
 | Notification delivery | SSE / WebSocket / Polling | Phase 15 |
 | File storage | Local filesystem / Cloud storage | Phase 08 |
-| Arabic font | Cairo (recommended) / Tajawal | Phase 01 |
+| Arabic font | Cairo / Tajawal | Phase 01 |
+| Hostinger plan specifics | Confirm cron support, Node.js version | Phase 18 |
+| Production domain | TBD | Phase 18 |
+| Backup strategy | TBD | Phase 18 |
 
-**See:** `docs/decisions/DECISION_LOG.md` DEC-014
+**See:** `docs/decisions/DECISION_LOG.md` for full decision history
 
 ---
 
@@ -147,18 +158,18 @@ Status: OPEN | RESOLVED
 
 ## UNKNOWNS REQUIRING HUMAN DECISION
 
-| ID | Question | Impact |
-|---|---|---|
-| UNK-001 | Which frontend framework? | Entire frontend implementation |
-| UNK-002 | Which backend framework? | Entire backend implementation |
-| UNK-003 | Which ORM/DB driver? | Database access layer |
-| UNK-004 | Authentication mechanism (JWT/session)? | Security architecture |
-| UNK-005 | Notification delivery mechanism? | Real-time rental alerts |
-| UNK-006 | File storage strategy (local/cloud)? | Damage photo uploads |
-| UNK-007 | Hostinger plan details (supports Node.js cron?)? | Scheduled jobs |
-| UNK-008 | Production domain? | Deployment |
-| UNK-009 | Email provider (if notifications required by email)? | Notification delivery |
-| UNK-010 | Backup strategy? | Data safety |
+| ID | Question | Impact | Status |
+|---|---|---|---|
+| UNK-001 | Which frontend framework? | Entire frontend | RESOLVED — React + Vite + TypeScript (DEC-019) |
+| UNK-002 | Which backend framework? | Entire backend | RESOLVED — Node.js + Express + TypeScript (DEC-020) |
+| UNK-003 | Which ORM/DB driver? | Database access layer | PENDING |
+| UNK-004 | Authentication mechanism (JWT/session)? | Security architecture | PENDING |
+| UNK-005 | Notification delivery mechanism? | Real-time rental alerts | PENDING |
+| UNK-006 | File storage strategy (local/cloud)? | Damage photo uploads | PENDING |
+| UNK-007 | Hostinger plan: cron support, Node.js version? | Scheduled jobs, deployment | PENDING |
+| UNK-008 | Production domain? | Deployment | PENDING |
+| UNK-009 | Email provider (if email notifications needed)? | Notification delivery | PENDING |
+| UNK-010 | Backup strategy? | Data safety | PENDING |
 
 ---
 
@@ -166,8 +177,9 @@ Status: OPEN | RESOLVED
 
 | Document | Status |
 |---|---|
-| `docs/00-governance/AI_AGENT_RULES.md` | COMPLETE |
-| `docs/00-governance/SOURCE_OF_TRUTH.md` | COMPLETE |
+| `docs/00-governance/AI_AGENT_RULES.md` | COMPLETE — reviewed |
+| `docs/00-governance/AI_AGENT_WORKFLOW_AR.md` | COMPLETE — created (reconciliation) |
+| `docs/00-governance/SOURCE_OF_TRUTH.md` | COMPLETE — reviewed |
 | `docs/00-governance/DEFINITION_OF_DONE.md` | COMPLETE |
 | `docs/00-governance/CHANGE_REQUEST_PROCESS.md` | COMPLETE |
 | `docs/00-governance/DOCUMENTATION_RULES.md` | COMPLETE |
@@ -194,12 +206,13 @@ Status: OPEN | RESOLVED
 
 | Field | Value |
 |---|---|
-| Repository | Initialized locally |
-| Remote | NONE — not connected to GitHub |
-| Branch | `main` (default) |
-| Last commit | docs: establish project governance and architecture documentation |
-| Push status | NOT PUSHED — no remote configured |
+| Repository | VERIFIED — `https://github.com/mohamedalihassanwork-cpu/Skate-system` |
+| Remote name | `origin` |
+| Branch | `master` |
+| Last commit | `36a2c48` docs: establish project governance and architecture documentation |
+| Push status | PUSHED — branch is up to date with `origin/master` |
+| Working tree | Clean |
 
 ---
 
-*Last updated: 2026-09-09 by AI Governance Agent*
+*Last updated: 2026-09-09 (reconciled) by AI Governance Agent (Documentation Reconciliation)*

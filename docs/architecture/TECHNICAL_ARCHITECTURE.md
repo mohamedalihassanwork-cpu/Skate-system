@@ -1,8 +1,8 @@
 # Technical Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** INITIAL — No code exists. This document describes the intended target architecture.  
-**Last updated:** 2026-09-09
+**Last updated:** 2026-09-09 (reconciled)
 
 > [!IMPORTANT]
 > **This document describes TARGET architecture. No implementation exists yet.**
@@ -38,47 +38,71 @@ KOSHK SKATE ERP is a cloud-based, Arabic-first, RTL-first commercial ERP and POS
 
 ## 2. Technology Stack
 
-**Status: UNKNOWN — No technology has been selected or implemented.**
+> [!NOTE]
+> Approved choices are marked **APPROVED**. Items still requiring a decision are marked **PENDING**.
 
-All options below are candidates pending human decision (see `docs/decisions/DECISION_LOG.md` DEC-014).
+### Frontend — APPROVED
 
-### Frontend (candidates)
-- React (with Vite or Next.js)
-- Vue.js
-- Vanilla HTML/CSS/JS
+| Choice | Value |
+|---|---|
+| Framework | React |
+| Build tool | Vite |
+| Language | TypeScript |
+| Decision reference | DEC-019 |
 
 **Constraints:**
-- Must support Arabic/RTL (native or via CSS `dir="rtl"`)
-- Must be responsive
-- Must be compatible with the KOSHK SKATE design system (navy/gold/white, Cairo/Tajawal font)
+- Must support Arabic/RTL (native via CSS `dir="rtl"`)
+- Must be responsive (desktop, tablet, mobile)
+- Must implement the KOSHK SKATE design system (navy/gold/white, Cairo/Tajawal font)
+- SPA (Single Page Application) with client-side routing
 
-### Backend (candidates)
-- Node.js + Express
-- Node.js + Fastify
-- Node.js + NestJS
+### Backend — APPROVED
+
+| Choice | Value |
+|---|---|
+| Runtime | Node.js |
+| Framework | Express |
+| Language | TypeScript |
+| API style | REST |
+| Decision reference | DEC-020 |
 
 **Constraints:**
 - Must be hostable on Hostinger (Node.js)
-- Must support REST API
+- Must support REST API with JWT or session authentication
 - Must support background jobs (rental expiration notifications)
 
-### Database (candidates)
-- MySQL 8.x
-- MariaDB 10.x
+### Database — APPROVED
 
-**Constraints:**
-- Must be compatible with Hostinger MySQL/MariaDB
-- Must support transactions (InnoDB)
-- Must support foreign keys
+| Choice | Value |
+|---|---|
+| Engine | MySQL 8.x or MariaDB 10.x (Hostinger-provided) |
+| Storage engine | InnoDB (transactions + foreign keys) |
+| Charset | utf8mb4 (Arabic text support) |
+| Decision reference | DEC-015 |
 
-### ORM / Query Builder (candidates)
-- Prisma
-- TypeORM
-- Knex.js
-- Sequelize
-- Raw SQL
+### Source Control — APPROVED
 
-**Status:** PENDING — requires human decision
+| Choice | Value |
+|---|---|
+| Platform | GitHub |
+| Repository | `https://github.com/mohamedalihassanwork-cpu/Skate-system` |
+| Default branch | `master` |
+| Decision reference | DEC-021 |
+
+### ORM / Query Builder — PENDING
+
+Options: Prisma / TypeORM / Knex.js / Sequelize  
+Status: **PENDING — requires project owner decision before Phase 01 begins**
+
+### Authentication Mechanism — PENDING
+
+Options: JWT stateless / JWT + refresh token / Session-based  
+Status: **PENDING — requires decision before Phase 02 begins**
+
+### Notification Delivery — PENDING
+
+Options: Server-Sent Events / WebSocket / Client-side polling  
+Status: **PENDING — requires decision before Phase 15 begins**
 
 ---
 
@@ -330,17 +354,18 @@ See `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` for detailed documentation.
 
 ## Current vs Target Summary
 
-| Area | Current | Target |
+| Area | Current State | Target / Approved |
 |---|---|---|
-| Frontend | NONE | React/Vue SPA (pending decision) |
-| Backend | NONE | Node.js REST API |
-| Database | NONE | MySQL/MariaDB |
-| Auth | NONE | JWT (pending decision) |
-| File storage | NONE | Local / Cloud (pending decision) |
-| Notifications | NONE | SSE / WebSocket / Polling (pending decision) |
-| Deployment | NONE | Hostinger |
-| Git | Initialized (empty) | GitHub |
+| Frontend | NONE | React + Vite + TypeScript (APPROVED \u2014 DEC-019) |
+| Backend | NONE | Node.js + Express + TypeScript (APPROVED \u2014 DEC-020) |
+| Database | NONE | MySQL / MariaDB InnoDB (APPROVED \u2014 DEC-015) |
+| ORM | NONE | PENDING decision |
+| Auth | NONE | PENDING decision (JWT stateless / JWT+refresh / Session) |
+| File storage | NONE | PENDING decision |
+| Notifications | NONE | PENDING decision (SSE / WebSocket / Polling) |
+| Deployment | NONE | Hostinger (plan not yet purchased) |
+| Git | VERIFIED | `https://github.com/mohamedalihassanwork-cpu/Skate-system` |
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-09 (reconciled)*
