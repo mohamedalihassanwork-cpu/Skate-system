@@ -271,7 +271,7 @@ Every decision recorded here is part of the project's institutional memory. Futu
 | ID | Description | Status |
 |---|---|---|
 | DEC-018 (partial) | Notification delivery mechanism (SSE/WebSocket/polling?) | PENDING |
-| UNK-003 | ORM / Database driver selection | PENDING |
+| UNK-003 | ORM / Database driver selection | RESOLVED — see DEC-022 |
 | UNK-004 | Authentication mechanism (JWT stateless / JWT+refresh / Session) | PENDING |
 
 ---
@@ -315,4 +315,30 @@ Every decision recorded here is part of the project's institutional memory. Futu
 
 ---
 
-*Last updated: 2026-09-09 (reconciled) by AI Governance Agent*
+### DEC-022
+
+**Date:** 2026-09-09 (Phase 01)  
+**Category:** Technology — ORM / Database Driver  
+**Decision:** The database access layer uses **Drizzle ORM** with the `mysql2` driver.  
+**Reason:** Approved by the project owner. Drizzle provides excellent TypeScript type safety, schema-as-code, lightweight query builder syntax, and clean migration management compatible with MySQL/MariaDB on Hostinger.  
+**Impact:** All database access, schema definition, migrations. All database code must use Drizzle ORM patterns. No raw query library or alternative ORM will be used unless a future change request supersedes this decision.  
+**Affected Modules:** All (backend database layer)  
+**Status:** ACTIVE  
+**Source:** Project owner approval — Phase 01 planning (2026-09-09)
+
+---
+
+### DEC-023
+
+**Date:** 2026-09-09 (Phase 01)  
+**Category:** Design — Arabic Typography  
+**Decision:** The primary Arabic font is **Cairo** (Google Fonts). It is loaded via `@import` in the frontend CSS and applied globally as the default `font-family`.  
+**Reason:** Approved by the project owner. Cairo is geometric and premium-feeling, matching the navy/gold KOSHK SKATE visual identity.  
+**Impact:** All frontend UI. Every screen must render in Cairo. No other Arabic font should be used unless an explicit design decision supersedes this.  
+**Affected Modules:** All (frontend)  
+**Status:** ACTIVE  
+**Source:** Project owner approval — Phase 01 planning (2026-09-09)
+
+---
+
+*Last updated: 2026-09-09 (Phase 01 execution) by AI Agent*

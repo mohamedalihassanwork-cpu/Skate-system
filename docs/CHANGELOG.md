@@ -8,6 +8,42 @@
 
 ---
 
+## [0.2.0] — 2026-09-09 (Phase 01 — Foundation & Project Setup)
+
+### Added
+- **Frontend scaffold** (`apps/web/`) — Vite + React + TypeScript initialized and building cleanly
+- **`apps/web/index.html`** — Updated to `lang="ar" dir="rtl"`, Cairo font loaded via Google Fonts, proper meta description
+- **`apps/web/src/styles/design-system.css`** — Complete KOSHK SKATE CSS token system (colors, typography, spacing, shadows, radii, z-index, transitions, layout variables)
+- **`apps/web/src/styles/index.css`** — Global RTL reset, Cairo font applied, branded scrollbar, gold focus ring
+- **`apps/web/src/App.tsx`** — Application shell (navy sidebar RTL-anchored + topbar + content area using design system tokens)
+- **`apps/web/src/services/api.ts`** — Typed fetch-based API client base
+- **`apps/web/.env.example`** — Frontend environment variable template
+- **Backend scaffold** (`apps/api/`) — Express + TypeScript with dev/build scripts
+- **`apps/api/src/index.ts`** — Express entry, CORS, JSON parsing, Morgan, `GET /api/v1/health`, 404 handler, global error handler
+- **`apps/api/src/config/env.ts`** — Centralized environment config (no direct `process.env` access elsewhere)
+- **`apps/api/src/middleware/errorHandler.ts`** — Global structured JSON error handler with dev/prod stack trace control
+- **`apps/api/src/utils/errors.ts`** — 8 typed error classes (AppError, ValidationError, AuthenticationError, ForbiddenError, NotFoundError, ConflictError, BusinessRuleError, InternalError)
+- **`apps/api/src/utils/financial.ts`** — Financial utilities (calculateLateFee, calculateExpectedEndTime, roundCurrency, formatCurrency)
+- **`apps/api/src/db/connection.ts`** — Drizzle ORM + mysql2 pool with `testConnection()` (DEC-022)
+- **`apps/api/src/db/schema/index.ts`** — Empty Drizzle schema anchor
+- **`apps/api/drizzle.config.ts`** — Drizzle Kit config for migrations
+- **`apps/api/.env.example`** — Backend environment variable template
+- **`.gitignore`** (root) — Comprehensive exclusion rules covering both apps
+- **`README.md`** (root) — Arabic README with tech stack, structure, and local setup
+
+### Decisions Made
+- **DEC-022** — ORM: Drizzle ORM with mysql2 driver (project owner approved)
+- **DEC-023** — Arabic font: Cairo (Google Fonts) (project owner approved)
+
+### Technical
+- Frontend builds: ✅ zero TypeScript errors
+- Backend: TypeScript strict mode, CommonJS output for Node.js/Hostinger compatibility
+- Database: utf8mb4 charset enforced for Arabic text
+- All monetary calculations use integer arithmetic (no floating-point)
+- RTL enforced at HTML root level (`<html lang="ar" dir="rtl">`)
+
+---
+
 ## [0.1.1] — 2026-09-09 (Documentation Reconciliation)
 
 ### Changed

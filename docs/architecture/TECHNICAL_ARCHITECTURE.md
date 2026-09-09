@@ -1,8 +1,8 @@
 # Technical Architecture — KOSHK SKATE ERP
 
-**Version:** 1.1  
-**Status:** INITIAL — No code exists. This document describes the intended target architecture.  
-**Last updated:** 2026-09-09 (reconciled)
+**Version:** 1.2  
+**Status:** INITIAL — Phase 01 executing. Scaffold exists; business features start Phase 02.  
+**Last updated:** 2026-09-09 (Phase 01 execution)
 
 > [!IMPORTANT]
 > **This document describes TARGET architecture. No implementation exists yet.**
@@ -89,10 +89,11 @@ KOSHK SKATE ERP is a cloud-based, Arabic-first, RTL-first commercial ERP and POS
 | Default branch | `master` |
 | Decision reference | DEC-021 |
 
-### ORM / Query Builder — PENDING
+### ORM / Query Builder — APPROVED (DEC-022)
 
-Options: Prisma / TypeORM / Knex.js / Sequelize  
-Status: **PENDING — requires project owner decision before Phase 01 begins**
+**Choice:** Drizzle ORM with `mysql2` driver  
+**Reason:** Excellent TypeScript type safety, schema-as-code, clean migration management, MySQL/MariaDB compatible, Hostinger-deployable.  
+**Status:** APPROVED — project owner decision, Phase 01 planning
 
 ### Authentication Mechanism — PENDING
 
@@ -356,10 +357,11 @@ See `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` for detailed documentation.
 
 | Area | Current State | Target / Approved |
 |---|---|---|
-| Frontend | NONE | React + Vite + TypeScript (APPROVED \u2014 DEC-019) |
-| Backend | NONE | Node.js + Express + TypeScript (APPROVED \u2014 DEC-020) |
-| Database | NONE | MySQL / MariaDB InnoDB (APPROVED \u2014 DEC-015) |
-| ORM | NONE | PENDING decision |
+| Frontend | SCAFFOLD — `apps/web/` builds cleanly (Phase 01) | React + Vite + TypeScript (APPROVED — DEC-019) |
+| Backend | SCAFFOLD — `apps/api/` written (Phase 01) | Node.js + Express + TypeScript (APPROVED — DEC-020) |
+| Database | NONE — Drizzle configured, no tables yet | MySQL / MariaDB InnoDB (APPROVED — DEC-015) |
+| ORM | CONFIGURED — `drizzle-orm` + `mysql2` installed (Phase 01) | Drizzle ORM + mysql2 (APPROVED — DEC-022) |
+| Arabic Font | LOADED — Cairo via Google Fonts in `index.html` (Phase 01) | Cairo (APPROVED — DEC-023) |
 | Auth | NONE | PENDING decision (JWT stateless / JWT+refresh / Session) |
 | File storage | NONE | PENDING decision |
 | Notifications | NONE | PENDING decision (SSE / WebSocket / Polling) |
@@ -368,4 +370,4 @@ See `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` for detailed documentation.
 
 ---
 
-*Last updated: 2026-09-09 (reconciled)*
+*Last updated: 2026-09-09 (Phase 01 execution)*

@@ -1,13 +1,13 @@
 # Project Map — KOSHK SKATE ERP
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.  
-**Last updated:** 2026-09-09 (reconciled)
+**Last updated:** 2026-09-09 (Phase 01 execution)
 
 > [!IMPORTANT]
-> **PROJECT STATE: PRE-IMPLEMENTATION (GREENFIELD)**
-> No source code exists. All paths below are TARGET locations — where code WILL be placed.
-> When implementation begins, update this file to mark paths as VERIFIED as they are created.
+> **PROJECT STATE: IN IMPLEMENTATION — Phase 01 executing**
+> Phase 01 scaffold files have been created. Paths marked VERIFIED exist on disk.
+> Continue marking paths VERIFIED as they are created in subsequent phases.
 
 ---
 
@@ -15,19 +15,21 @@
 
 ```
 d:/Skate system/
+├── .gitignore                   — VERIFIED (Phase 01)
+├── README.md                    — VERIFIED (Phase 01, Arabic)
 ├── docs/                        — All project documentation
 │   ├── 00-governance/           — AI rules, process, DoD
 │   │   ├── AI_AGENT_RULES.md      — VERIFIED
-│   │   ├── AI_AGENT_WORKFLOW_AR.md — VERIFIED (created reconciliation)
+│   │   ├── AI_AGENT_WORKFLOW_AR.md — VERIFIED
 │   │   ├── SOURCE_OF_TRUTH.md     — VERIFIED
 │   │   ├── DEFINITION_OF_DONE.md  — VERIFIED
 │   │   ├── CHANGE_REQUEST_PROCESS.md — VERIFIED
 │   │   └── DOCUMENTATION_RULES.md — VERIFIED
-│   ├── architecture/            — Technical architecture docs
-│   ├── modules/                 — Per-module documentation
-│   ├── phases/                  — Phase plans
-│   ├── quality/                 — QA strategy and test matrix
-│   ├── decisions/               — Decision log
+│   ├── architecture/            — Technical architecture docs (VERIFIED)
+│   ├── modules/                 — Per-module documentation (STUBS)
+│   ├── phases/                  — Phase plans (PHASE_01 expanded)
+│   ├── quality/                 — QA strategy and test matrix (VERIFIED)
+│   ├── decisions/               — Decision log (23 decisions)
 │   ├── product/                 — Master Business Spec copy (VERIFIED)
 │   ├── design/                  — Visual Design Reference copy (VERIFIED)
 │   ├── PROJECT_MAP.md           — THIS FILE
@@ -35,11 +37,42 @@ d:/Skate system/
 │   ├── CHANGELOG.md             — Change history
 │   ├── RELEASE_HISTORY.md       — Release history
 │   └── INITIAL_PROJECT_AUDIT.md — Initial audit report
-├── apps/                        — Applications (TARGET — not yet created)
-│   ├── web/                     — Frontend
-│   └── api/                     — Backend
-├── tests/                       — Test suites (TARGET)
-├── scripts/                     — Utility scripts (TARGET)
+├── apps/                        — Applications
+│   ├── web/                     — Frontend (VERIFIED — Phase 01)
+│   │   ├── index.html             — VERIFIED (lang=ar dir=rtl, Cairo font)
+│   │   ├── .env.example           — VERIFIED
+│   │   ├── package.json           — VERIFIED
+│   │   ├── vite.config.ts         — VERIFIED
+│   │   ├── tsconfig.json          — VERIFIED
+│   │   └── src/
+│   │       ├── main.tsx             — VERIFIED
+│   │       ├── App.tsx              — VERIFIED (shell: sidebar + topbar + content)
+│   │       ├── styles/
+│   │       │   ├── design-system.css — VERIFIED (full CSS token system)
+│   │       │   └── index.css         — VERIFIED (global RTL reset)
+│   │       └── services/
+│   │           └── api.ts            — VERIFIED (typed fetch API client)
+│   └── api/                     — Backend (VERIFIED — Phase 01)
+│       ├── .env.example           — VERIFIED
+│       ├── package.json           — VERIFIED
+│       ├── tsconfig.json          — VERIFIED
+│       ├── drizzle.config.ts      — VERIFIED (Drizzle Kit config)
+│       └── src/
+│           ├── index.ts             — VERIFIED (Express entry, health check)
+│           ├── config/
+│           │   └── env.ts           — VERIFIED (centralized env config)
+│           ├── middleware/
+│           │   └── errorHandler.ts  — VERIFIED (global JSON error handler)
+│           ├── db/
+│           │   ├── connection.ts    — VERIFIED (Drizzle + mysql2 pool)
+│           │   └── schema/
+│           │       └── index.ts     — VERIFIED (empty schema anchor)
+│           ├── utils/
+│           │   ├── errors.ts        — VERIFIED (8 custom error classes)
+│           │   └── financial.ts     — VERIFIED (late fee, currency utils)
+│           └── modules/             — PLANNED (Phase 02+)
+├── tests/                       — PLACEHOLDER (Phase 02+)
+├── scripts/                     — PLACEHOLDER
 ├── KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md  — VERIFIED (source document)
 └── Skate_Rental_ERP_Master_Business_Product_Specification.md  — VERIFIED (source document)
 ```
@@ -394,15 +427,20 @@ For each module: where to find code, documentation, database tables, and API rou
 
 | Component | Target Location | Status |
 |---|---|---|
-| Design system CSS | `apps/web/src/styles/` | PLANNED |
-| Shared UI components | `apps/web/src/components/` | PLANNED |
-| API client | `apps/web/src/services/api.js` | PLANNED |
-| Auth middleware | `apps/api/src/middleware/auth.ts` | PLANNED |
-| Permission middleware | `apps/api/src/middleware/permission.ts` | PLANNED |
-| DB connection | `apps/api/src/db/connection.ts` | PLANNED |
-| Audit service | `apps/api/src/modules/audit-log/audit.service.ts` | PLANNED |
-| Financial utilities | `apps/api/src/utils/financial.ts` | PLANNED |
-| Error classes | `apps/api/src/utils/errors.ts` | PLANNED |
+| Design system CSS | `apps/web/src/styles/design-system.css` | VERIFIED (Phase 01) |
+| Global CSS / RTL reset | `apps/web/src/styles/index.css` | VERIFIED (Phase 01) |
+| Shared UI components | `apps/web/src/components/` | PLANNED (Phase 02+) |
+| API client | `apps/web/src/services/api.ts` | VERIFIED (Phase 01) |
+| Auth middleware | `apps/api/src/middleware/auth.ts` | PLANNED (Phase 02) |
+| Permission middleware | `apps/api/src/middleware/permission.ts` | PLANNED (Phase 02) |
+| DB connection | `apps/api/src/db/connection.ts` | VERIFIED (Phase 01) |
+| DB schema index | `apps/api/src/db/schema/index.ts` | VERIFIED (Phase 01) |
+| Drizzle config | `apps/api/drizzle.config.ts` | VERIFIED (Phase 01) |
+| Audit service | `apps/api/src/modules/audit-log/audit.service.ts` | PLANNED (Phase 16) |
+| Financial utilities | `apps/api/src/utils/financial.ts` | VERIFIED (Phase 01) |
+| Error classes | `apps/api/src/utils/errors.ts` | VERIFIED (Phase 01) |
+| Error handler middleware | `apps/api/src/middleware/errorHandler.ts` | VERIFIED (Phase 01) |
+| Env config | `apps/api/src/config/env.ts` | VERIFIED (Phase 01) |
 
 ---
 
@@ -420,13 +458,14 @@ For each module: where to find code, documentation, database tables, and API rou
 
 | Layer | Approved Technology |
 |---|---|
-| Frontend | React + Vite + TypeScript |
-| Backend | Node.js + Express + TypeScript |
-| Database | MySQL / MariaDB |
-| Source control | GitHub (`mohamedalihassanwork-cpu/Skate-system`, branch: `master`) |
-| ORM | PENDING decision |
-| Auth | PENDING decision |
+| Frontend | React + Vite + TypeScript (DEC-019) |
+| Backend | Node.js + Express + TypeScript (DEC-020) |
+| Database | MySQL / MariaDB InnoDB utf8mb4 (DEC-015) |
+| ORM / DB Driver | Drizzle ORM + mysql2 (DEC-022) |
+| Arabic Font | Cairo — Google Fonts (DEC-023) |
+| Source control | GitHub (`mohamedalihassanwork-cpu/Skate-system`, branch: `master`) (DEC-021) |
+| Auth | PENDING decision (Phase 02) |
 
 ---
 
-*Last updated: 2026-09-09 (reconciled)*
+*Last updated: 2026-09-09 (Phase 01 execution)*
