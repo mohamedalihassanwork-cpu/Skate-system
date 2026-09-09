@@ -25,6 +25,7 @@ import {
   type ReactNode,
 } from 'react'
 import { loginApi, logoutApi, refreshApi, meApi, type AuthUser } from '../modules/auth/auth.service'
+import { setTokenProvider } from '../services/api'
 
 // ---------------------------------------------------------------------------
 // Context types
@@ -79,6 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null
     }
   }, [setToken])
+
+  // ---------------------------------------------------------------------------
+  // Wire the api.ts token provider so every request gets the Bearer token injected
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    setTokenProvider(
+      () => accessTokenRef.current,
+      refreshAccessToken,
+    )
+  }, [refreshAccessToken])
 
   // ---------------------------------------------------------------------------
   // On mount: try silent refresh to restore session
