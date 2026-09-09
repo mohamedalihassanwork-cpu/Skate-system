@@ -10,16 +10,16 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | IN IMPLEMENTATION — Phase 01 FINAL GATE APPROVED |
-| **Current Phase** | Phase 01 — Foundation & Project Setup |
-| **Current Milestone** | Phase 01 APPROVED WITH DOCUMENTED LIMITATIONS |
+| **Overall Status** | IN IMPLEMENTATION — Phase 01 FINAL GATE APPROVED. Phase 02 AUTHORIZED. |
+| **Current Phase** | Transitioning Phase 01 → Phase 02 |
+| **Current Milestone** | UNK-004 resolved (DEC-024). Phase 02 may begin. |
 | **Last Completed Phase** | Phase 01 |
-| **Active Work** | None — awaiting Phase 02 authorization |
-| **Blocked Work** | UNK-004 (auth mechanism) must be resolved before Phase 02 start |
+| **Active Work** | None — Phase 02 not yet started |
+| **Blocked Work** | None — all Phase 02 prerequisites resolved |
 | **Last Verification** | 2026-09-09 — LIVE: frontend build ✅, backend build ✅, `GET /api/v1/health → 200 ok`, DB connected `localhost:3306/koshk_skate`, 404 handler ✅, CORS ✅, RTL ✅, Cairo ✅, CSS tokens ✅, no .env committed ✅ |
-| **Last Git Commit** | `35cc75a` docs(phase-01): mark Phase 01 COMPLETED — all DoD verified |
+| **Last Git Commit** | `9494431` chore(phase-01): final verification and documentation reconciliation |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
-| **Recommended Next Action** | Resolve UNK-004 (auth mechanism) then begin Phase 02 — Authentication & Permissions |
+| **Recommended Next Action** | Begin Phase 02 — Authentication & Permissions |
 
 ---
 
@@ -108,12 +108,12 @@
 | Source control | GitHub | DEC-021 |
 | ORM / Database driver | Drizzle ORM + mysql2 | DEC-022 |
 | Arabic font | Cairo (Google Fonts) | DEC-023 |
+| Authentication mechanism | JWT + Refresh Token | DEC-024 |
 
 ### PENDING (still require human decision)
 
 | Decision | Options | Blocks |
 |---|---|---|
-| Authentication mechanism | JWT stateless / JWT+refresh / Session | Phase 02 |
 | Notification delivery | SSE / WebSocket / Polling | Phase 15 |
 | File storage | Local filesystem / Cloud storage | Phase 08 |
 | Hostinger plan specifics | Confirm cron support, Node.js version | Phase 18 |
@@ -162,7 +162,7 @@ Status: OPEN | RESOLVED
 | UNK-001 | Which frontend framework? | Entire frontend | RESOLVED — React + Vite + TypeScript (DEC-019) |
 | UNK-002 | Which backend framework? | Entire backend | RESOLVED — Node.js + Express + TypeScript (DEC-020) |
 | UNK-003 | Which ORM/DB driver? | Database access layer | RESOLVED — Drizzle ORM + mysql2 (DEC-022) |
-| UNK-004 | Authentication mechanism (JWT/session)? | Security architecture | PENDING — Phase 02 |
+| UNK-004 | Authentication mechanism (JWT/session)? | Security architecture | RESOLVED — JWT + Refresh Token (DEC-024) |
 | UNK-005 | Notification delivery mechanism? | Real-time rental alerts | PENDING — Phase 15 |
 | UNK-006 | File storage strategy (local/cloud)? | Damage photo uploads | PENDING — Phase 08 |
 | UNK-007 | Hostinger plan: cron support, Node.js version? | Scheduled jobs, deployment | PENDING — Phase 18 |
@@ -220,4 +220,4 @@ Status: OPEN | RESOLVED
 
 ---
 
-*Last updated: 2026-09-09 (Phase 01 COMPLETED) by AI Agent*
+*Last updated: 2026-09-09 (DEC-024 recorded — Phase 02 authorized) by AI Agent*

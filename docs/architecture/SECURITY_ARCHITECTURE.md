@@ -12,12 +12,12 @@
 |---|---|---|
 | HTTPS | PLANNED | Required for production (Hostinger SSL) |
 | Password hashing | PLANNED | bcrypt, min 12 rounds |
-| JWT authentication | PLANNED (UNKNOWN mechanism) | Or session-based — pending decision |
+| JWT authentication | APPROVED (DEC-024) | JWT + Refresh Token. Access token: 15 min. Refresh token: 7 days, stored in DB, single-use rotation. |
 | RBAC authorization | PLANNED | Server-side enforcement |
 | Input validation | PLANNED | All endpoints |
 | SQL injection prevention | PLANNED | ORM/parameterized queries |
 | XSS prevention | PLANNED | Output encoding, CSP header |
-| CSRF protection | PLANNED | For session-based auth; evaluate for JWT |
+| CSRF protection | NOT REQUIRED | Using Authorization header (not cookies) for access token — CSRF not applicable for JWT in header |
 | Rate limiting | PLANNED | Login endpoint at minimum |
 | File upload security | PLANNED | Type/size limits, safe storage |
 | Audit logging | PLANNED | Sensitive operations |
@@ -29,14 +29,21 @@
 
 ## Authentication
 
-**Target:** JWT-based  
-**Status:** PENDING decision
+**Decision:** JWT + Refresh Token (DEC-024)  
+**Status:** APPROVED — implementation in Phase 02
+
+**Design:**
+- **Access token:** Short-lived JWT (15 min). Sent as `Authorization: Bearer <token>` header.
+- **Refresh token:** Long-lived (7 days). Stored in `refresh_tokens` DB table. Single-use with rotation (old token invalidated on each refresh).
+- **Revocation:** Delete refresh token row. Required for cashier shift close / forced logout.
+- **Logout:** Server deletes the refresh token; client discards the access token.
+- **`JWT_SECRET`:** Cryptographically random string, min 32 bytes, loaded from `.env` only.
 
 **Requirements:**
-- Passwords hashed with bcrypt (never stored plain)
-- Failed login attempts should be rate-limited
-- Token expiry must cover a full cashier shift (recommend 8–12 hours)
+- Passwords hashed with bcrypt (min 12 rounds — never stored plain)
+- Login endpoint must be rate-limited
 - No hardcoded credentials in code
+- Access tokens expire in 15 minutes (covers brief network gaps; refresh token handles longer sessions)
 
 ---
 

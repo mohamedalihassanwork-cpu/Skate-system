@@ -341,4 +341,30 @@ Every decision recorded here is part of the project's institutional memory. Futu
 
 ---
 
-*Last updated: 2026-09-09 (Phase 01 execution) by AI Agent*
+### DEC-024
+
+**Date:** 2026-09-09 (pre-Phase 02)  
+**Category:** Security — Authentication  
+**Decision:** Authentication mechanism is **JWT + Refresh Token**.
+
+- **Access token:** Short-lived JWT (recommended: 15 minutes). Sent as `Authorization: Bearer <token>` header.
+- **Refresh token:** Long-lived (recommended: 7 days). Stored server-side (DB table `refresh_tokens`) and as an `HttpOnly` cookie or returned in the response body for storage by the client.
+- **Rotation:** Refresh tokens are single-use. On each refresh, the old token is invalidated and a new pair is issued.
+- **Revocation:** Refresh tokens are stored in the database, allowing forced logout (revoke by deleting the DB record). Access tokens are short-lived and expire naturally; no blacklist is required unless a shorter invalidation window is needed.
+- **Logout:** Deletes the refresh token from the database.
+
+**Reason:** Project owner decision. JWT + refresh token balances statelessness (access token) with revocability (refresh token stored in DB), which is required for cashier-shift-aware security (shift close must be able to force logout).
+
+**Impact:**
+- Phase 02 will implement: `refresh_tokens` table, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, `apps/api/src/middleware/auth.ts`
+- All subsequent phases depend on this auth mechanism for protected routes
+- Frontend must store the refresh token and implement the silent refresh flow
+
+**Affected Modules:** Auth (Phase 02), all modules with protected routes (Phase 03+)  
+**Status:** ACTIVE  
+**Source:** Project owner decision — 2026-09-09 (pre-Phase 02)  
+**Resolves:** UNK-004
+
+---
+
+*Last updated: 2026-09-09 (UNK-004 resolved — DEC-024 added) by AI Agent*

@@ -95,10 +95,14 @@ KOSHK SKATE ERP is a cloud-based, Arabic-first, RTL-first commercial ERP and POS
 **Reason:** Excellent TypeScript type safety, schema-as-code, clean migration management, MySQL/MariaDB compatible, Hostinger-deployable.  
 **Status:** APPROVED — project owner decision, Phase 01 planning
 
-### Authentication Mechanism — PENDING
+### Authentication Mechanism — APPROVED (DEC-024)
 
-Options: JWT stateless / JWT + refresh token / Session-based  
-Status: **PENDING — requires decision before Phase 02 begins**
+**Choice:** JWT + Refresh Token  
+**Access token:** Short-lived JWT (15 min) — `Authorization: Bearer <token>` header  
+**Refresh token:** Long-lived (7 days) — stored in `refresh_tokens` DB table; single-use with rotation  
+**Revocation:** Forced logout via DB deletion of refresh token (required for cashier shift close)  
+**Status:** APPROVED — project owner decision, 2026-09-09 (pre-Phase 02)  
+**Implementation:** Phase 02
 
 ### Notification Delivery — PENDING
 
