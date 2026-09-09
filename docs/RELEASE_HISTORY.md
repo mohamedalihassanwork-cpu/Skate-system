@@ -4,9 +4,34 @@
 
 ---
 
-## No releases have been made.
+## v0.2.0 — 2026-09-09
 
-The project is in the pre-implementation phase. All entries below will be added as the system is built, tested, and deployed.
+**Phase:** Phase 01 — Foundation & Project Setup  
+**Status:** UNRELEASED (internal baseline — no deployment)  
+**Git Commits:** `f7d2810`, `35cc75a`  
+**Deployment:** NOT DEPLOYED — Hostinger not yet configured  
+**Final Gate:** APPROVED WITH DOCUMENTED LIMITATIONS (2026-09-09)
+
+### Major Changes
+- Frontend scaffold: Vite + React + TypeScript, Cairo font, RTL, KOSHK SKATE design system
+- Backend scaffold: Express + TypeScript, health check, global error handler, structured JSON errors
+- Database: Drizzle ORM + mysql2 configured; local `koshk_skate` database created
+- Custom error class hierarchy (8 classes), financial utilities (pure functions)
+- `.gitignore`, `README.md`, `.env.example` files
+
+### Verification
+- Frontend build: ✅ zero TypeScript errors
+- Backend build: ✅ zero TypeScript errors
+- `GET /api/v1/health → 200 { status: "ok" }`: ✅ live verified
+- DB connection: ✅ `localhost:3306/koshk_skate` confirmed
+- RTL + Cairo + CSS tokens: ✅ all verified
+- 404 handler: ✅ `{ success: false, error: { code: "NOT_FOUND" } }`
+- CORS: ✅ `Access-Control-Allow-Origin: http://localhost:5173`
+- No secrets committed: ✅
+
+### Notes
+- No user-facing business features in this release. Infrastructure only.
+- Decisions DEC-022 (Drizzle ORM) and DEC-023 (Cairo) recorded.
 
 ---
 

@@ -1,18 +1,19 @@
 # Database Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
-**Status:** PLANNED — No database or schema exists yet.  
-**Last updated:** 2026-09-09
+**Version:** 1.1  
+**Status:** PARTIAL — Engine and ORM approved (Phase 01). Schema is PLANNED (Phase 02+).  
+**Last updated:** 2026-09-09 (Phase 01 final gate)
 
 > [!IMPORTANT]
-> No database implementation exists. This document describes the intended target schema derived from the Master Business Specification. All tables and columns are PLANNED.
+> The database engine and ORM are approved (DEC-015, DEC-022). The local `koshk_skate` database has been created. No business tables exist yet — all table definitions below are PLANNED and will be implemented starting Phase 02.
 
 ---
 
 ## Database Engine
 
 **Target:** MySQL 8.x or MariaDB 10.x (InnoDB engine)  
-**Status:** PLANNED — pending technology decision (DEC-014)
+**Status:** APPROVED — DEC-015 (engine), DEC-022 (Drizzle ORM + mysql2 driver)  
+**Phase 01 verified:** local `koshk_skate` database created (utf8mb4, InnoDB), connection confirmed via `testConnection()`
 
 **Required features:**
 - InnoDB storage engine (transactions, foreign keys)
@@ -25,11 +26,12 @@
 ## Connection Architecture
 
 **Target:**
-- Connection pool managed by ORM/driver
+- Connection pool managed by Drizzle ORM + mysql2 (DEC-022)
 - Separate read replica: NOT required at this stage
-- Connection string via environment variable (`DATABASE_URL`)
+- Configuration via individual env vars: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- Pool configured: `connectionLimit: 10`, `charset: utf8mb4`, `timezone: +00:00`
 
-**Status:** PLANNED
+**Status:** IMPLEMENTED (Phase 01) — `apps/api/src/db/connection.ts`
 
 ---
 
@@ -526,10 +528,16 @@ These are database-level constraints that must be enforced:
 
 ## Migrations
 
-**Status:** PLANNED  
-**Tool:** TBD (Prisma Migrate / Knex migrations / TypeORM migrations)
+**Status:** CONFIGURED (Phase 01) — ready for first business migration in Phase 02  
+**Tool:** Drizzle Kit (DEC-022)  
+**Config file:** `apps/api/drizzle.config.ts`  
+**Schema entry point:** `apps/api/src/db/schema/index.ts`  
+**Output directory:** `apps/api/src/db/migrations/`
 
-All schema changes must be managed via migrations. No manual schema editing in production.
+All schema changes must be managed via Drizzle Kit migrations. No manual schema editing in production.
+
+> [!NOTE]
+> Phase 01 creates no tables. The first migration (users, roles, permissions) runs in Phase 02.
 
 ---
 
@@ -547,4 +555,4 @@ Initial seed data should include:
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-09 (Phase 01 final gate)*
