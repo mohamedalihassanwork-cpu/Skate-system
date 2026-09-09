@@ -1,0 +1,346 @@
+# Technical Architecture — KOSHK SKATE ERP
+
+**Version:** 1.0  
+**Status:** INITIAL — No code exists. This document describes the intended target architecture.  
+**Last updated:** 2026-09-09
+
+> [!IMPORTANT]
+> **This document describes TARGET architecture. No implementation exists yet.**
+> All sections below are PLANNED unless explicitly marked VERIFIED.
+> As implementation progresses, update this document to clearly separate CURRENT from TARGET.
+
+---
+
+## System Overview
+
+KOSHK SKATE ERP is a cloud-based, Arabic-first, RTL-first commercial ERP and POS system for a skate rental business.
+
+**Core characteristics:**
+- Single web application (not separate mobile app)
+- Responsive for desktop, tablet, mobile
+- Arabic UI, RTL layout
+- Role-based access control
+- Individual asset lifecycle management (per-skate)
+- Real-time operational state (active rentals, expiration alerts)
+- Financial traceability (treasury, shifts, audit)
+
+---
+
+## 1. Architecture Style
+
+**Target:** Modular monolith
+
+**Rationale:** Compatible with Hostinger hosting constraints. Modular structure allows future extraction if needed. No distributed systems, no microservices, no message queues required at this stage.
+
+**Status:** PLANNED
+
+---
+
+## 2. Technology Stack
+
+**Status: UNKNOWN — No technology has been selected or implemented.**
+
+All options below are candidates pending human decision (see `docs/decisions/DECISION_LOG.md` DEC-014).
+
+### Frontend (candidates)
+- React (with Vite or Next.js)
+- Vue.js
+- Vanilla HTML/CSS/JS
+
+**Constraints:**
+- Must support Arabic/RTL (native or via CSS `dir="rtl"`)
+- Must be responsive
+- Must be compatible with the KOSHK SKATE design system (navy/gold/white, Cairo/Tajawal font)
+
+### Backend (candidates)
+- Node.js + Express
+- Node.js + Fastify
+- Node.js + NestJS
+
+**Constraints:**
+- Must be hostable on Hostinger (Node.js)
+- Must support REST API
+- Must support background jobs (rental expiration notifications)
+
+### Database (candidates)
+- MySQL 8.x
+- MariaDB 10.x
+
+**Constraints:**
+- Must be compatible with Hostinger MySQL/MariaDB
+- Must support transactions (InnoDB)
+- Must support foreign keys
+
+### ORM / Query Builder (candidates)
+- Prisma
+- TypeORM
+- Knex.js
+- Sequelize
+- Raw SQL
+
+**Status:** PENDING — requires human decision
+
+---
+
+## 3. Application Structure (Target)
+
+```
+/                          — Repository root
+├── apps/
+│   ├── web/               — Frontend application
+│   │   ├── src/
+│   │   │   ├── modules/   — Feature modules
+│   │   │   ├── components/ — Shared UI components
+│   │   │   ├── layouts/   — Page layouts
+│   │   │   ├── styles/    — Design system / CSS
+│   │   │   ├── services/  — API client services
+│   │   │   ├── stores/    — State management
+│   │   │   └── utils/     — Utilities
+│   │   └── public/
+│   └── api/               — Backend application
+│       └── src/
+│           ├── modules/   — Feature modules
+│           ├── middleware/ — Express/framework middleware
+│           ├── config/    — Configuration
+│           ├── db/        — Database connection, migrations, seeds
+│           └── utils/     — Utilities
+├── docs/                  — Project documentation
+├── tests/                 — Test suites
+└── scripts/               — Utility scripts
+```
+
+**Status:** PLANNED — structure not yet created
+
+---
+
+## 4. Frontend Architecture
+
+**Status: PLANNED**
+
+See `docs/architecture/FRONTEND_ARCHITECTURE.md` for detailed documentation.
+
+### Key design requirements:
+- Arabic-first, RTL-first (`dir="rtl"`, `lang="ar"` on `<html>`)
+- KOSHK SKATE design system (CSS tokens)
+- Cairo or Tajawal font from Google Fonts
+- Responsive: mobile, tablet, desktop
+- Component-based architecture
+- Client-side routing
+
+---
+
+## 5. Backend Architecture
+
+**Status: PLANNED**
+
+See `docs/architecture/BACKEND_ARCHITECTURE.md` for detailed documentation.
+
+### Key requirements:
+- REST API
+- JWT-based authentication (UNKNOWN — pending decision)
+- Role-based authorization middleware
+- Input validation (server-side)
+- Transaction support for financial operations
+- Audit log middleware/service
+- Background job for rental expiration notifications
+
+---
+
+## 6. Database Architecture
+
+**Status: PLANNED**
+
+See `docs/architecture/DATABASE_ARCHITECTURE.md` for detailed documentation.
+
+### Key requirements:
+- MySQL/MariaDB InnoDB
+- Foreign key constraints
+- Transaction support
+- Migrations managed by the ORM/migration tool
+- No hard-delete of historical records (soft-delete pattern)
+
+---
+
+## 7. API Architecture
+
+**Status: PLANNED**
+
+See `docs/architecture/API_ARCHITECTURE.md` for detailed documentation.
+
+### Key conventions (target):
+- RESTful routes grouped by module
+- JSON request/response
+- Standard HTTP status codes
+- Consistent error response format
+- JWT Bearer token authentication
+- Permission check per endpoint
+
+---
+
+## 8. Authentication
+
+**Status: UNKNOWN — pending decision**
+
+**Options:**
+- JWT (stateless)
+- Session-based (with server-side store)
+- JWT + refresh token rotation
+
+**Constraints:**
+- Must support role-based authorization
+- Must be compatible with Hostinger environment
+
+---
+
+## 9. Authorization
+
+**Status: PLANNED**
+
+- Role-based access control (RBAC)
+- Roles are configurable by Administrator
+- Permissions are data-driven (stored in database)
+- Backend enforces all permission checks independently
+- Frontend may hide/disable UI but must never be the sole enforcement layer
+
+---
+
+## 10. File Storage
+
+**Status: UNKNOWN — pending decision**
+
+**Use case:** Damage photos attached to damage reports.
+
+**Options:**
+- Local filesystem on server (simple, Hostinger-compatible)
+- Cloud storage (S3, Cloudinary, etc.)
+
+**Constraints:** Must be compatible with Hostinger hosting plan.
+
+---
+
+## 11. Notifications
+
+**Status: UNKNOWN — pending decision**
+
+**Use case:** Alert cashier 1 minute before rental expiration.
+
+**Options:**
+- Server-Sent Events (SSE)
+- WebSocket
+- Client-side polling
+
+**Constraints:** Must work within Hostinger environment.
+
+---
+
+## 12. Scheduled Jobs
+
+**Status: UNKNOWN — pending decision**
+
+**Use case:** Check for expiring rentals and send notifications.
+
+**Options:**
+- Node.js `node-cron` or `agenda`
+- Hostinger-supported cron jobs
+
+---
+
+## 13. Reporting
+
+**Status: PLANNED**
+
+- Server-side report generation
+- PDF export (library TBD: puppeteer, pdfmake, jsPDF)
+- Excel/CSV export
+- Print support via browser `window.print()`
+
+---
+
+## 14. Invoice / Barcode
+
+**Status: PLANNED**
+
+- Invoice generation for rentals and sales
+- Barcode on invoice (format TBD: Code128, QR)
+- Print support
+- Administrator can enable/disable printing
+
+---
+
+## 15. Error Handling
+
+**Status: PLANNED**
+
+- Backend: structured JSON error responses
+- Frontend: user-friendly Arabic error messages
+- Unhandled errors: logged server-side, generic message to client
+- Financial errors: log and alert, never silently swallow
+
+---
+
+## 16. Logging
+
+**Status: PLANNED**
+
+- Business audit log: stored in database (see Audit Log module)
+- Application error log: server-side (file or service)
+- Format: structured JSON preferred
+
+---
+
+## 17. Security
+
+See `docs/architecture/SECURITY_ARCHITECTURE.md` for detailed documentation.
+
+**Status: PLANNED**
+
+---
+
+## 18. Environment Configuration
+
+**Status: PLANNED**
+
+- All secrets via environment variables (`.env` file, never committed)
+- `.env.example` committed with placeholder values
+- Required variables (target):
+  - `DATABASE_URL`
+  - `JWT_SECRET`
+  - `PORT`
+  - `NODE_ENV`
+  - `STORAGE_PATH` (if local file storage)
+
+---
+
+## 19. Deployment
+
+See `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` for detailed documentation.
+
+**Target:** Hostinger Web/Cloud  
+**Status: PLANNED — no deployment exists**
+
+---
+
+## 20. Scalability
+
+**Immediate target:** Single-store operation. Not a multi-tenant SaaS.
+
+**No premature optimization** for scale that doesn't exist. The modular monolith structure allows future scale if needed.
+
+---
+
+## Current vs Target Summary
+
+| Area | Current | Target |
+|---|---|---|
+| Frontend | NONE | React/Vue SPA (pending decision) |
+| Backend | NONE | Node.js REST API |
+| Database | NONE | MySQL/MariaDB |
+| Auth | NONE | JWT (pending decision) |
+| File storage | NONE | Local / Cloud (pending decision) |
+| Notifications | NONE | SSE / WebSocket / Polling (pending decision) |
+| Deployment | NONE | Hostinger |
+| Git | Initialized (empty) | GitHub |
+
+---
+
+*Last updated: 2026-09-09*
