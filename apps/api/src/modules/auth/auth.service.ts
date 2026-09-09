@@ -39,9 +39,13 @@ function signAccessToken(payload: TokenPayload): string {
 }
 
 function signRefreshToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: `${env.JWT_REFRESH_EXPIRES_DAYS}d`,
-  })
+  // Include a random jti so the same user logging in twice within the same second
+  // produces two different tokens (and therefore two different hashes in refresh_tokens)
+  return jwt.sign(
+    { ...payload, jti: crypto.randomUUID() },
+    env.JWT_REFRESH_SECRET,
+    { expiresIn: `${env.JWT_REFRESH_EXPIRES_DAYS}d` },
+  )
 }
 
 /** Hash a refresh token before storing in DB (DEC-025) */

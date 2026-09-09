@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 2.0
-**Last updated:** 2026-09-09 (Phase 02 COMPLETED)
-**Updated by:** AI Agent (Phase 02 Implementation)
+**Version:** 2.1
+**Last updated:** 2026-09-09 (Phase 02 FINAL GATE)
+**Updated by:** AI Agent (Phase 02 Final Gate Verification)
 
 ---
 
@@ -10,14 +10,14 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | IN IMPLEMENTATION — Phase 02 COMPLETED. Phase 03 AUTHORIZED. |
-| **Current Phase** | Phase 02 COMPLETED |
-| **Current Milestone** | Authentication, RBAC, Login UI all implemented and verified. |
+| **Overall Status** | IN IMPLEMENTATION — Phase 02 FINAL GATE PASSED. Phase 03 AUTHORIZED. |
+| **Current Phase** | Phase 02 FINAL GATE PASSED |
+| **Current Milestone** | All Phase 02 DoD criteria satisfied. 18/18 tests pass. Both builds zero TS errors. |
 | **Last Completed Phase** | Phase 02 |
 | **Active Work** | None — Phase 03 (Skates Module) ready to begin |
 | **Blocked Work** | None |
-| **Last Verification** | 2026-09-09 — Backend build ✅, Frontend build ✅, DB migration applied ✅, Seed run ✅ (40 perms, 3 roles, 1 admin user), Login API tested, Protected routes enforced, Both builds zero TS errors. |
-| **Last Git Commit** | Pending commit for Phase 02 |
+| **Last Verification** | 2026-09-09 — FINAL GATE: API build ✅, Web build ✅, `npm test` 18/18 PASS ✅, DB migration applied ✅, Seed applied (40 perms, 3 roles, 1 admin) ✅, Login API 200 ✅, Refresh rotation ✅, Logout revocation ✅, 401/403 enforced ✅, Browser: login ✅, protected routes ✅, users/roles pages ✅, logout ✅. |
+| **Last Git Commit** | Pending — Phase 02 Final Gate verification commit |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Begin Phase 03 — Skates Module |
 
@@ -31,13 +31,13 @@
 | Visual Design Reference | VERIFIED — complete |
 | Governance documentation | COMPLETED |
 | Architecture documentation | COMPLETED — updated with Phase 02 decisions |
-| Module documentation | AUTH.md, USERS_PERMISSIONS.md — IMPLEMENTED |
-| Source code — Frontend | IMPLEMENTED — `apps/web/` built ✅ zero TS errors. React Router, AuthContext, Login page, Users/Roles pages. |
-| Source code — Backend | IMPLEMENTED — `apps/api/` built ✅ zero TS errors. Auth + Users + Roles modules + middleware. |
-| Database | IMPLEMENTED — Migration 001 applied. 6 tables created. Seed complete (40 perms, 3 roles, 1 admin). |
-| Tests | NONE (Phase 02 integration tests pending) |
+| Module documentation | AUTH.md ✅, USERS_PERMISSIONS.md ✅, PHASE_02 spec ✅ (all updated) |
+| Source code — Frontend | IMPLEMENTED — `apps/web/` built ✅ zero TS errors. React Router, AuthContext, LoginPage, Users/Roles pages, ProtectedRoute, PermissionGate. |
+| Source code — Backend | IMPLEMENTED — `apps/api/` built ✅ zero TS errors. Auth + Users + Roles modules + middleware. app.ts separated from index.ts for test isolation. jti added to refresh tokens (Final Gate bug fix). |
+| Database | IMPLEMENTED — Migration 001 applied. 6 tables. Seed: 40 permissions, 3 system roles, 1 admin. |
+| Tests | IMPLEMENTED — `npm test` 18/18 PASS ✅. Covers: login, refresh rotation, logout revocation, 401, 403, deactivated user. |
 | Deployment | NONE |
-| Git repository | VERIFIED — local + GitHub remote |
+| Git repository | VERIFIED — local + GitHub remote (`https://github.com/mohamedalihassanwork-cpu/Skate-system`) |
 
 ---
 
@@ -47,7 +47,7 @@
 |---|---|---|---|
 | Phase 00 | Governance & Documentation | COMPLETED | This initialization |
 | Phase 01 | Foundation & Project Setup | COMPLETED | FINAL GATE: APPROVED. Commits `f7d2810`, `35cc75a`. |
-| Phase 02 | Authentication & Permissions | **COMPLETED** | JWT auth, RBAC, Login UI, Users/Roles pages. Migration 001 applied. Seed run. |
+| Phase 02 | Authentication & Permissions | **FINAL GATE PASSED** | JWT auth, RBAC, 18/18 tests pass. Commits `67726c5`, `a1d7250`, `b27bf55` + Final Gate commit. |
 | Phase 03 | Skates Module | PLANNED | Depends on Phase 02 |
 | Phase 04 | Customers Module | PLANNED | Depends on Phase 02 |
 | Phase 05 | Rental POS (Core) | PLANNED | Depends on Phases 03, 04 |

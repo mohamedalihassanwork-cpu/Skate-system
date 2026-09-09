@@ -1,13 +1,13 @@
 # Project Map — KOSHK SKATE ERP
 
-**Version:** 1.2  
-**Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.  
-**Last updated:** 2026-09-09 (Phase 01 execution)
+**Version:** 1.3
+**Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.
+**Last updated:** 2026-09-09 (Phase 02 FINAL GATE)
 
 > [!IMPORTANT]
-> **PROJECT STATE: IN IMPLEMENTATION — Phase 01 COMPLETED. Phase 02 not yet started.**
-> Phase 01 scaffold files are committed and pushed. Paths marked VERIFIED exist on disk and have been tested.
-> Update this file as new files are created in Phase 02+.
+> **PROJECT STATE: IN IMPLEMENTATION — Phase 01 & 02 COMPLETED. Phase 03 ready to begin.**
+> Phase 02 auth files are committed and pushed. Paths marked VERIFIED exist on disk and have been tested.
+> Update this file as new files are created in Phase 03+.
 
 ---
 
@@ -15,8 +15,8 @@
 
 ```
 d:/Skate system/
-├── .gitignore                   — VERIFIED (Phase 01)
-├── README.md                    — VERIFIED (Phase 01, Arabic)
+├── .gitignore                   — VERIFIED
+├── README.md                    — VERIFIED (Phase 02, Arabic, updated)
 ├── docs/                        — All project documentation
 │   ├── 00-governance/           — AI rules, process, DoD
 │   │   ├── AI_AGENT_RULES.md      — VERIFIED
@@ -25,53 +25,96 @@ d:/Skate system/
 │   │   ├── DEFINITION_OF_DONE.md  — VERIFIED
 │   │   ├── CHANGE_REQUEST_PROCESS.md — VERIFIED
 │   │   └── DOCUMENTATION_RULES.md — VERIFIED
-│   ├── architecture/            — Technical architecture docs (VERIFIED)
-│   ├── modules/                 — Per-module documentation (STUBS)
-│   ├── phases/                  — Phase plans (PHASE_01 expanded)
+│   ├── architecture/            — Technical architecture docs (VERIFIED, updated Phase 02)
+│   ├── modules/                 — Per-module documentation
+│   │   ├── AUTH.md              — VERIFIED (Phase 02)
+│   │   └── USERS_PERMISSIONS.md — VERIFIED (Phase 02)
+│   ├── phases/                  — Phase plans
+│   │   ├── PHASE_02_AUTHENTICATION_AND_PERMISSIONS.md — VERIFIED (full spec, Phase 02 Final Gate)
+│   │   └── PHASE_03_SKATES_MODULE.md — PLANNED (stub)
 │   ├── quality/                 — QA strategy and test matrix (VERIFIED)
-│   ├── decisions/               — Decision log (23 decisions)
+│   ├── decisions/               — Decision log (29 decisions through DEC-029)
 │   ├── product/                 — Master Business Spec copy (VERIFIED)
 │   ├── design/                  — Visual Design Reference copy (VERIFIED)
 │   ├── PROJECT_MAP.md           — THIS FILE
-│   ├── PROJECT_STATE.md         — Current project status
-│   ├── CHANGELOG.md             — Change history
+│   ├── PROJECT_STATE.md         — Current project status (Phase 02 COMPLETED)
+│   ├── CHANGELOG.md             — Change history (v0.3.0 entry added)
 │   ├── RELEASE_HISTORY.md       — Release history
 │   └── INITIAL_PROJECT_AUDIT.md — Initial audit report
 ├── apps/                        — Applications
-│   ├── web/                     — Frontend (VERIFIED — Phase 01)
+│   ├── web/                     — Frontend (VERIFIED — Phase 02)
 │   │   ├── index.html             — VERIFIED (lang=ar dir=rtl, Cairo font)
 │   │   ├── .env.example           — VERIFIED
-│   │   ├── package.json           — VERIFIED
+│   │   ├── package.json           — VERIFIED (react-router-dom added)
 │   │   ├── vite.config.ts         — VERIFIED
 │   │   ├── tsconfig.json          — VERIFIED
 │   │   └── src/
-│   │       ├── main.tsx             — VERIFIED
-│   │       ├── App.tsx              — VERIFIED (shell: sidebar + topbar + content)
+│   │       ├── main.tsx             — VERIFIED (wrapped BrowserRouter + AuthProvider)
+│   │       ├── App.tsx              — VERIFIED (full routing: /login + protected shell)
 │   │       ├── styles/
 │   │       │   ├── design-system.css — VERIFIED (full CSS token system)
 │   │       │   └── index.css         — VERIFIED (global RTL reset)
-│   │       └── services/
-│   │           └── api.ts            — VERIFIED (typed fetch API client)
-│   └── api/                     — Backend (VERIFIED — Phase 01)
-│       ├── .env.example           — VERIFIED
-│       ├── package.json           — VERIFIED
+│   │       ├── services/
+│   │       │   └── api.ts            — VERIFIED (auth-aware: Bearer injection + 401 retry)
+│   │       ├── contexts/
+│   │       │   └── AuthContext.tsx   — VERIFIED (Phase 02: in-memory token, silent refresh)
+│   │       ├── hooks/
+│   │       │   └── usePermission.ts  — VERIFIED (Phase 02)
+│   │       ├── components/
+│   │       │   ├── ProtectedRoute.tsx — VERIFIED (Phase 02)
+│   │       │   └── PermissionGate.tsx — VERIFIED (Phase 02)
+│   │       └── modules/
+│   │           ├── auth/
+│   │           │   ├── auth.types.ts  — VERIFIED (Phase 02)
+│   │           │   ├── auth.service.ts — VERIFIED (Phase 02)
+│   │           │   └── LoginPage.tsx  — VERIFIED (Phase 02, Arabic RTL)
+│   │           └── users/
+│   │               ├── users.service.ts — VERIFIED (Phase 02)
+│   │               ├── UsersPage.tsx    — VERIFIED (Phase 02)
+│   │               └── RolesPage.tsx    — VERIFIED (Phase 02)
+│   └── api/                     — Backend (VERIFIED — Phase 02)
+│       ├── .env.example           — VERIFIED (updated Phase 02)
+│       ├── package.json           — VERIFIED (test, db:seed scripts added)
 │       ├── tsconfig.json          — VERIFIED
-│       ├── drizzle.config.ts      — VERIFIED (Drizzle Kit config)
+│       ├── drizzle.config.ts      — VERIFIED (schema array)
+│       ├── vitest.config.ts       — VERIFIED (Phase 02 Final Gate)
 │       └── src/
-│           ├── index.ts             — VERIFIED (Express entry, health check)
+│           ├── index.ts             — VERIFIED (server entry — imports app.ts)
+│           ├── app.ts               — VERIFIED (Phase 02: app factory, routes, middleware)
 │           ├── config/
-│           │   └── env.ts           — VERIFIED (centralized env config)
+│           │   └── env.ts           — VERIFIED (JWT_REFRESH_SECRET, expiry, seed vars)
 │           ├── middleware/
-│           │   └── errorHandler.ts  — VERIFIED (global JSON error handler)
+│           │   ├── errorHandler.ts  — VERIFIED
+│           │   ├── auth.ts          — VERIFIED (Phase 02: authenticate middleware)
+│           │   ├── permission.ts    — VERIFIED (Phase 02: requirePermission factory)
+│           │   └── rateLimiter.ts   — VERIFIED (Phase 02: loginLimiter, skipped in test)
 │           ├── db/
-│           │   ├── connection.ts    — VERIFIED (Drizzle + mysql2 pool)
+│           │   ├── connection.ts    — VERIFIED
+│           │   ├── seed.ts          — VERIFIED (Phase 02: 40 perms, 3 roles, 1 admin)
+│           │   ├── migrations/
+│           │   │   └── 0000_cloudy_the_renegades.sql — VERIFIED (6 tables)
 │           │   └── schema/
-│           │       └── index.ts     — VERIFIED (empty schema anchor)
+│           │       ├── index.ts     — VERIFIED (exports all tables)
+│           │       ├── users.ts     — VERIFIED (Phase 02: users, roles, perms, join tables)
+│           │       └── auth.ts      — VERIFIED (Phase 02: refresh_tokens)
+│           ├── tests/
+│           │   ├── setup.ts         — VERIFIED (Phase 02 Final Gate)
+│           │   └── auth.test.ts     — VERIFIED (Phase 02 Final Gate: 18 tests, 18 PASS)
 │           ├── utils/
-│           │   ├── errors.ts        — VERIFIED (8 custom error classes)
-│           │   └── financial.ts     — VERIFIED (late fee, currency utils)
-│           └── modules/             — PLANNED (Phase 02+)
-├── tests/                       — PLACEHOLDER (Phase 02+)
+│           │   ├── errors.ts        — VERIFIED (UnauthorizedError added Phase 02)
+│           │   └── financial.ts     — VERIFIED
+│           └── modules/
+│               ├── auth/
+│               │   ├── auth.types.ts  — VERIFIED (Phase 02)
+│               │   ├── auth.service.ts — VERIFIED (Phase 02, jti fix in Final Gate)
+│               │   └── auth.routes.ts  — VERIFIED (Phase 02)
+│               └── users/
+│                   ├── users.types.ts  — VERIFIED (Phase 02)
+│                   ├── users.service.ts — VERIFIED (Phase 02)
+│                   ├── users.routes.ts  — VERIFIED (Phase 02)
+│                   ├── roles.service.ts — VERIFIED (Phase 02)
+│                   └── roles.routes.ts  — VERIFIED (Phase 02)
+├── tests/                       — Integration tests (top-level placeholder)
 ├── scripts/                     — PLACEHOLDER
 ├── KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md  — VERIFIED (source document)
 └── Skate_Rental_ERP_Master_Business_Product_Specification.md  — VERIFIED (source document)
@@ -88,32 +131,32 @@ For each module: where to find code, documentation, database tables, and API rou
 ### MODULE: AUTH
 
 | Area | Path | Status |
-|---|---|---|
-| Frontend | `apps/web/src/modules/auth/` | PLANNED |
-| Backend | `apps/api/src/modules/auth/` | PLANNED |
-| Database tables | `users`, `roles`, `permissions`, `user_roles`, `role_permissions` | PLANNED |
-| API routes | `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` | PLANNED |
-| Documentation | `docs/modules/AUTH.md` | PLANNED |
-| Tests | `tests/auth/` | PLANNED |
+|---|---|
+| Frontend | `apps/web/src/modules/auth/` | VERIFIED (Phase 02) |
+| Backend | `apps/api/src/modules/auth/` | VERIFIED (Phase 02) |
+| Database tables | `users`, `roles`, `permissions`, `user_roles`, `role_permissions` | VERIFIED (Phase 02) |
+| API routes | `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` | VERIFIED (Phase 02) |
+| Documentation | `docs/modules/AUTH.md` | VERIFIED (Phase 02) |
+| Tests | `apps/api/src/tests/auth.test.ts` | VERIFIED (Phase 02 Final Gate — 18/18 PASS) |
 
-**Dependencies:** None (foundation module)  
-**Key risks:** JWT secret management, session coverage for cashier shifts
+**Dependencies:** None (foundation module)
+**Key risks:** JWT secret must be rotated in production; rate limiter is in-memory (DEC-027)
 
 ---
 
 ### MODULE: USERS & PERMISSIONS
 
 | Area | Path | Status |
-|---|---|---|
-| Frontend | `apps/web/src/modules/users/` | PLANNED |
-| Backend | `apps/api/src/modules/users/` | PLANNED |
-| Database tables | `users`, `roles`, `permissions`, `user_roles`, `role_permissions` | PLANNED |
-| API routes | `/api/v1/users`, `/api/v1/roles`, `/api/v1/permissions` | PLANNED |
-| Documentation | `docs/modules/USERS_PERMISSIONS.md` | PLANNED |
-| Tests | `tests/users/` | PLANNED |
+|---|---|
+| Frontend | `apps/web/src/modules/users/` | VERIFIED (Phase 02) |
+| Backend | `apps/api/src/modules/users/` | VERIFIED (Phase 02) |
+| Database tables | `users`, `roles`, `permissions`, `user_roles`, `role_permissions` | VERIFIED (Phase 02) |
+| API routes | `/api/v1/users`, `/api/v1/roles` | VERIFIED (Phase 02) |
+| Documentation | `docs/modules/USERS_PERMISSIONS.md` | VERIFIED (Phase 02) |
+| Tests | Covered by `apps/api/src/tests/auth.test.ts` (TC-AUTH-11, -12) | VERIFIED |
 
-**Dependencies:** AUTH  
-**Key risks:** Permission enforcement must be server-side
+**Dependencies:** AUTH
+**Key risks:** Permission enforcement MUST remain server-side (backend middleware, not frontend only)
 
 ---
 
@@ -429,18 +472,18 @@ For each module: where to find code, documentation, database tables, and API rou
 |---|---|---|
 | Design system CSS | `apps/web/src/styles/design-system.css` | VERIFIED (Phase 01) |
 | Global CSS / RTL reset | `apps/web/src/styles/index.css` | VERIFIED (Phase 01) |
-| Shared UI components | `apps/web/src/components/` | PLANNED (Phase 02+) |
-| API client | `apps/web/src/services/api.ts` | VERIFIED (Phase 01) |
-| Auth middleware | `apps/api/src/middleware/auth.ts` | PLANNED (Phase 02) |
-| Permission middleware | `apps/api/src/middleware/permission.ts` | PLANNED (Phase 02) |
+| Shared UI components | `apps/web/src/components/` | VERIFIED (Phase 02: ProtectedRoute, PermissionGate) |
+| API client | `apps/web/src/services/api.ts` | VERIFIED (Phase 02: auth-aware, 401 retry) |
+| Auth middleware | `apps/api/src/middleware/auth.ts` | VERIFIED (Phase 02) |
+| Permission middleware | `apps/api/src/middleware/permission.ts` | VERIFIED (Phase 02) |
 | DB connection | `apps/api/src/db/connection.ts` | VERIFIED (Phase 01) |
-| DB schema index | `apps/api/src/db/schema/index.ts` | VERIFIED (Phase 01) |
-| Drizzle config | `apps/api/drizzle.config.ts` | VERIFIED (Phase 01) |
+| DB schema index | `apps/api/src/db/schema/index.ts` | VERIFIED (Phase 02: all tables exported) |
+| Drizzle config | `apps/api/drizzle.config.ts` | VERIFIED (Phase 02: schema array) |
 | Audit service | `apps/api/src/modules/audit-log/audit.service.ts` | PLANNED (Phase 16) |
 | Financial utilities | `apps/api/src/utils/financial.ts` | VERIFIED (Phase 01) |
-| Error classes | `apps/api/src/utils/errors.ts` | VERIFIED (Phase 01) |
+| Error classes | `apps/api/src/utils/errors.ts` | VERIFIED (Phase 02: UnauthorizedError added) |
 | Error handler middleware | `apps/api/src/middleware/errorHandler.ts` | VERIFIED (Phase 01) |
-| Env config | `apps/api/src/config/env.ts` | VERIFIED (Phase 01) |
+| Env config | `apps/api/src/config/env.ts` | VERIFIED (Phase 02: JWT secrets, expiry, seed vars) |
 
 ---
 
@@ -464,8 +507,8 @@ For each module: where to find code, documentation, database tables, and API rou
 | ORM / DB Driver | Drizzle ORM + mysql2 (DEC-022) |
 | Arabic Font | Cairo — Google Fonts (DEC-023) |
 | Source control | GitHub (`mohamedalihassanwork-cpu/Skate-system`, branch: `master`) (DEC-021) |
-| Auth | PENDING decision (Phase 02) |
+| Auth | JWT Bearer (access) + HttpOnly cookie (refresh) — DEC-025, DEC-028 (Phase 02) |
 
 ---
 
-*Last updated: 2026-09-09 (Phase 01 final gate)*
+*Last updated: 2026-09-09 (Phase 02 Final Gate)*

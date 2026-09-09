@@ -4,7 +4,7 @@
  *
  * Seeds:
  *   - Default roles: Administrator, Cashier, Maintenance Staff
- *   - All permission keys (39 keys from SECURITY_ARCHITECTURE.md)
+ *   - All permission keys (40 keys — see ALL_PERMISSIONS below)
  *   - Administrator role gets ALL permissions
  *   - Default admin user (credentials from env — DEC-026)
  *
@@ -104,7 +104,7 @@ const DEFAULT_ROLES = [
       'rentals.view', 'rentals.create', 'rentals.return',
       'customers.view', 'customers.create', 'customers.edit',
       'skates.view',
-      'payments.view',
+      // Note: 'payments.view' excluded — not in Phase 02 permission set (Phase 06)
       'sales.view', 'sales.create',
       'expenses.view', 'expenses.create',
       'shifts.view', 'shifts.manage',

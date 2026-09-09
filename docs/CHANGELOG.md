@@ -8,6 +8,35 @@
 
 ---
 
+## [0.3.1] — 2026-09-09 (Phase 02 Final Gate Verification & Reconciliation)
+
+### Fixed
+- **`apps/api/src/modules/auth/auth.service.ts`** — Added `jti` (UUID) to refresh token JWT payload; prevents `ER_DUP_ENTRY` when same user logs in multiple times within the same second (duplicate token hash collision)
+- **`apps/api/src/db/seed.ts`** — Removed non-existent `payments.view` from Cashier `permissionKeys` (that key is not in Phase 02 permission set; it was silently filtered but left misleading); fixed comment from "39 keys" to "40 keys"
+
+### Added
+- **`apps/api/src/app.ts`** — App factory module (extracted from `index.ts`): configures Express, middleware, and routes without starting the HTTP listener. Required for test isolation.
+- **`apps/api/src/tests/auth.test.ts`** — 14 integration test cases, 18 assertions: login success/failure, GET /me, refresh rotation, logout revocation, 401 (unauth), 403 (permission denied), deactivated user. All 18 PASS.
+- **`apps/api/src/tests/setup.ts`** — Test setup file
+- **`apps/api/vitest.config.ts`** — Vitest configuration (30s timeout, serial execution, dotenv)
+- **`apps/api/src/modules/auth/auth.types.ts`** — Added `jti?` field to `TokenPayload`
+
+### Modified
+- **`apps/api/src/index.ts`** — Refactored to import app from `app.ts`; now only handles DB connection test + HTTP listener startup
+- **`apps/api/package.json`** — Added `test` and `test:watch` scripts; added `dotenv-cli`, `cross-env`, `supertest`, `vitest` dev dependencies
+- **`docs/phases/PHASE_02_AUTHENTICATION_AND_PERMISSIONS.md`** — Completely rewritten from stub to full spec: scope, all 14 API routes, DB schema, 40 permission keys table, full test matrix (14 TCs), DoD checklist, known risks
+- **`docs/PROJECT_MAP.md`** — All Phase 02 files and modules updated from PLANNED → VERIFIED
+- **`docs/PROJECT_STATE.md`** — Final Gate results: tests, builds, verification timestamp
+
+### Verified (Final Gate)
+- `npm test` → **18/18 PASS** (zero failures)
+- `npm run build` (api) → **zero TypeScript errors**
+- `npm run build` (web) → **zero TypeScript errors**
+- Browser: login, protected routes, users page, roles page, logout — **all pass**
+- Security: duplicate hash bug fixed, rotation enforced, revocation confirmed
+
+---
+
 ## [0.3.0] — 2026-09-09 (Phase 02 — Authentication & Permissions)
 
 ### Added — Backend
