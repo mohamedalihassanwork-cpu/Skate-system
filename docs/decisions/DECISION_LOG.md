@@ -367,4 +367,96 @@ Every decision recorded here is part of the project's institutional memory. Futu
 
 ---
 
-*Last updated: 2026-09-09 (UNK-004 resolved — DEC-024 added) by AI Agent*
+### DEC-025
+
+**Date:** 2026-09-09 (Phase 02 planning — owner approval)
+**Category:** Security — Refresh Token Storage
+**Decision:** The refresh token is stored in an **HttpOnly cookie** (not localStorage, not memory-only).
+- Access token: stored in memory, sent via `Authorization: Bearer` header.
+- Refresh token: sent as an `HttpOnly`, `SameSite=Strict` (development: `SameSite=None; Secure` in production) cookie AND tracked server-side in the `refresh_tokens` DB table.
+- The frontend never accesses the refresh token value directly.
+- Cookie settings for production: `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/v1/auth/refresh`.
+- CSRF: Not applicable for the access token (header-based). The refresh cookie is scoped to the refresh endpoint only.
+
+**Reason:** Owner-approved. Most secure client-side storage option. Prevents XSS access to the refresh token. CSRF is mitigated by limiting the cookie path to the refresh endpoint.
+**Impact:** All auth middleware, login endpoint, refresh endpoint, logout endpoint, frontend API client.
+**Affected Modules:** Auth, all protected routes
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 02 open questions (2026-09-09)
+**Resolves:** OQ-01
+
+---
+
+### DEC-026
+
+**Date:** 2026-09-09 (Phase 02 planning — owner approval)
+**Category:** Operations — Seed Admin Credentials
+**Decision:** The database seed creates a default admin user with:
+- Email: read from `SEED_ADMIN_EMAIL` environment variable (default: `admin@koshkskate.com`)
+- Password: read from `SEED_ADMIN_PASSWORD` environment variable (default: `Koshk@12345`)
+- Only the **bcrypt hash** (min 12 rounds) is stored in the database. The plain password is never stored.
+- The seed script is **idempotent**: it checks by email before inserting and does NOT create duplicates on repeated runs.
+- Credentials must be changed after first login. This is a stated expectation, not a technical enforcement in Phase 02.
+
+**Reason:** Owner-approved. Credentials must not be hardcoded in source code. Idempotency prevents double-seeding errors.
+**Impact:** Seed script, `.env.example`, documentation.
+**Affected Modules:** Auth, Users
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 02 open questions (2026-09-09)
+**Resolves:** OQ-02
+
+---
+
+### DEC-027
+
+**Date:** 2026-09-09 (Phase 02 planning — owner approval)
+**Category:** Security — Rate Limiting
+**Decision:** The login endpoint (`POST /api/v1/auth/login`) is rate-limited to **10 attempts per minute per IP** using an **in-memory rate limiter** (`express-rate-limit` with default MemoryStore).
+- Redis is NOT required. The system is a modular monolith on a single Hostinger server.
+- If the architecture ever moves to multi-server, this decision should be revisited.
+
+**Reason:** Owner-approved. In-memory is appropriate for the current single-server deployment target.
+**Impact:** Login endpoint only.
+**Affected Modules:** Auth
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 02 open questions (2026-09-09)
+**Resolves:** OQ-03
+
+---
+
+### DEC-028
+
+**Date:** 2026-09-09 (Phase 02 planning — owner approval)
+**Category:** Security — JWT Secrets
+**Decision:** The access token and refresh token use **separate signing secrets**:
+- `JWT_SECRET` — used to sign access tokens
+- `JWT_REFRESH_SECRET` — used to sign refresh tokens
+Both secrets must be cryptographically random strings (min 32 bytes), stored in `.env` only, and never committed to Git.
+
+**Reason:** Owner-approved. Compromise of one secret does not compromise the other.
+**Impact:** Auth service, env config, `.env.example`.
+**Affected Modules:** Auth
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 02 open questions (2026-09-09)
+**Resolves:** OQ-04
+
+---
+
+### DEC-029
+
+**Date:** 2026-09-09 (Phase 02 planning — owner approval)
+**Category:** Product — Password Reset
+**Decision:** Forgot-password and password-reset functionality is **OUT OF SCOPE for Phase 02**. No implementation will be done in this phase.
+- This feature requires an email provider, which is pending (UNK-009).
+- It will be introduced in a future phase or Change Request after the email provider decision is made.
+
+**Reason:** Owner-approved. Dependency on UNK-009 (email provider) is unresolved.
+**Impact:** None in Phase 02.
+**Affected Modules:** Auth (future)
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 02 open questions (2026-09-09)
+**Resolves:** OQ-05
+
+---
+
+*Last updated: 2026-09-09 (DEC-025 to DEC-029 added — Phase 02 open questions resolved) by AI Agent*

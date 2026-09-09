@@ -1,326 +1,303 @@
 /**
  * KOSHK SKATE ERP — App Shell
- * Phase 01 — Foundation
+ * Phase 02 — Authentication & Permissions (updated)
  *
- * This is a layout scaffold only. No routing or business logic yet.
- * Phase 02 will add authentication; subsequent phases will add module routing.
+ * Routing:
+ *   /login        → LoginPage (public)
+ *   /             → Dashboard (protected — placeholder until Phase 17)
+ *   /users        → UsersPage (protected, requires users.view)
+ *   /roles        → RolesPage (protected, requires roles.view)
+ *   /*            → 404 redirect to /
+ *
+ * Phase 03+ will add: /skates, /customers, /rentals, etc.
  */
 
+import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useAuth } from './contexts/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { PermissionGate } from './components/PermissionGate'
+import LoginPage from './modules/auth/LoginPage'
+import UsersPage from './modules/users/UsersPage'
+import RolesPage from './modules/users/RolesPage'
 
 // ---------------------------------------------------------------------------
-// Inline shell styles — kept here because they are pure layout primitives.
-// Feature-level styles will live in their respective module CSS files.
+// Nav items
 // ---------------------------------------------------------------------------
-const shellStyles: Record<string, React.CSSProperties> = {
-  appShell: {
-    display: 'flex',
-    minHeight: '100vh',
-    backgroundColor: 'var(--color-gray-50)',
-  },
-  sidebar: {
-    width: 'var(--sidebar-width)',
-    minHeight: '100vh',
-    backgroundColor: 'var(--color-navy-800)',
-    display: 'flex',
-    flexDirection: 'column',
-    flexShrink: 0,
-    position: 'fixed',
-    top: 0,
-    right: 0, // RTL — sidebar on the right
-    bottom: 0,
-    zIndex: 'var(--z-sticky)' as unknown as number,
-    boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
-  },
-  sidebarLogo: {
-    padding: 'var(--space-6) var(--space-4)',
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 'var(--space-2)',
-  },
-  logoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: 'var(--color-gold-400)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '1.5rem',
-    fontWeight: 'var(--font-weight-extrabold)' as unknown as number,
-    color: 'var(--color-navy-900)',
-    letterSpacing: '-0.03em',
-  },
-  logoText: {
-    color: 'var(--color-white)',
-    fontSize: 'var(--font-size-sm)',
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    textAlign: 'center',
-    letterSpacing: '0.05em',
-    opacity: 0.85,
-  },
-  sidebarNav: {
-    flex: 1,
-    padding: 'var(--space-4) var(--space-3)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--space-1)',
-    overflowY: 'auto',
-  },
-  navItem: {
+
+const NAV_ITEMS = [
+  { icon: '🏠', label: 'لوحة التحكم', to: '/', exact: true },
+  { icon: '⛸️', label: 'الزلاجات', to: '/skates', permission: 'skates.view' },
+  { icon: '👥', label: 'العملاء', to: '/customers', permission: 'customers.view' },
+  { icon: '🎫', label: 'الإيجارات', to: '/rentals', permission: 'rentals.view' },
+  { icon: '💰', label: 'الخزينة', to: '/treasury', permission: 'treasury.view' },
+  { icon: '🔧', label: 'الصيانة', to: '/maintenance', permission: 'maintenance.view' },
+  { icon: '📊', label: 'التقارير', to: '/reports', permission: 'reports.view' },
+]
+
+const ADMIN_NAV_ITEMS = [
+  { icon: '👤', label: 'المستخدمون', to: '/users', permission: 'users.view' },
+  { icon: '🔑', label: 'الأدوار', to: '/roles', permission: 'roles.view' },
+  { icon: '⚙️', label: 'الإعدادات', to: '/settings', permission: 'settings.view' },
+]
+
+// ---------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------
+
+function Sidebar({ onLogout }: { onLogout: () => void }) {
+  const { user } = useAuth()
+
+  const navLinkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
     gap: 'var(--space-3)',
     padding: 'var(--space-3) var(--space-4)',
     borderRadius: 'var(--radius-base)',
-    color: 'rgba(255,255,255,0.65)',
+    color: isActive ? 'var(--color-gold-400)' : 'rgba(255,255,255,0.65)',
     fontSize: 'var(--font-size-sm)',
-    fontWeight: 'var(--font-weight-medium)' as unknown as number,
+    fontWeight: isActive ? 600 : 400,
     cursor: 'pointer',
+    textDecoration: 'none',
     transition: 'all var(--transition-fast)',
-  },
-  navItemActive: {
-    backgroundColor: 'rgba(243,183,53,0.15)',
-    color: 'var(--color-gold-400)',
-  },
-  sidebarFooter: {
-    padding: 'var(--space-4)',
-    borderTop: '1px solid rgba(255,255,255,0.08)',
-  },
-  mainArea: {
-    flex: 1,
-    marginRight: 'var(--sidebar-width)', // RTL offset
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-  },
-  topbar: {
-    height: 'var(--header-height)',
-    backgroundColor: 'var(--color-white)',
-    borderBottom: '1px solid var(--color-border)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 var(--space-8)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 'var(--z-raised)' as unknown as number,
-    boxShadow: 'var(--shadow-xs)',
-  },
-  topbarTitle: {
-    fontSize: 'var(--font-size-lg)',
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    color: 'var(--color-navy-800)',
-  },
-  topbarActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--space-4)',
-  },
-  statusBadge: {
-    padding: 'var(--space-1) var(--space-3)',
-    borderRadius: 'var(--radius-full)',
-    fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    backgroundColor: 'var(--color-success-bg)',
-    color: 'var(--color-success)',
-    letterSpacing: '0.04em',
-  },
-  content: {
-    flex: 1,
-    padding: 'var(--space-8)',
-    maxWidth: 'var(--content-max-width)',
-    width: '100%',
-    margin: '0 auto',
-  },
-  card: {
-    backgroundColor: 'var(--color-white)',
-    borderRadius: 'var(--radius-lg)',
-    boxShadow: 'var(--shadow-card)',
-    padding: 'var(--space-8)',
-    border: '1px solid var(--color-border)',
-  },
-  cardTitle: {
-    fontSize: 'var(--font-size-2xl)',
-    fontWeight: 'var(--font-weight-bold)' as unknown as number,
-    color: 'var(--color-navy-800)',
-    marginBottom: 'var(--space-2)',
-  },
-  cardSubtitle: {
-    color: 'var(--color-text-secondary)',
-    fontSize: 'var(--font-size-sm)',
-    lineHeight: 'var(--line-height-relaxed)',
-    marginBottom: 'var(--space-8)',
-  },
-  phaseGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: 'var(--space-4)',
-  },
-  phaseItem: {
-    padding: 'var(--space-4)',
-    borderRadius: 'var(--radius-base)',
-    border: '1px solid var(--color-border)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--space-2)',
-  },
-  phaseLabel: {
-    fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    color: 'var(--color-text-muted)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.08em',
-  },
-  phaseName: {
-    fontSize: 'var(--font-size-sm)',
-    fontWeight: 'var(--font-weight-medium)' as unknown as number,
-    color: 'var(--color-text-primary)',
-  },
-  phaseBadge: {
-    alignSelf: 'flex-start',
-    padding: '2px var(--space-2)',
-    borderRadius: 'var(--radius-full)',
-    fontSize: '0.65rem',
-    fontWeight: 'var(--font-weight-bold)' as unknown as number,
-    letterSpacing: '0.05em',
-  },
-}
+    backgroundColor: isActive ? 'rgba(243,183,53,0.15)' : 'transparent',
+  })
 
-// ---------------------------------------------------------------------------
-// Nav items — placeholder, will be replaced by router in Phase 02+
-// ---------------------------------------------------------------------------
-const navItems = [
-  { icon: '🏠', label: 'لوحة التحكم', active: false },
-  { icon: '⛸️', label: 'الزلاجات', active: false },
-  { icon: '👥', label: 'العملاء', active: false },
-  { icon: '🎫', label: 'الإيجارات', active: true },
-  { icon: '💰', label: 'المدفوعات', active: false },
-  { icon: '🔧', label: 'الصيانة', active: false },
-  { icon: '📊', label: 'التقارير', active: false },
-  { icon: '⚙️', label: 'الإعدادات', active: false },
-]
-
-const phases = [
-  { num: '00', name: 'الحوكمة والتوثيق', status: 'مكتمل', color: 'var(--color-success-bg)', textColor: 'var(--color-success)' },
-  { num: '01', name: 'البنية الأساسية', status: 'جاري', color: 'var(--color-gold-100)', textColor: 'var(--color-gold-600)' },
-  { num: '02', name: 'المصادقة والصلاحيات', status: 'مخطط', color: 'var(--color-gray-100)', textColor: 'var(--color-gray-600)' },
-  { num: '03', name: 'وحدة الزلاجات', status: 'مخطط', color: 'var(--color-gray-100)', textColor: 'var(--color-gray-600)' },
-  { num: '04', name: 'وحدة العملاء', status: 'مخطط', color: 'var(--color-gray-100)', textColor: 'var(--color-gray-600)' },
-  { num: '05', name: 'نقطة بيع الإيجار', status: 'مخطط', color: 'var(--color-gray-100)', textColor: 'var(--color-gray-600)' },
-]
-
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
-function Sidebar() {
   return (
-    <aside style={shellStyles.sidebar} role="navigation" aria-label="القائمة الرئيسية">
-      <div style={shellStyles.sidebarLogo}>
-        <div style={shellStyles.logoIcon} aria-hidden="true">KS</div>
-        <span style={shellStyles.logoText}>KOSHK SKATE ERP</span>
+    <aside
+      style={{
+        width: 'var(--sidebar-width)',
+        minHeight: '100vh',
+        backgroundColor: 'var(--color-navy-800)',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 'var(--z-sticky)' as unknown as number,
+        boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
+      }}
+      role="navigation"
+      aria-label="القائمة الرئيسية"
+    >
+      {/* Logo */}
+      <div style={{
+        padding: 'var(--space-6) var(--space-4)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 'var(--space-2)',
+      }}>
+        <div style={{
+          width: 48, height: 48,
+          borderRadius: 'var(--radius-md)',
+          backgroundColor: 'var(--color-gold-400)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '1.5rem', fontWeight: 800,
+          color: 'var(--color-navy-900)',
+        }} aria-hidden="true">KS</div>
+        <span style={{ color: 'var(--color-white)', fontSize: 'var(--font-size-sm)', fontWeight: 600, opacity: 0.85 }}>
+          KOSHK SKATE ERP
+        </span>
       </div>
-      <nav style={shellStyles.sidebarNav}>
-        {navItems.map((item) => (
-          <div
-            key={item.label}
-            style={{
-              ...shellStyles.navItem,
-              ...(item.active ? shellStyles.navItemActive : {}),
-            }}
-          >
-            <span aria-hidden="true">{item.icon}</span>
-            <span>{item.label}</span>
-          </div>
+
+      {/* Main nav */}
+      <nav style={{ flex: 1, padding: 'var(--space-4) var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', overflowY: 'auto' }}>
+        {NAV_ITEMS.map(item => (
+          item.permission ? (
+            <PermissionGate key={item.to} permission={item.permission}>
+              <NavLink to={item.to} end={item.exact} style={navLinkStyle}>
+                <span aria-hidden="true">{item.icon}</span>
+                <span>{item.label}</span>
+              </NavLink>
+            </PermissionGate>
+          ) : (
+            <NavLink key={item.to} to={item.to} end={item.exact} style={navLinkStyle}>
+              <span aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          )
         ))}
+
+        {/* Admin section */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)' }}>
+          <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', paddingRight: 'var(--space-4)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            الإدارة
+          </span>
+          {ADMIN_NAV_ITEMS.map(item => (
+            <PermissionGate key={item.to} permission={item.permission}>
+              <NavLink to={item.to} style={navLinkStyle}>
+                <span aria-hidden="true">{item.icon}</span>
+                <span>{item.label}</span>
+              </NavLink>
+            </PermissionGate>
+          ))}
+        </div>
       </nav>
-      <div style={shellStyles.sidebarFooter}>
-        <div style={{ ...shellStyles.navItem, fontSize: 'var(--font-size-xs)' }}>
+
+      {/* Footer: user info + logout */}
+      <div style={{ padding: 'var(--space-4)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        {user && (
+          <div style={{ marginBottom: 'var(--space-3)', padding: 'var(--space-3) var(--space-4)', borderRadius: 'var(--radius-base)', backgroundColor: 'rgba(255,255,255,0.06)' }}>
+            <p style={{ color: 'white', fontSize: 'var(--font-size-sm)', fontWeight: 600, margin: 0 }}>{user.name}</p>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', margin: 'var(--space-1) 0 0', direction: 'ltr' }}>{user.email}</p>
+          </div>
+        )}
+        <button
+          onClick={onLogout}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+            width: '100%', padding: 'var(--space-3) var(--space-4)',
+            background: 'none', border: 'none', cursor: 'pointer',
+            borderRadius: 'var(--radius-base)',
+            color: 'rgba(255,255,255,0.55)', fontSize: 'var(--font-size-sm)',
+            fontFamily: "'Cairo', sans-serif",
+          }}
+          id="logout-btn"
+        >
           <span aria-hidden="true">🚪</span>
           <span>تسجيل الخروج</span>
-        </div>
+        </button>
       </div>
     </aside>
   )
 }
 
-function Topbar() {
+// ---------------------------------------------------------------------------
+// Topbar
+// ---------------------------------------------------------------------------
+
+function Topbar({ pageTitle }: { pageTitle?: string }) {
+  const { user } = useAuth()
   return (
-    <header style={shellStyles.topbar}>
-      <span style={shellStyles.topbarTitle}>الرئيسية</span>
-      <div style={shellStyles.topbarActions}>
-        <span style={shellStyles.statusBadge}>الخادم يعمل ✓</span>
-        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
-          المرحلة 01
+    <header style={{
+      height: 'var(--header-height)',
+      backgroundColor: 'var(--color-white)',
+      borderBottom: '1px solid var(--color-border)',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '0 var(--space-8)',
+      position: 'sticky', top: 0,
+      zIndex: 'var(--z-raised)' as unknown as number,
+      boxShadow: 'var(--shadow-xs)',
+    }}>
+      <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--color-navy-800)' }}>
+        {pageTitle ?? 'الرئيسية'}
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+        {user?.roles[0] && (
+          <span style={{
+            padding: 'var(--space-1) var(--space-3)',
+            borderRadius: 'var(--radius-full)',
+            fontSize: 'var(--font-size-xs)',
+            fontWeight: 600,
+            backgroundColor: 'var(--color-navy-50)',
+            color: 'var(--color-navy-700)',
+          }}>
+            {user.roles[0].nameAr}
+          </span>
+        )}
+        <span style={{
+          padding: 'var(--space-1) var(--space-3)',
+          borderRadius: 'var(--radius-full)',
+          fontSize: 'var(--font-size-xs)',
+          fontWeight: 600,
+          backgroundColor: 'var(--color-success-bg)',
+          color: 'var(--color-success)',
+        }}>
+          المرحلة 02 ✓
         </span>
       </div>
     </header>
   )
 }
 
-function PhaseCard({ num, name, status, color, textColor }: {
-  num: string; name: string; status: string; color: string; textColor: string;
-}) {
+// ---------------------------------------------------------------------------
+// Placeholder page for modules not yet implemented
+// ---------------------------------------------------------------------------
+
+function PlaceholderPage({ title, phase }: { title: string; phase: string }) {
   return (
-    <div style={shellStyles.phaseItem}>
-      <span style={shellStyles.phaseLabel}>المرحلة {num}</span>
-      <span style={shellStyles.phaseName}>{name}</span>
-      <span style={{ ...shellStyles.phaseBadge, backgroundColor: color, color: textColor }}>
-        {status}
-      </span>
+    <div style={{ padding: 'var(--space-8)', maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+      <div style={{
+        backgroundColor: 'var(--color-white)',
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: 'var(--shadow-card)',
+        border: '1px solid var(--color-border)',
+        padding: 'var(--space-12)',
+        textAlign: 'center',
+      }}>
+        <p style={{ fontSize: 'var(--font-size-3xl)', margin: '0 0 var(--space-4)' }}>🚧</p>
+        <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-navy-800)', margin: '0 0 var(--space-2)' }}>{title}</h1>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
+          سيتم تنفيذ هذه الوحدة في {phase}
+        </p>
+      </div>
     </div>
   )
 }
 
-function MainContent(): ReactNode {
+// ---------------------------------------------------------------------------
+// App Shell (authenticated layout)
+// ---------------------------------------------------------------------------
+
+function AppShell({ children }: { children: ReactNode }) {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
-    <main style={shellStyles.content} id="main-content">
-      <div style={shellStyles.card}>
-        <h1 style={shellStyles.cardTitle}>نظام KOSHK SKATE ERP</h1>
-        <p style={shellStyles.cardSubtitle}>
-          هذه الشاشة هي هيكل المرحلة الأولى — البنية الأساسية للنظام.
-          سيتم إضافة المصادقة والوحدات التجارية في المراحل التالية.
-        </p>
-
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-navy-700)', marginBottom: 'var(--space-4)' }}>
-            حالة المراحل
-          </h2>
-          <div style={shellStyles.phaseGrid}>
-            {phases.map((p) => (
-              <PhaseCard key={p.num} {...p} />
-            ))}
-          </div>
-        </div>
-
-        <div style={{
-          padding: 'var(--space-4)',
-          borderRadius: 'var(--radius-base)',
-          backgroundColor: 'var(--color-navy-50)',
-          border: '1px solid var(--color-navy-100)',
-        }}>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-navy-700)', fontWeight: 'var(--font-weight-medium)' }}>
-            ✅ المرحلة 01 — البنية الأساسية: الواجهة تعمل | نظام التصميم محمّل | الخط Cairo نشط | RTL مفعّل
-          </p>
-        </div>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-gray-50)' }}>
+      <Sidebar onLogout={handleLogout} />
+      <div style={{ flex: 1, marginRight: 'var(--sidebar-width)', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Topbar />
+        <main style={{ flex: 1 }}>
+          {children}
+        </main>
       </div>
-    </main>
+    </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Root App
+// Root App — routing
 // ---------------------------------------------------------------------------
+
 export default function App() {
   return (
-    <div style={shellStyles.appShell} id="app-shell">
-      <Sidebar />
-      <div style={shellStyles.mainArea}>
-        <Topbar />
-        <MainContent />
-      </div>
-    </div>
+    <Routes>
+      {/* Public */}
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Protected */}
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <Routes>
+                <Route path="/" element={<PlaceholderPage title="لوحة التحكم" phase="المرحلة 17" />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/roles" element={<RolesPage />} />
+                <Route path="/skates" element={<PlaceholderPage title="الزلاجات" phase="المرحلة 03" />} />
+                <Route path="/customers" element={<PlaceholderPage title="العملاء" phase="المرحلة 04" />} />
+                <Route path="/rentals" element={<PlaceholderPage title="الإيجارات" phase="المرحلة 05" />} />
+                <Route path="/treasury" element={<PlaceholderPage title="الخزينة" phase="المرحلة 06" />} />
+                <Route path="/maintenance" element={<PlaceholderPage title="الصيانة" phase="المرحلة 09" />} />
+                <Route path="/reports" element={<PlaceholderPage title="التقارير" phase="المرحلة 13" />} />
+                <Route path="/settings" element={<PlaceholderPage title="الإعدادات" phase="المرحلة متأخرة" />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   )
 }

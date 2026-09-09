@@ -56,6 +56,14 @@ export class AuthenticationError extends AppError {
   }
 }
 
+/** Alias for AuthenticationError — used in auth module for 401 responses */
+export class UnauthorizedError extends AppError {
+  constructor(message = 'غير مصرح') {
+    super(message, 401, 'UNAUTHORIZED')
+  }
+}
+
+
 // ---------------------------------------------------------------------------
 // HTTP 403 — Authenticated but not authorized
 // ---------------------------------------------------------------------------

@@ -8,6 +8,61 @@
 
 ---
 
+## [0.3.0] — 2026-09-09 (Phase 02 — Authentication & Permissions)
+
+### Added — Backend
+- **`apps/api/src/db/schema/users.ts`** — Drizzle schema: `users`, `roles`, `permissions`, `user_roles`, `role_permissions` tables
+- **`apps/api/src/db/schema/auth.ts`** — Drizzle schema: `refresh_tokens` table (single-use rotation, SHA-256 hash stored — DEC-025)
+- **`apps/api/src/db/migrations/0000_*.sql`** — Migration 001: 6 tables created in `koshk_skate` DB
+- **`apps/api/src/db/seed.ts`** — Idempotent seed: 40 permission keys, 3 system roles, default admin user (DEC-026)
+- **`apps/api/src/modules/auth/auth.types.ts`** — Auth TypeScript types
+- **`apps/api/src/modules/auth/auth.service.ts`** — login, refresh (with rotation), logout, verifyAccessToken, loadUserWithPermissions
+- **`apps/api/src/modules/auth/auth.routes.ts`** — POST /login, POST /refresh, POST /logout, GET /me with HttpOnly cookie handling (DEC-025)
+- **`apps/api/src/modules/users/users.types.ts`** — User/Role/Permission DTO types
+- **`apps/api/src/modules/users/users.service.ts`** — User CRUD with bcrypt + soft deactivation
+- **`apps/api/src/modules/users/users.routes.ts`** — GET/POST/PATCH/DELETE /users (permission-gated)
+- **`apps/api/src/modules/users/roles.service.ts`** — Role CRUD + permission assignment (system roles protected)
+- **`apps/api/src/modules/users/roles.routes.ts`** — GET/POST/PATCH/DELETE /roles + PUT /roles/:id/permissions
+- **`apps/api/src/middleware/auth.ts`** — `authenticate()` — JWT Bearer token verification, req.user injection
+- **`apps/api/src/middleware/permission.ts`** — `requirePermission(key)` — RBAC server-side enforcement, returns 403
+- **`apps/api/src/middleware/rateLimiter.ts`** — `loginLimiter` — 10 req/min/IP (DEC-027), in-memory
+
+### Added — Frontend
+- **`apps/web/src/modules/auth/`** — auth.types.ts, auth.service.ts (login/refresh/logout/me API calls)
+- **`apps/web/src/modules/auth/LoginPage.tsx`** — Arabic RTL login page, KOSHK SKATE design, loading state, Arabic error messages
+- **`apps/web/src/modules/users/users.service.ts`** — Users/Roles API client wrappers
+- **`apps/web/src/modules/users/UsersPage.tsx`** — User list + create modal + deactivate
+- **`apps/web/src/modules/users/RolesPage.tsx`** — Role cards with permissions
+- **`apps/web/src/contexts/AuthContext.tsx`** — In-memory token storage, silent refresh on mount, login/logout
+- **`apps/web/src/hooks/usePermission.ts`** — `usePermission(key): boolean`
+- **`apps/web/src/components/ProtectedRoute.tsx`** — Redirect to /login if not authenticated
+- **`apps/web/src/components/PermissionGate.tsx`** — Render children only if user has permission
+
+### Modified
+- **`apps/api/src/index.ts`** — Added cookie-parser, mounted auth/users/roles routes, CORS credentials:true
+- **`apps/api/src/config/env.ts`** — Added JWT_REFRESH_SECRET, token expiry vars, seed vars, production secret enforcement
+- **`apps/api/src/utils/errors.ts`** — Added UnauthorizedError class
+- **`apps/api/src/db/schema/index.ts`** — Exports Phase 02 tables
+- **`apps/api/drizzle.config.ts`** — Schema array for drizzle-kit compatibility
+- **`apps/api/package.json`** — Added db:seed script
+- **`apps/api/.env.example`** — Added JWT_REFRESH_SECRET, token expiry, CORS, seed credential vars
+- **`apps/web/src/main.tsx`** — Wrapped with BrowserRouter + AuthProvider
+- **`apps/web/src/App.tsx`** — Full routing: /login (public) + protected app shell with NavLink sidebar
+- **`apps/web/src/services/api.ts`** — Bearer token injection, 401 silent refresh retry, credentials:include
+
+### Decisions Recorded
+- DEC-025: Refresh token stored as HttpOnly cookie
+- DEC-026: Seed admin credentials via env vars, idempotent
+- DEC-027: In-memory rate limiter, 10 req/min/IP
+- DEC-028: Separate JWT_SECRET / JWT_REFRESH_SECRET
+- DEC-029: Password reset out of scope for Phase 02
+
+### Dependencies Added
+- Backend: `bcryptjs`, `jsonwebtoken`, `express-rate-limit`, `cookie-parser` + type definitions
+- Frontend: `react-router-dom`
+
+---
+
 ## [0.2.0] — 2026-09-09 (Phase 01 — Foundation & Project Setup)
 
 ### Added

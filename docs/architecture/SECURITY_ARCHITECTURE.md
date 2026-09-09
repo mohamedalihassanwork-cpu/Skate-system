@@ -1,7 +1,7 @@
 # Security Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
-**Status:** PLANNED — No implementation exists.  
+**Version:** 2.0
+**Status:** PARTIALLY IMPLEMENTED — Phase 02 auth/RBAC complete.
 **Last updated:** 2026-09-09
 
 ---
@@ -11,39 +11,51 @@
 | Control | Status | Notes |
 |---|---|---|
 | HTTPS | PLANNED | Required for production (Hostinger SSL) |
-| Password hashing | PLANNED | bcrypt, min 12 rounds |
-| JWT authentication | APPROVED (DEC-024) | JWT + Refresh Token. Access token: 15 min. Refresh token: 7 days, stored in DB, single-use rotation. |
-| RBAC authorization | PLANNED | Server-side enforcement |
+| Password hashing | **IMPLEMENTED** | bcrypt, 12 rounds — `apps/api/src/modules/users/users.service.ts` |
+| JWT authentication | **IMPLEMENTED** | JWT + Refresh Token (DEC-024). Access: 15 min, memory. Refresh: 7 days, HttpOnly cookie + DB (DEC-025). |
+| RBAC authorization | **IMPLEMENTED** | Server-side middleware — `apps/api/src/middleware/permission.ts` |
 | Input validation | PLANNED | All endpoints |
-| SQL injection prevention | PLANNED | ORM/parameterized queries |
+| SQL injection prevention | **IMPLEMENTED** | Drizzle ORM parameterized queries |
 | XSS prevention | PLANNED | Output encoding, CSP header |
-| CSRF protection | NOT REQUIRED | Using Authorization header (not cookies) for access token — CSRF not applicable for JWT in header |
-| Rate limiting | PLANNED | Login endpoint at minimum |
-| File upload security | PLANNED | Type/size limits, safe storage |
-| Audit logging | PLANNED | Sensitive operations |
+| CSRF protection | NOT REQUIRED | Access token in `Authorization` header. Refresh cookie scoped to `/api/v1/auth` path only. |
+| Rate limiting | **IMPLEMENTED** | 10 req/min/IP on login — `express-rate-limit`, in-memory (DEC-027) |
+| File upload security | PLANNED | Phase 08 |
+| Audit logging | PARTIAL | Login/logout events. Full module in Phase 16. |
 | Sensitive data handling | PLANNED | National ID, phone numbers |
-| Environment secrets | PLANNED | `.env`, never committed |
-| HTTPS-only cookies | PLANNED | If session/cookie auth used |
+| Environment secrets | **IMPLEMENTED** | `.env` excluded from Git. JWT_SECRET + JWT_REFRESH_SECRET required. |
+| HTTPS-only cookies | PLANNED (prod) | `secure: true` for refresh cookie in production — DEC-025 |
 
 ---
 
 ## Authentication
 
-**Decision:** JWT + Refresh Token (DEC-024)  
-**Status:** APPROVED — implementation in Phase 02
+**Decision:** JWT + Refresh Token (DEC-024)
+**Refresh token storage:** HttpOnly cookie (DEC-025)
+**Status:** IMPLEMENTED — Phase 02
 
 **Design:**
-- **Access token:** Short-lived JWT (15 min). Sent as `Authorization: Bearer <token>` header.
-- **Refresh token:** Long-lived (7 days). Stored in `refresh_tokens` DB table. Single-use with rotation (old token invalidated on each refresh).
-- **Revocation:** Delete refresh token row. Required for cashier shift close / forced logout.
-- **Logout:** Server deletes the refresh token; client discards the access token.
-- **`JWT_SECRET`:** Cryptographically random string, min 32 bytes, loaded from `.env` only.
+- **Access token:** Short-lived JWT (15 min). Sent as `Authorization: Bearer <token>` header. Stored in memory only on the frontend — never in localStorage.
+- **Refresh token:** Long-lived (7 days). Signed with `JWT_REFRESH_SECRET` (separate from access token — DEC-028). Sent as an `HttpOnly` cookie scoped to `Path=/api/v1/auth`. Also tracked in the `refresh_tokens` DB table with a SHA-256 hash (raw value never stored in DB).
+- **Single-use rotation:** On each `/auth/refresh` call, the old token DB record is deleted and a new token pair is issued.
+- **Revocation:** Delete refresh token row from DB. Used for forced logout on cashier shift close.
+- **Logout:** Server deletes the refresh token; cookie is cleared; client discards the access token from memory.
+- **`JWT_SECRET`:** Signs access tokens. Must be cryptographically random, min 32 bytes, from `.env` only. Startup fails in production if default value is detected.
+- **`JWT_REFRESH_SECRET`:** Signs refresh tokens. Different from `JWT_SECRET` — separate compromise domains.
+
+**Cookie settings for refresh token (DEC-025):**
+```
+HttpOnly: true
+Secure: true (production) / false (development)
+SameSite: Strict (production) / Lax (development)
+Path: /api/v1/auth
+MaxAge: 7 days
+```
 
 **Requirements:**
-- Passwords hashed with bcrypt (min 12 rounds — never stored plain)
-- Login endpoint must be rate-limited
+- Passwords hashed with bcrypt (12 rounds — never stored plain)
+- Login endpoint rate-limited: 10 req/min/IP (DEC-027)
 - No hardcoded credentials in code
-- Access tokens expire in 15 minutes (covers brief network gaps; refresh token handles longer sessions)
+- Access tokens expire in 15 minutes; refresh token handles session continuity
 
 ---
 
