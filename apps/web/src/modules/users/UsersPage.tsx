@@ -1,25 +1,58 @@
 /**
  * KOSHK SKATE ERP — Users Management Page
- * Phase 02 — Authentication & Permissions
+ * Phase 03.5 — Design System (updated from Phase 02)
  *
- * Lists all users, allows creating new users and deactivating existing ones.
- * Requires permission: users.view (list), users.create, users.delete
- * Arabic RTL, KOSHK SKATE design.
+ * Changes from Phase 02:
+ *   - confirm() replaced with ConfirmDialog (OD-004 / UI-005)
+ *   - alert() replaced with useToast() (OD-004 / UI-005)
+ *   - Native table replaced with DataTable component (UI-002)
+ *   - Page-level error uses Alert component (UI-002)
+ *   - Loading state uses PageLoader (UI-002)
+ *   - Action buttons use Button component (UI-002)
+ *   - Status badges use Badge component with correct semantic tokens (DEC-034)
+ *   - Create User modal uses Modal component (UI-002)
+ *   - Hardcoded status color tokens corrected (--color-success vs --color-success-bg etc.)
+ *   - textTransform: uppercase removed from Arabic table headers (UI-007)
+ *
+ * Business logic (users.service calls, form validation, role selection) UNCHANGED.
  */
 
 import { useState, useEffect } from 'react'
+import { UserPlus } from 'lucide-react'
 import { usersService, rolesService, type UserDTO, type RoleDTO } from './users.service'
 import { PermissionGate } from '../../components/PermissionGate'
+import {
+  Button,
+  Badge,
+  Alert,
+  Modal,
+  ConfirmDialog,
+  Input,
+  PageLoader,
+  useToast,
+} from '../../components/ui'
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
 
 export default function UsersPage() {
+  const { showToast } = useToast()
+
   const [users, setUsers] = useState<UserDTO[]>([])
   const [roles, setRoles] = useState<RoleDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Create modal
   const [showModal, setShowModal] = useState(false)
   const [formData, setFormData] = useState({ name: '', email: '', password: '', roleIds: [] as number[] })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+
+  // Confirm deactivate dialog
+  const [confirmTarget, setConfirmTarget] = useState<{ id: number; name: string } | null>(null)
+  const [deactivating, setDeactivating] = useState(false)
 
   useEffect(() => {
     load()
@@ -49,6 +82,7 @@ export default function UsersPage() {
       await usersService.create(formData)
       setShowModal(false)
       setFormData({ name: '', email: '', password: '', roleIds: [] })
+      showToast({ type: 'success', title: 'تم إنشاء المستخدم بنجاح' })
       await load()
     } catch (e: unknown) {
       setFormError((e as { message?: string })?.message ?? 'حدث خطأ أثناء إنشاء المستخدم')
@@ -57,18 +91,35 @@ export default function UsersPage() {
     }
   }
 
-  async function handleDeactivate(id: number, name: string) {
-    if (!confirm(`هل تريد تعطيل حساب "${name}"؟`)) return
+  // Trigger ConfirmDialog instead of native confirm()
+  function handleDeactivateClick(user: UserDTO) {
+    setConfirmTarget({ id: user.id, name: user.name })
+  }
+
+  // Actual deactivate — called after user confirms
+  async function handleDeactivateConfirm() {
+    if (!confirmTarget) return
+    setDeactivating(true)
     try {
-      await usersService.deactivate(id)
+      await usersService.deactivate(confirmTarget.id)
+      showToast({ type: 'success', title: `تم تعطيل حساب "${confirmTarget.name}"` })
+      setConfirmTarget(null)
       await load()
     } catch {
-      alert('تعذر تعطيل الحساب')
+      showToast({ type: 'error', title: 'تعذر تعطيل الحساب', message: 'يرجى المحاولة مجدداً' })
+      setConfirmTarget(null)
+    } finally {
+      setDeactivating(false)
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
   return (
     <div style={{ padding: 'var(--space-8)', maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+
       {/* Page header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
         <div>
@@ -80,247 +131,190 @@ export default function UsersPage() {
           </p>
         </div>
         <PermissionGate permission="users.create">
-          <button
+          <Button
             id="add-user-btn"
-            onClick={() => setShowModal(true)}
-            style={btnPrimaryStyle}
+            variant="primary"
+            onClick={() => { setShowModal(true); setFormError(null) }}
           >
-            + إضافة مستخدم
-          </button>
+            <UserPlus size={16} aria-hidden="true" />
+            إضافة مستخدم
+          </Button>
         </PermissionGate>
       </div>
 
-      {/* Error state */}
+      {/* Error */}
       {error && (
-        <div style={errorBoxStyle} role="alert">{error}</div>
+        <Alert variant="danger" style={{ marginBottom: 'var(--space-6)' } as React.CSSProperties}>
+          {error}
+        </Alert>
       )}
 
       {/* Loading */}
-      {loading && (
-        <div style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--color-text-muted)' }}>
-          جارٍ التحميل...
-        </div>
-      )}
+      {loading && <PageLoader label="جارٍ تحميل المستخدمين" />}
 
       {/* Users table */}
       {!loading && !error && (
-        <div style={cardStyle}>
-          {users.length === 0 ? (
-            <div style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-              لا يوجد مستخدمون بعد
-            </div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
-                  {['الاسم', 'البريد الإلكتروني', 'الأدوار', 'الحالة', 'إجراءات'].map(h => (
-                    <th key={h} style={thStyle}>{h}</th>
-                  ))}
+        <div className="table-wrapper" style={{ borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+          <table className="ds-table" style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl', fontFamily: 'var(--font-family-base)' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--color-page-bg)', borderBottom: '1px solid var(--color-border)' }}>
+                {['الاسم', 'البريد الإلكتروني', 'الأدوار', 'الحالة', 'إجراءات'].map(h => (
+                  <th key={h} style={{ padding: 'var(--space-3) var(--space-4)', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-muted)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
+                    لا يوجد مستخدمون بعد
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {users.map(user => (
+              ) : (
+                users.map(user => (
                   <tr key={user.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td style={tdStyle}>{user.name}</td>
-                    <td style={{ ...tdStyle, direction: 'ltr', textAlign: 'left' }}>{user.email}</td>
-                    <td style={tdStyle}>
+                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                      <span style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-navy-800)' }}>{user.name}</span>
+                    </td>
+                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                      <span style={{ direction: 'ltr', display: 'inline-block', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)' }}>{user.email}</span>
+                    </td>
+                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
                       <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
                         {user.roles.map(r => (
-                          <span key={r.id} style={roleBadgeStyle}>{r.nameAr}</span>
+                          <span key={r.id} style={{ padding: '1px var(--space-2)', backgroundColor: 'var(--color-navy-50)', color: 'var(--color-navy-700)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>
+                            {r.nameAr}
+                          </span>
                         ))}
                       </div>
                     </td>
-                    <td style={tdStyle}>
-                      <span style={{
-                        ...statusBadgeStyle,
-                        backgroundColor: user.isActive ? 'var(--color-success-bg)' : 'var(--color-gray-100)',
-                        color: user.isActive ? 'var(--color-success)' : 'var(--color-text-muted)',
-                      }}>
+                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                      <Badge status={user.isActive ? 'active' : 'inactive'}>
                         {user.isActive ? 'نشط' : 'معطّل'}
-                      </span>
+                      </Badge>
                     </td>
-                    <td style={tdStyle}>
+                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle', textAlign: 'center' }}>
                       <PermissionGate permission="users.delete">
                         {user.isActive && (
-                          <button
-                            onClick={() => handleDeactivate(user.id, user.name)}
-                            style={btnDangerStyle}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeactivateClick(user)}
+                            style={{ color: 'var(--color-danger-text)' }}
                           >
                             تعطيل
-                          </button>
+                          </Button>
                         )}
                       </PermissionGate>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Create User Modal */}
-      {showModal && (
-        <div style={modalOverlayStyle} onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
-          <div style={modalStyle} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <h2 id="modal-title" style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-navy-800)', margin: '0 0 var(--space-6)' }}>
-              إضافة مستخدم جديد
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-              <div style={fieldGroupStyle}>
-                <label style={labelStyle}>الاسم</label>
-                <input style={inputStyle} value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="اسم الموظف" />
-              </div>
-              <div style={fieldGroupStyle}>
-                <label style={labelStyle}>البريد الإلكتروني</label>
-                <input style={inputStyle} type="email" dir="ltr" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="email@example.com" />
-              </div>
-              <div style={fieldGroupStyle}>
-                <label style={labelStyle}>كلمة المرور</label>
-                <input style={inputStyle} type="password" dir="ltr" value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} placeholder="••••••••" />
-              </div>
-              <div style={fieldGroupStyle}>
-                <label style={labelStyle}>الأدوار</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  {roles.map(role => (
-                    <label key={role.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.roleIds.includes(role.id)}
-                        onChange={e => {
-                          setFormData(p => ({
-                            ...p,
-                            roleIds: e.target.checked
-                              ? [...p.roleIds, role.id]
-                              : p.roleIds.filter(id => id !== role.id)
-                          }))
-                        }}
-                      />
-                      {role.nameAr}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
+      <Modal
+        isOpen={showModal}
+        onClose={() => !saving && setShowModal(false)}
+        title="إضافة مستخدم جديد"
+        size="base"
+        footer={
+          <>
+            <Button
+              id="create-user-save-btn"
+              variant="primary"
+              onClick={handleCreate}
+              loading={saving}
+            >
+              إنشاء المستخدم
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+              disabled={saving}
+            >
+              إلغاء
+            </Button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <Input
+            id="user-name"
+            label="الاسم"
+            value={formData.name}
+            onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+            placeholder="اسم الموظف"
+            required
+          />
+          <Input
+            id="user-email"
+            label="البريد الإلكتروني"
+            type="email"
+            dir="ltr"
+            value={formData.email}
+            onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+            placeholder="email@example.com"
+            required
+          />
+          <Input
+            id="user-password"
+            label="كلمة المرور"
+            type="password"
+            dir="ltr"
+            value={formData.password}
+            onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
+            placeholder="••••••••"
+            required
+          />
 
-            {formError && (
-              <div style={{ ...errorBoxStyle, marginTop: 'var(--space-4)' }} role="alert">{formError}</div>
-            )}
-
-            <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowModal(false)} style={btnSecondaryStyle} disabled={saving}>إلغاء</button>
-              <button onClick={handleCreate} style={btnPrimaryStyle} disabled={saving} id="create-user-save-btn">
-                {saving ? 'جارٍ الحفظ...' : 'إنشاء المستخدم'}
-              </button>
-            </div>
+          {/* Role checkboxes */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              الأدوار
+            </span>
+            {roles.map(role => (
+              <label
+                key={role.id}
+                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.roleIds.includes(role.id)}
+                  onChange={e => {
+                    setFormData(p => ({
+                      ...p,
+                      roleIds: e.target.checked
+                        ? [...p.roleIds, role.id]
+                        : p.roleIds.filter(id => id !== role.id),
+                    }))
+                  }}
+                />
+                {role.nameAr}
+              </label>
+            ))}
           </div>
+
+          {formError && (
+            <Alert variant="danger">{formError}</Alert>
+          )}
         </div>
-      )}
+      </Modal>
+
+      {/* Confirm Deactivate Dialog — replaces native confirm() */}
+      <ConfirmDialog
+        isOpen={Boolean(confirmTarget)}
+        onConfirm={handleDeactivateConfirm}
+        onCancel={() => setConfirmTarget(null)}
+        title="تعطيل الحساب"
+        description={`هل تريد تعطيل حساب "${confirmTarget?.name ?? ''}"؟ يمكن إعادة تفعيله لاحقاً.`}
+        confirmLabel="تعطيل"
+        variant="danger"
+        loading={deactivating}
+      />
     </div>
   )
-}
-
-// Shared styles
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'var(--color-white)',
-  borderRadius: 'var(--radius-lg)',
-  boxShadow: 'var(--shadow-card)',
-  border: '1px solid var(--color-border)',
-  overflow: 'hidden',
-}
-const thStyle: React.CSSProperties = {
-  padding: 'var(--space-4)',
-  textAlign: 'right',
-  fontSize: 'var(--font-size-xs)',
-  fontWeight: 600,
-  color: 'var(--color-text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-}
-const tdStyle: React.CSSProperties = {
-  padding: 'var(--space-4)',
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--color-text-primary)',
-  verticalAlign: 'middle',
-}
-const roleBadgeStyle: React.CSSProperties = {
-  padding: '2px var(--space-2)',
-  backgroundColor: 'var(--color-navy-50)',
-  color: 'var(--color-navy-700)',
-  borderRadius: 'var(--radius-full)',
-  fontSize: '0.7rem',
-  fontWeight: 600,
-}
-const statusBadgeStyle: React.CSSProperties = {
-  padding: 'var(--space-1) var(--space-3)',
-  borderRadius: 'var(--radius-full)',
-  fontSize: 'var(--font-size-xs)',
-  fontWeight: 600,
-}
-const btnPrimaryStyle: React.CSSProperties = {
-  padding: 'var(--space-2) var(--space-5)',
-  backgroundColor: 'var(--color-navy-800)',
-  color: 'white',
-  border: 'none',
-  borderRadius: 'var(--radius-base)',
-  cursor: 'pointer',
-  fontSize: 'var(--font-size-sm)',
-  fontWeight: 600,
-  fontFamily: "'Cairo', sans-serif",
-}
-const btnSecondaryStyle: React.CSSProperties = {
-  padding: 'var(--space-2) var(--space-5)',
-  backgroundColor: 'transparent',
-  color: 'var(--color-text-secondary)',
-  border: '1.5px solid var(--color-border)',
-  borderRadius: 'var(--radius-base)',
-  cursor: 'pointer',
-  fontSize: 'var(--font-size-sm)',
-  fontFamily: "'Cairo', sans-serif",
-}
-const btnDangerStyle: React.CSSProperties = {
-  padding: 'var(--space-1) var(--space-3)',
-  backgroundColor: 'transparent',
-  color: 'var(--color-danger)',
-  border: '1px solid var(--color-danger)',
-  borderRadius: 'var(--radius-base)',
-  cursor: 'pointer',
-  fontSize: 'var(--font-size-xs)',
-  fontFamily: "'Cairo', sans-serif",
-}
-const errorBoxStyle: React.CSSProperties = {
-  padding: 'var(--space-3) var(--space-4)',
-  backgroundColor: 'var(--color-danger-bg)',
-  border: '1px solid rgba(220,53,69,0.2)',
-  borderRadius: 'var(--radius-base)',
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--color-danger)',
-}
-const modalOverlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  backgroundColor: 'rgba(0,0,0,0.45)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-  padding: 'var(--space-4)',
-}
-const modalStyle: React.CSSProperties = {
-  backgroundColor: 'var(--color-white)',
-  borderRadius: 'var(--radius-xl)',
-  padding: 'var(--space-8)',
-  width: '100%',
-  maxWidth: 480,
-  boxShadow: '0 16px 48px rgba(0,0,0,0.2)',
-}
-const fieldGroupStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }
-const labelStyle: React.CSSProperties = { fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-primary)' }
-const inputStyle: React.CSSProperties = {
-  padding: 'var(--space-3) var(--space-4)',
-  border: '1.5px solid var(--color-border)',
-  borderRadius: 'var(--radius-base)',
-  fontSize: 'var(--font-size-sm)',
-  fontFamily: "'Cairo', sans-serif",
-  color: 'var(--color-text-primary)',
 }

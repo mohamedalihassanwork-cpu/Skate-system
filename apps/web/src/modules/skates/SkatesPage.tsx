@@ -17,10 +17,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { Package, RefreshCw, Plus, Pencil } from 'lucide-react'
 import {
   skatesService,
   STATUS_LABELS,
-  STATUS_COLORS,
   CONDITION_LABELS,
   ADMIN_SETTABLE_STATUSES,
   type SkateDTO,
@@ -30,66 +30,40 @@ import {
   type SkateCondition,
 } from './skates.service'
 import { PermissionGate } from '../../components/PermissionGate'
+import {
+  Badge,
+  Button,
+  Alert,
+  Modal,
+  EmptyState,
+  PageLoader,
+  SearchBar,
+  type BadgeStatus,
+} from '../../components/ui'
 
 // ---------------------------------------------------------------------------
-// Status badge component
+// Status badge — uses shared Badge with status → semantic color mapping
 // ---------------------------------------------------------------------------
 
 function StatusBadge({ status }: { status: SkateStatus }) {
-  const colors = STATUS_COLORS[status]
+  // Map skate statuses to badge semantic variants
+  const statusToBadge: Record<SkateStatus, BadgeStatus> = {
+    available:   'available',
+    rented:      'rented',
+    reserved:    'reserved',
+    maintenance: 'maintenance',
+    damaged:     'damaged',
+    lost:        'lost',
+  }
   return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '2px 10px',
-      borderRadius: 'var(--radius-full)',
-      fontSize: 'var(--font-size-xs)',
-      fontWeight: 700,
-      backgroundColor: colors.bg,
-      color: colors.text,
-      whiteSpace: 'nowrap',
-    }}>
+    <Badge status={statusToBadge[status]}>
       {STATUS_LABELS[status]}
-    </span>
+    </Badge>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Modal backdrop + container
-// ---------------------------------------------------------------------------
-
-function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      style={{
-        position: 'fixed', inset: 0,
-        backgroundColor: 'rgba(14,25,41,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 1000,
-        padding: 'var(--space-4)',
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div style={{
-        backgroundColor: 'var(--color-white)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-xl)',
-        width: '100%',
-        maxWidth: 560,
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        direction: 'rtl',
-      }}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Form field helpers
+// Form field helper (local — for skates-specific complex form fields)
 // ---------------------------------------------------------------------------
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -161,21 +135,19 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
   }
 
   return (
-    <Modal onClose={onClose}>
-      <div style={{ padding: 'var(--space-6)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-navy-800)' }}>
-            إضافة زلاجة جديدة
-          </h2>
-          <button
-            onClick={onClose}
-            id="create-skate-close-btn"
-            aria-label="إغلاق"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--color-text-muted)' }}
-          >×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} noValidate>
+    <Modal isOpen onClose={onClose} title="إضافة زلاجة جديدة" size="base"
+      footer={
+        <>
+          <Button type="submit" form="create-skate-form" variant="primary" loading={saving} id="create-skate-submit-btn">
+            إضافة الزلاجة
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose} id="create-skate-cancel-btn">
+            إلغاء
+          </Button>
+        </>
+      }
+    >
+      <form id="create-skate-form" onSubmit={handleSubmit} noValidate>
           <Field label="رمز الزلاجة (اختياري — يُولَّد تلقائياً إذا تُرك فارغاً)">
             <input
               id="create-skate-code"
@@ -274,59 +246,8 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
             />
           </Field>
 
-          {error && (
-            <div role="alert" style={{
-              padding: 'var(--space-3)',
-              backgroundColor: 'var(--color-danger-bg)',
-              color: 'var(--color-danger)',
-              borderRadius: 'var(--radius-base)',
-              fontSize: 'var(--font-size-sm)',
-              marginBottom: 'var(--space-4)',
-            }}>
-              {error}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-2)' }}>
-            <button
-              type="button"
-              id="create-skate-cancel-btn"
-              onClick={onClose}
-              style={{
-                padding: 'var(--space-2) var(--space-6)',
-                borderRadius: 'var(--radius-base)',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-white)',
-                color: 'var(--color-text-secondary)',
-                fontFamily: "'Cairo', sans-serif",
-                cursor: 'pointer',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 600,
-              }}
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              id="create-skate-submit-btn"
-              disabled={saving}
-              style={{
-                padding: 'var(--space-2) var(--space-6)',
-                borderRadius: 'var(--radius-base)',
-                border: 'none',
-                backgroundColor: saving ? 'var(--color-navy-300)' : 'var(--color-navy-800)',
-                color: 'var(--color-white)',
-                fontFamily: "'Cairo', sans-serif",
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 700,
-              }}
-            >
-              {saving ? 'جارٍ الحفظ...' : 'إضافة الزلاجة'}
-            </button>
-          </div>
-        </form>
-      </div>
+          {error && <Alert variant="danger" style={{ marginBottom: 'var(--space-4)' } as React.CSSProperties}>{error}</Alert>}
+      </form>
     </Modal>
   )
 }
@@ -384,26 +305,20 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
     : ADMIN_SETTABLE_STATUSES
 
   return (
-    <Modal onClose={onClose}>
-      <div style={{ padding: 'var(--space-6)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-navy-800)' }}>
-              تعديل الزلاجة
-            </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
-              {skate.skateCode}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            id="edit-skate-close-btn"
-            aria-label="إغلاق"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--color-text-muted)' }}
-          >×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} noValidate>
+    <Modal isOpen onClose={onClose} title="تعديل الزلاجة" size="base"
+      footer={
+        <>
+          <Button type="submit" form="edit-skate-form" variant="primary" loading={saving} id="edit-skate-submit-btn" style={{ backgroundColor: 'var(--color-gold-500)', color: 'var(--color-navy-900)' } as React.CSSProperties}>
+            حفظ التعديلات
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose} id="edit-skate-cancel-btn">
+            إلغاء
+          </Button>
+        </>
+      }
+    >
+      <p style={{ marginTop: 0, marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>{skate.skateCode}</p>
+      <form id="edit-skate-form" onSubmit={handleSubmit} noValidate>
           <Field label="المقاس *">
             <input id="edit-skate-size" style={inputStyle} type="text" value={form.size ?? ''} onChange={e => set('size', e.target.value)} required />
           </Field>
@@ -468,22 +383,8 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
             </label>
           </div>
 
-          {error && (
-            <div role="alert" style={{ padding: 'var(--space-3)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: 'var(--radius-base)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-4)' }}>
-              {error}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
-            <button type="button" id="edit-skate-cancel-btn" onClick={onClose} style={{ padding: 'var(--space-2) var(--space-6)', borderRadius: 'var(--radius-base)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-white)', color: 'var(--color-text-secondary)', fontFamily: "'Cairo', sans-serif", cursor: 'pointer', fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
-              إلغاء
-            </button>
-            <button type="submit" id="edit-skate-submit-btn" disabled={saving} style={{ padding: 'var(--space-2) var(--space-6)', borderRadius: 'var(--radius-base)', border: 'none', backgroundColor: saving ? 'var(--color-navy-300)' : 'var(--color-gold-400)', color: saving ? 'white' : 'var(--color-navy-900)', fontFamily: "'Cairo', sans-serif", cursor: saving ? 'not-allowed' : 'pointer', fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>
-              {saving ? 'جارٍ الحفظ...' : 'حفظ التعديلات'}
-            </button>
-          </div>
-        </form>
-      </div>
+          {error && <Alert variant="danger" style={{ marginBottom: 'var(--space-4)' } as React.CSSProperties}>{error}</Alert>}
+      </form>
     </Modal>
   )
 }
@@ -552,26 +453,14 @@ export default function SkatesPage() {
           </p>
         </div>
         <PermissionGate permission="skates.create">
-          <button
+          <Button
             id="add-skate-btn"
+            variant="primary"
             onClick={() => setShowCreate(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
-              padding: 'var(--space-3) var(--space-5)',
-              backgroundColor: 'var(--color-navy-800)',
-              color: 'var(--color-white)',
-              border: 'none',
-              borderRadius: 'var(--radius-base)',
-              fontFamily: "'Cairo', sans-serif",
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              transition: 'background-color var(--transition-fast)',
-            }}
           >
-            <span>+</span>
-            <span>إضافة زلاجة</span>
-          </button>
+            <Plus size={16} aria-hidden="true" />
+            إضافة زلاجة
+          </Button>
         </PermissionGate>
       </div>
 
@@ -581,23 +470,12 @@ export default function SkatesPage() {
         flexWrap: 'wrap', alignItems: 'center',
       }}>
         {/* Search */}
-        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 320 }}>
-          <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }}>
-            🔍
-          </span>
-          <input
-            id="skates-search"
-            type="text"
-            placeholder="بحث برمز أو مقاس..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{
-              ...inputStyle,
-              paddingRight: 'var(--space-8)',
-              border: '1px solid var(--color-border)',
-            }}
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="بحث برمز أو مقاس..."
+          onClear={() => setSearch('')}
+        />
 
         {/* Status filter */}
         <select
@@ -612,64 +490,38 @@ export default function SkatesPage() {
         </select>
 
         {/* Refresh */}
-        <button
+        <Button
           id="skates-refresh-btn"
+          variant="secondary"
+          size="base"
           onClick={load}
-          title="تحديث القائمة"
-          style={{
-            padding: 'var(--space-2) var(--space-3)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-base)',
-            backgroundColor: 'var(--color-white)',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            color: 'var(--color-text-muted)',
-          }}
+          aria-label="تحديث القائمة"
         >
-          🔄
-        </button>
+          <RefreshCw size={16} aria-hidden="true" />
+        </Button>
       </div>
 
       {/* Loading state */}
-      {loading && (
-        <div style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--color-text-muted)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: 'var(--space-4)' }}>⏳</div>
-          <p>جارٍ التحميل...</p>
-        </div>
-      )}
+      {loading && <PageLoader label="جارٍ تحميل الزلاجات" />}
 
       {/* Error state */}
       {!loading && error && (
-        <div role="alert" style={{
-          padding: 'var(--space-6)',
-          backgroundColor: 'var(--color-danger-bg)',
-          borderRadius: 'var(--radius-lg)',
-          textAlign: 'center',
-        }}>
-          <p style={{ color: 'var(--color-danger)', fontWeight: 600, margin: '0 0 var(--space-3)' }}>{error}</p>
-          <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--color-navy-600)', cursor: 'pointer', textDecoration: 'underline', fontFamily: "'Cairo', sans-serif" }}>
-            إعادة المحاولة
-          </button>
-        </div>
+        <Alert variant="danger">{error}</Alert>
       )}
 
       {/* Empty state */}
       {!loading && !error && skatesList.length === 0 && (
         <div style={{
-          padding: 'var(--space-12)',
-          textAlign: 'center',
           backgroundColor: 'var(--color-white)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-border)',
           boxShadow: 'var(--shadow-card)',
         }}>
-          <p style={{ fontSize: '2.5rem', margin: '0 0 var(--space-4)' }}>⛸️</p>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-navy-800)', margin: '0 0 var(--space-2)' }}>
-            لا توجد زلاجات
-          </h2>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)', margin: 0 }}>
-            {search || statusFilter !== 'all' ? 'لا توجد نتائج تطابق معايير البحث' : 'لم يتم إضافة أي زلاجات بعد'}
-          </p>
+          <EmptyState
+            icon={Package}
+            title="لا توجد زلاجات"
+            description={search || statusFilter !== 'all' ? 'لا توجد نتائج تطابق معايير البحث' : 'لم يتم إضافة أي زلاجات بعد'}
+          />
         </div>
       )}
 
@@ -715,10 +567,10 @@ export default function SkatesPage() {
 function SkateCard({ skate, onEdit }: { skate: SkateDTO; onEdit: () => void }) {
   return (
     <div style={{
-      backgroundColor: skate.isActive ? 'var(--color-white)' : 'var(--color-gray-50)',
+      backgroundColor: skate.isActive ? 'var(--color-white)' : 'var(--color-page-bg)',
       borderRadius: 'var(--radius-lg)',
       boxShadow: 'var(--shadow-card)',
-      border: `1px solid ${skate.isActive ? 'var(--color-border)' : 'var(--color-gray-200)'}`,
+      border: `1px solid ${skate.isActive ? 'var(--color-border)' : 'var(--color-border)'}`,
       padding: 'var(--space-5)',
       display: 'flex',
       flexDirection: 'column',
@@ -785,28 +637,17 @@ function SkateCard({ skate, onEdit }: { skate: SkateDTO; onEdit: () => void }) {
 
       {/* Action */}
       <PermissionGate permission="skates.edit">
-        <button
+        <Button
           id={`edit-skate-${skate.id}-btn`}
+          variant="secondary"
+          size="sm"
           onClick={onEdit}
-          style={{
-            marginTop: 'auto',
-            padding: 'var(--space-2) var(--space-4)',
-            borderRadius: 'var(--radius-base)',
-            border: '1px solid var(--color-border)',
-            backgroundColor: 'var(--color-white)',
-            color: 'var(--color-navy-700)',
-            fontFamily: "'Cairo', sans-serif",
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: 600,
-            cursor: 'pointer',
-            width: '100%',
-            transition: 'background-color var(--transition-fast)',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-navy-50)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--color-white)')}
+          fullWidth
+          style={{ marginTop: 'auto' } as React.CSSProperties}
         >
+          <Pencil size={14} aria-hidden="true" />
           تعديل
-        </button>
+        </Button>
       </PermissionGate>
     </div>
   )
