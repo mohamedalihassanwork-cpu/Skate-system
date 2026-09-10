@@ -1,7 +1,8 @@
 # Source of Truth — KOSHK SKATE ERP
 
-**Version:** 1.0  
-**Status:** ACTIVE
+**Version:** 2.0  
+**Status:** ACTIVE  
+**Last updated:** 2026-09-10 (Phase 03.5 Stage 1 — design documents registered, document statuses updated)
 
 ---
 
@@ -16,6 +17,7 @@ When information conflicts, resolve using this priority order. Higher number = l
 | 3 | Master Business/Product Specification | `Skate_Rental_ERP_Master_Business_Product_Specification.md` | Business logic, workflows, rules |
 | 4 | Approved Technical Architecture | `docs/architecture/TECHNICAL_ARCHITECTURE.md` | Technical implementation decisions |
 | 5 | Approved Visual Design Reference | `KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md` | Visual language, UI DNA |
+| 5.1 | Approved Design System | `docs/design/DESIGN_SYSTEM.md` | Authoritative token + component + pattern reference (Phase 03.5+) |
 | 6 | Approved Phase Specification | `docs/phases/PHASE_XX_*.md` | Phase-specific scope |
 | 7 | Existing verified implementation | Source code + tests | What actually exists and works |
 | 8 | AI assumption | (none) | Lowest authority — must never override higher sources |
@@ -47,33 +49,59 @@ If two sources at the same priority level conflict:
 
 | Document | Location | Status |
 |---|---|---|
-| AI Agent Rules | `docs/00-governance/AI_AGENT_RULES.md` | ACTIVE |
-| Source of Truth | `docs/00-governance/SOURCE_OF_TRUTH.md` | ACTIVE |
-| Definition of Done | `docs/00-governance/DEFINITION_OF_DONE.md` | ACTIVE |
+| AI Agent Rules | `docs/00-governance/AI_AGENT_RULES.md` | ACTIVE (v2.0 — UI rules added Phase 03.5) |
+| Source of Truth | `docs/00-governance/SOURCE_OF_TRUTH.md` | ACTIVE (v2.0 — this file) |
+| Definition of Done | `docs/00-governance/DEFINITION_OF_DONE.md` | ACTIVE (v2.0 — UI/UX DoD expanded Phase 03.5) |
 | Change Request Process | `docs/00-governance/CHANGE_REQUEST_PROCESS.md` | ACTIVE |
 | Documentation Rules | `docs/00-governance/DOCUMENTATION_RULES.md` | ACTIVE |
+
+### Design Documents (Phase 03.5+)
+
+| Document | Location | Status |
+|---|---|---|
+| Visual Design Reference (source) | `KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md` | ACTIVE — primary visual reference |
+| Visual Design Reference (docs copy) | `docs/design/VISUAL_DESIGN_REFERENCE.md` | ACTIVE — same content |
+| Design System | `docs/design/DESIGN_SYSTEM.md` | ACTIVE (v1.0 — created Phase 03.5 Stage 1) |
+| Component Library | `docs/design/COMPONENT_LIBRARY.md` | ACTIVE (v1.0 — created Phase 03.5 Stage 1) |
 
 ### Architecture Documents
 
 | Document | Location | Status |
 |---|---|---|
-| Technical Architecture | `docs/architecture/TECHNICAL_ARCHITECTURE.md` | INITIAL — no code exists |
-| Database Architecture | `docs/architecture/DATABASE_ARCHITECTURE.md` | PLANNED |
-| API Architecture | `docs/architecture/API_ARCHITECTURE.md` | PLANNED |
-| Frontend Architecture | `docs/architecture/FRONTEND_ARCHITECTURE.md` | PLANNED |
-| Backend Architecture | `docs/architecture/BACKEND_ARCHITECTURE.md` | PLANNED |
-| Security Architecture | `docs/architecture/SECURITY_ARCHITECTURE.md` | PLANNED |
-| Deployment Architecture | `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` | PLANNED |
+| Technical Architecture | `docs/architecture/TECHNICAL_ARCHITECTURE.md` | ACTIVE |
+| Database Architecture | `docs/architecture/DATABASE_ARCHITECTURE.md` | ACTIVE |
+| API Architecture | `docs/architecture/API_ARCHITECTURE.md` | ACTIVE |
+| Frontend Architecture | `docs/architecture/FRONTEND_ARCHITECTURE.md` | ACTIVE (partially implemented — Phase 03.5 will expand) |
+| Backend Architecture | `docs/architecture/BACKEND_ARCHITECTURE.md` | ACTIVE |
+| Security Architecture | `docs/architecture/SECURITY_ARCHITECTURE.md` | ACTIVE |
+| Deployment Architecture | `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` | ACTIVE |
 
 ### Operational Documents
 
 | Document | Location | Status |
 |---|---|---|
-| Project Map | `docs/PROJECT_MAP.md` | INITIAL |
-| Project State | `docs/PROJECT_STATE.md` | INITIAL |
-| Decision Log | `docs/decisions/DECISION_LOG.md` | INITIAL |
-| Changelog | `docs/CHANGELOG.md` | INITIAL |
-| Release History | `docs/RELEASE_HISTORY.md` | INITIAL |
+| Project Map | `docs/PROJECT_MAP.md` | ACTIVE (v1.5 — Phase 03.5) |
+| Project State | `docs/PROJECT_STATE.md` | ACTIVE (v2.7 — Phase 03.5) |
+| Decision Log | `docs/decisions/DECISION_LOG.md` | ACTIVE (DEC-034 through DEC-040 added Phase 03.5) |
+| Changelog | `docs/CHANGELOG.md` | ACTIVE |
+| Release History | `docs/RELEASE_HISTORY.md` | ACTIVE |
+
+---
+
+## Documentation-First Development
+
+All AI agents must read and understand the most relevant documentation before making changes.
+
+**This is Rule 16 in `AI_AGENT_RULES.md`.** It is reproduced here for emphasis:
+
+Before implementation, the AI agent MUST:
+1. Read the minimum relevant governance, product, architecture, design, and module documentation
+2. Identify and reconcile documentation conflicts
+3. Record required owner decisions
+4. Update documentation before writing implementation code
+5. Obtain owner approval where required
+
+Documentation is NOT merely a post-implementation activity.
 
 ---
 
@@ -101,4 +129,4 @@ The following business rules from the Master Specification are inviolable. They 
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-10 (Phase 03.5 Stage 1 — design documents registered, statuses corrected, DOCUMENTATION_FIRST principle added)*

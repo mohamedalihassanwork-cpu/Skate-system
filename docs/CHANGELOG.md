@@ -8,6 +8,58 @@
 
 ---
 
+## [Phase 03.5 Stage 1] — 2026-09-10 — Documentation & Governance Alignment
+
+### Purpose
+Establish the documentation and governance foundation for Phase 03.5 (ERP Design System & Interface Standardization). No application code was modified.
+
+### Created — New Documentation
+
+- **`docs/design/DESIGN_SYSTEM.md`** — Authoritative design system reference (v1.0): approved color tokens (brand + semantic), typography rules, spacing system, border radius, shadows, z-index, motion/animation rules, icon system (Lucide React), RTL rules, accessibility requirements, page anatomy, all component standards (17 components), sidebar behavior (expanded/collapsed/mobile), login layout, responsive breakpoints, visual density, UI governance rules UI-001 through UI-010, anti-pattern catalogue, new-screen checklist
+- **`docs/design/COMPONENT_LIBRARY.md`** — Developer reference (v1.0): per-component specifications for all 17 shared UI components — purpose, expected props, important states, RTL considerations, accessibility expectations, and reuse rules
+- **`docs/phases/PHASE_035_UI_DESIGN_SYSTEM.md`** — Complete phase specification: all four stages defined (documentation / implementation / testing / finalization), owner decisions, in/out of scope, deliverables, Definition of Done (42 checklist items), risk matrix, dependencies
+
+### Updated — Governance Documents
+
+- **`docs/00-governance/AI_AGENT_RULES.md`** (v1.0 → v2.0) — Added Rule 16 (Documentation-First Development), Rule 17 (Future Phase Inheritance), and all UI governance rules UI-001 through UI-010 (OD-004 APPROVED)
+- **`docs/00-governance/DEFINITION_OF_DONE.md`** (v1.0 → v2.0) — UI/UX DoD section expanded with 15 design system compliance items: Lucide icons, token-only colors, shared components, no native dialogs, no inline style objects, Arabic text compliance, touch target minimums, and focus ring verification
+- **`docs/00-governance/SOURCE_OF_TRUTH.md`** (v1.0 → v2.0) — Updated priority hierarchy to include `docs/design/DESIGN_SYSTEM.md` (priority 5.1), added Design Documents section to document register, corrected all architecture document statuses from INITIAL/PLANNED to ACTIVE, corrected operational document statuses, added Documentation-First Development section
+
+### Updated — Operational Documents
+
+- **`docs/PROJECT_STATE.md`** (v2.6 → v2.7) — Current phase updated to Phase 03.5 Stage 1; Phase 03.5 row added to phase table; documentation status table updated with all Phase 03.5 docs; design docs section added
+- **`docs/PROJECT_MAP.md`** (v1.4 → v1.5) — Design directory entries added; component library paths planned; Phase 035 spec registered; note updated to reflect Phase 03 FINAL GATE PASSED and Phase 03.5 Stage 1 COMPLETE
+- **`docs/decisions/DECISION_LOG.md`** — DEC-034 through DEC-040 recorded:
+  - DEC-034: Semantic color tokens (OD-001)
+  - DEC-035: Login page split-screen layout (OD-002)
+  - DEC-036: Lucide React icon library (OD-003)
+  - DEC-037: UI governance rules UI-001 through UI-010 (OD-004)
+  - DEC-038: Sidebar expanded/collapsed/mobile behavior (OD-005)
+  - DEC-039: Documentation-First Development lifecycle (governance)
+  - DEC-040: Future phase inheritance rules (governance)
+
+### Decisions Recorded
+
+- **DEC-034** — Semantic color system: success `#58C89A`, warning `#F3B735`, danger `#ED4547`, neutral `#EEF1F5` — ACTIVE
+- **DEC-035** — Login split-screen desktop + centered mobile — ACTIVE
+- **DEC-036** — Lucide React as sole icon library — ACTIVE
+- **DEC-037** — UI-001 through UI-010 governance rules — ACTIVE
+- **DEC-038** — Sidebar: expanded + collapsible desktop; drawer mobile — ACTIVE
+- **DEC-039** — Documentation-First Development lifecycle — ACTIVE
+- **DEC-040** — Future phase inheritance — ACTIVE
+
+### Verification
+
+- No application source code was modified (confirmed)
+- No database migrations were created (confirmed)
+- No tests were modified (confirmed)
+- No API behavior was changed (confirmed)
+- All documentation files reviewed for internal consistency
+
+### Stage Status
+
+Stage 1: COMPLETE — awaiting owner review and approval to begin Stage 2 (Implementation)
+
 ## [v0.3.0 — FINAL GATE PASSED ✅] — 2026-09-10 — Phase 03: Skates / Asset Management
 
 **Commit:** `f12c5b72cdb87a2a34866c252ce63b864b7e8fdc`

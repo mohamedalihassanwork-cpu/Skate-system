@@ -1,8 +1,9 @@
 # Definition of Done — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Status:** ACTIVE  
-**Applies to:** Every feature, fix, or meaningful change
+**Applies to:** Every feature, fix, or meaningful change  
+**Last updated:** 2026-09-10 (Phase 03.5 Stage 1 — UI/UX DoD expanded)
 
 ---
 
@@ -38,11 +39,29 @@ Not most. **All applicable criteria.**
 - [ ] RTL layout is correct (not mirrored LTR)
 - [ ] Arabic text is used throughout (no English placeholders in user-facing areas)
 - [ ] Correct KOSHK SKATE visual design applied (navy/gold, correct fonts, cards, badges)
-- [ ] Responsive behavior is acceptable on desktop and mobile
-- [ ] Loading states are present for async operations
-- [ ] Empty states are present and informative
+- [ ] Responsive behavior is intentionally designed for desktop AND mobile
+- [ ] Loading states are present for async operations (LoadingSpinner or LoadingSkeleton)
+- [ ] Empty states are present and informative (EmptyState component)
 - [ ] No unrelated visual changes introduced
 - [ ] New screen looks like it belongs to the same product
+
+### Design System Compliance (Phase 03.5+ — Required for all new and migrated UI)
+
+- [ ] All icons are Lucide SVG — no emoji anywhere (UI-003)
+- [ ] All colors use approved design tokens from `design-system.css` — no hardcoded hex values (UI-001)
+- [ ] Shared Button component used for all interactive buttons (UI-002)
+- [ ] Shared Input / Select / Textarea used for all form fields (UI-002)
+- [ ] Shared Modal component used for all dialogs — no native `<dialog>` without full accessibility (UI-002)
+- [ ] Shared Badge component used for all status display (UI-002)
+- [ ] Shared DataTable component used for all tabular data (UI-002)
+- [ ] Shared EmptyState component used for all empty list / table / search results (UI-002)
+- [ ] Shared Toast system used for all success/error feedback (UI-005)
+- [ ] Shared ConfirmDialog used for all destructive action confirmations (UI-005)
+- [ ] No `confirm()`, `alert()`, or `prompt()` calls anywhere in the module (UI-005)
+- [ ] No inline `style={{}}` objects for structural/design properties (UI-007)
+- [ ] No `text-transform: uppercase` on Arabic text
+- [ ] Touch targets ≥ 44×44px for all interactive elements
+- [ ] Focus rings visible on keyboard navigation
 
 ---
 
@@ -129,4 +148,4 @@ Rental lifecycle operations (start, return, damage, maintenance) must additional
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-10 (Phase 03.5 Stage 1 — UI/UX DoD expanded with design system compliance requirements)*

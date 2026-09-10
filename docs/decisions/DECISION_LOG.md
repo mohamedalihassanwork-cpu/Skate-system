@@ -595,4 +595,238 @@ Note: DEC-007 remains active — a skate requiring maintenance cannot become `av
 
 ---
 
-*Last updated: 2026-09-10 (DEC-030 to DEC-033 updated — IMPL-001 to IMPL-004 resolved — Phase 03 fully specified) by AI Agent*
+### DEC-034
+
+**Date:** 2026-09-10 (Phase 03.5 OD-001 — owner approval)  
+**Category:** Design — Semantic Color System  
+**Decision:** The following semantic color tokens are APPROVED for implementation in `design-system.css`:
+
+Success (متاح / Available / Healthy):
+- `--color-success-500: #58C89A`
+- `--color-success-bg: #DDF6EA`
+- `--color-success-text: #159A69`
+
+Warning (تنبيه / Attention — same family as gold accent per VDR §2.2):
+- `--color-warning-500: #F3B735`
+- `--color-warning-bg: #FFF1C9`
+- `--color-warning-text: #C88B00`
+
+Danger (خطأ / Error / Destructive / متأخر):
+- `--color-danger-500: #ED4547`
+- `--color-danger-bg: #FCE0E1`
+- `--color-danger-text: #D83C40`
+
+Neutral (مفقود / Inactive — NEW, previously absent):
+- `--color-neutral-bg: #EEF1F5`
+- `--color-neutral-text: #657084`
+
+**Reason:** Existing semantic tokens in `design-system.css` diverged from the approved Visual Design Reference §2.2. Owner-approved correction and addition of missing neutral tokens.
+
+**Impact:**
+- `apps/web/src/styles/design-system.css` — update semantic color tokens (Phase 03.5 Stage 2)
+- All status badges using old hardcoded colors must migrate to these tokens
+- Badge component (`Badge.tsx`) will use these tokens exclusively
+
+**Affected Modules:** UI Shell, All modules with status badges  
+**Status:** ACTIVE  
+**Source:** Owner approval — Phase 03.5 OD-001 (2026-09-10)
+
+---
+
+### DEC-035
+
+**Date:** 2026-09-10 (Phase 03.5 OD-002 — owner approval)  
+**Category:** Design — Login Page Layout  
+**Decision:** The Login Page must use a split-screen layout on desktop and a centered single-column layout on mobile.
+
+Desktop:
+- Left panel (50%): Navy-800 branding panel with KOSHK SKATE logo and Arabic headline
+- Right panel (50%): White form panel with email, password, and primary CTA button
+
+Mobile (< 640px):
+- Centered single-column card layout (branding panel hidden)
+
+Preserved across both layouts:
+- Arabic-first language
+- RTL text direction
+- Cairo typography
+- KOSHK Navy/Gold visual identity
+
+**Reason:** The Visual Design Reference describes a split-screen login experience. The current implementation is a centered single-column card. This decision formally aligns the specification with the VDR and approves the desktop upgrade while defining the mobile fallback.
+
+**Impact:**
+- `apps/web/src/modules/auth/LoginPage.tsx` — rebuild with split-screen desktop layout (Phase 03.5 Stage 2)
+- No API, backend, or auth logic changes required
+
+**Affected Modules:** Auth (LoginPage)  
+**Status:** ACTIVE  
+**Source:** Owner approval — Phase 03.5 OD-002 (2026-09-10)
+
+---
+
+### DEC-036
+
+**Date:** 2026-09-10 (Phase 03.5 OD-003 — owner approval)  
+**Category:** Technical — Icon Library  
+**Decision:** Lucide React is the approved SVG icon library for the KOSHK SKATE ERP.
+
+Rules:
+- Package: `lucide-react` (MIT license)
+- Only Lucide icons may be used — no emoji, no other icon libraries
+- One coherent icon style throughout: stroke-based geometric Lucide icons
+- Icons are tree-shakeable — only imported icons are included in the bundle
+
+Emoji-to-Lucide replacement map is documented in `docs/design/DESIGN_SYSTEM.md §9`.
+
+**Reason:** The current implementation uses emoji characters as navigation and action icons. This is unprofessional and inaccessible. Lucide React was selected for its MIT license, consistent geometric style, React-native integration, and full tree-shakeability.
+
+**Impact:**
+- `apps/api`: no change
+- `apps/web/package.json`: add `lucide-react` dependency (Phase 03.5 Stage 2)
+- All emoji in `App.tsx` (sidebar), `Topbar`, and all pages must be replaced
+- See emoji mapping in `docs/design/DESIGN_SYSTEM.md §9`
+
+**Affected Modules:** App Shell (Sidebar, Topbar), all existing pages  
+**Status:** ACTIVE  
+**Source:** Owner approval — Phase 03.5 OD-003 (2026-09-10)
+
+---
+
+### DEC-037
+
+**Date:** 2026-09-10 (Phase 03.5 OD-004 — owner approval)  
+**Category:** Governance — UI Rules  
+**Decision:** All 10 UI governance rules (UI-001 through UI-010) are APPROVED and mandatory for all future ERP development.
+
+UI-001: Design System First  
+UI-002: Shared Components Mandatory  
+UI-003: No Emoji in UI  
+UI-004: Arabic-RTL Verification Mandatory  
+UI-005: No Native Browser Dialogs  
+UI-006: New Patterns Require Approval  
+UI-007: No Inline Style Objects for Structure  
+UI-008: Phase Completion Requires UI/UX DoD  
+UI-009: Mobile Must Be Intentionally Designed  
+UI-010: AI Agents Must Reuse Before Creating  
+
+Full rule text documented in `docs/00-governance/AI_AGENT_RULES.md` (UI Governance Rules section).
+
+**Reason:** Formalizes the UI quality standards discovered during Phase 03.5 discovery. Prevents regression in future phases.
+
+**Impact:**
+- `docs/00-governance/AI_AGENT_RULES.md` — rules added (Phase 03.5 Stage 1 COMPLETE)
+- `docs/00-governance/DEFINITION_OF_DONE.md` — UI/UX DoD updated (Phase 03.5 Stage 1 COMPLETE)
+- All Phase 04+ modules must comply with these rules
+
+**Affected Modules:** All future modules  
+**Status:** ACTIVE  
+**Source:** Owner approval — Phase 03.5 OD-004 (2026-09-10)
+
+---
+
+### DEC-038
+
+**Date:** 2026-09-10 (Phase 03.5 OD-005 — owner approval)  
+**Category:** Design — Sidebar Behavior  
+**Decision:** The desktop sidebar must support both an expanded state (240px) and a collapsed state (64px icon-only).
+
+Expanded state (default):
+- 240px width
+- Icons + text labels visible
+- Active state: gold tint background + gold text + gold indicator bar
+
+Collapsed state:
+- 64px width
+- Icons visible and centered (text labels hidden)
+- Active state remains visually obvious (icon in gold, indicator bar visible)
+- Tooltips appear on hover with Arabic module name
+- Correct RTL behavior maintained
+
+Toggle:
+- Toggle button visible in sidebar or topbar
+- State persisted in `localStorage` key: `koshk_sidebar_collapsed`
+- Transition: 300ms ease-in-out
+
+Mobile behavior:
+- Mobile sidebar is always a full-height drawer (NOT the collapsed desktop state)
+- Triggered by hamburger icon in topbar
+- Slides in from right, 80% width, max 320px, with backdrop
+
+**Reason:** Operators who manage dense information screens benefit from more horizontal workspace. The collapsed sidebar provides this without breaking the mobile experience.
+
+**Impact:**
+- `apps/web/src/App.tsx` or Sidebar component — collapse state management (Phase 03.5 Stage 2)
+- `--sidebar-collapsed-width: 64px` token added to `design-system.css`
+- Mobile drawer is a separate responsive implementation
+
+**Affected Modules:** App Shell (Sidebar)  
+**Status:** ACTIVE  
+**Source:** Owner approval — Phase 03.5 OD-005 (2026-09-10)
+
+---
+
+### DEC-039
+
+**Date:** 2026-09-10 (Phase 03.5 — governance)  
+**Category:** Governance — Documentation-First Development  
+**Decision:** All project phases (Phase 03.5 onwards) and all meaningful feature requests must follow the Documentation-First Development lifecycle.
+
+Required lifecycle:
+1. Review existing documentation
+2. Reconcile conflicts per SOURCE_OF_TRUTH.md
+3. Update documentation
+4. Record and resolve owner decisions
+5. Produce approved phase/feature specification
+6. Implement
+7. Test
+8. Verify
+9. Update documentation post-implementation
+10. Git commit and push
+11. Report completion
+
+This rule is formally documented as Rule 16 in `docs/00-governance/AI_AGENT_RULES.md`.
+
+**Reason:** Documentation-after-implementation leads to documentation drift, AI agents making incorrect assumptions, and regressions. Documentation-first ensures the project remains governable at scale.
+
+**Impact:**
+- `docs/00-governance/AI_AGENT_RULES.md` — Rule 16 added (Phase 03.5 Stage 1 COMPLETE)
+- Applies to Phase 03.5, Phase 04, and all future phases
+
+**Affected Modules:** Governance (all phases)  
+**Status:** ACTIVE  
+**Source:** Owner-directed — Phase 03.5 governance requirement (2026-09-10)
+
+---
+
+### DEC-040
+
+**Date:** 2026-09-10 (Phase 03.5 — future phase inheritance)  
+**Category:** Governance — Phase Inheritance  
+**Decision:** Every future phase automatically inherits, without needing to redefine:
+
+- Project governance (`docs/00-governance/`)
+- Source-of-truth hierarchy (`SOURCE_OF_TRUTH.md`)
+- Documentation-first development (DEC-039, AI_AGENT_RULES.md Rule 16)
+- Approved design system (`docs/design/DESIGN_SYSTEM.md`)
+- UI governance rules UI-001 through UI-010 (DEC-037)
+- RTL requirements (DEC-001)
+- Accessibility requirements (DESIGN_SYSTEM.md §11)
+- Responsive requirements (DESIGN_SYSTEM.md §16)
+- Shared component reuse (UI-002, UI-010)
+- Git and verification requirements (AI_AGENT_RULES.md Rules 8 and 9)
+
+Future phases must NOT redefine these unless the owner explicitly approves a change.
+
+**Reason:** Prevents each new phase from accidentally overriding or forgetting established project governance. Establishes a clear floor of quality and process.
+
+**Impact:**
+- `docs/00-governance/AI_AGENT_RULES.md` — Rule 17 added (Phase 03.5 Stage 1 COMPLETE)
+- All phase specifications from Phase 04 onwards inherit these rules by reference
+
+**Affected Modules:** All future phases  
+**Status:** ACTIVE  
+**Source:** Owner-directed — Phase 03.5 governance requirement (2026-09-10)
+
+---
+
+*Last updated: 2026-09-10 (DEC-034 through DEC-040 added — Phase 03.5 Stage 1 owner decisions and governance decisions recorded) by AI Agent*

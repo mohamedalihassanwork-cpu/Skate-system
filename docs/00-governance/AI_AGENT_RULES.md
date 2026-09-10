@@ -1,8 +1,9 @@
 # AI Agent Rules — KOSHK SKATE ERP
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Status:** ACTIVE  
-**Authority:** These rules are mandatory for all AI agents working on this project.
+**Authority:** These rules are mandatory for all AI agents working on this project.  
+**Last updated:** 2026-09-10 (Phase 03.5 Stage 1 — DOCUMENTATION_FIRST rule + UI governance rules added)
 
 ---
 
@@ -254,6 +255,130 @@ If two authoritative sources conflict: record in `docs/decisions/DECISION_LOG.md
 
 ---
 
+## RULE 16 — DOCUMENTATION-FIRST DEVELOPMENT (Phase 03.5+)
+
+Every project phase and every meaningful feature must begin with documentation review and alignment BEFORE implementation.
+
+**Required lifecycle:**
+
+```
+Existing Documentation
+        ↓
+Review & Reconcile
+        ↓
+Update Documentation
+        ↓
+Owner Decisions / Approval
+        ↓
+Approved Phase Specification
+        ↓
+Implementation
+        ↓
+Testing
+        ↓
+Verification
+        ↓
+Documentation Update
+        ↓
+Git Commit
+        ↓
+Git Push
+        ↓
+Phase Complete
+```
+
+**Before implementation, the AI agent MUST:**
+
+1. Read the minimum relevant governance, product, architecture, design, and module documentation
+2. Identify all affected documentation files
+3. Identify outdated or conflicting documentation
+4. Reconcile documentation conflicts according to `SOURCE_OF_TRUTH.md`
+5. Record required owner decisions
+6. Update relevant documentation
+7. Produce an implementation plan based on updated documentation
+8. Obtain owner approval where a decision is required
+9. Only then begin implementation
+
+**This rule applies to:**
+- Phase 03.5
+- Phase 04
+- All future phases
+- All meaningful feature or change requests
+
+Documentation is NOT merely a post-implementation activity.
+
+---
+
+## RULE 17 — FUTURE PHASE INHERITANCE
+
+Every future phase automatically inherits the following without needing to redefine them:
+
+- Project governance (`docs/00-governance/`)
+- Source-of-truth hierarchy (`SOURCE_OF_TRUTH.md`)
+- Documentation-first development (Rule 16)
+- Approved design system (`docs/design/DESIGN_SYSTEM.md`)
+- Approved UI governance rules UI-001 through UI-010
+- RTL requirements (DEC-001)
+- Accessibility requirements (DESIGN_SYSTEM.md §11)
+- Responsive requirements (DESIGN_SYSTEM.md §16)
+- Shared component reuse requirements (UI-002, UI-010)
+- Git and verification requirements (Rules 8 and 9)
+
+Future phases must NOT redefine these from scratch unless the owner explicitly approves a change.
+
+---
+
+## UI GOVERNANCE RULES (Phase 03.5+ — OD-004 APPROVED)
+
+These UI rules are mandatory for all new and migrated interfaces.
+
+### UI-001 — Design System First
+All new ERP interfaces MUST use approved KOSHK SKATE design system tokens from `design-system.css`.
+No module may introduce custom color values, font sizes, border radii, or shadows outside of the approved token file.
+
+### UI-002 — Shared Components Mandatory
+All new pages MUST use shared components from `apps/web/src/components/ui/`.
+Duplicate implementations of Modal, Button, Input, Badge, DataTable, or any other shared component are prohibited.
+If a needed component does not exist, add it to the shared library first, then use it.
+
+### UI-003 — No Emoji in UI
+Emoji are permanently prohibited in all ERP interfaces.
+All icons must use the approved Lucide React SVG library (OD-003).
+Violations are blocking — a phase cannot be marked COMPLETED with emoji anywhere in the UI.
+
+### UI-004 — Arabic-RTL Verification Mandatory
+Every new interface must be visually verified in Arabic RTL before being marked VERIFIED.
+RTL layout errors are blocking issues.
+
+### UI-005 — No Native Browser Dialogs
+`confirm()`, `alert()`, and `prompt()` are permanently prohibited in this codebase.
+All confirmations must use the shared `ConfirmDialog` component.
+All error/success messages must use the shared Toast system.
+
+### UI-006 — New Patterns Require Approval
+If a feature genuinely requires a new UI pattern not present in the design system, that pattern must be proposed and approved before implementation.
+AI agents must NOT invent new visual patterns silently.
+
+### UI-007 — No Inline Style Objects for Structure
+Structural layout styles (colors, sizing, shadows, radii) must NOT be hardcoded as inline JavaScript `style={{}}` objects.
+Use `className` with CSS custom properties.
+Inline styles are permitted ONLY for genuinely dynamic values (e.g., dynamically calculated widths, animated progress percentages).
+
+### UI-008 — Phase Completion Requires UI/UX DoD
+A phase cannot be marked COMPLETED without satisfying all UI/UX items in the Definition of Done.
+The UI/UX DoD includes items specific to the design system.
+
+### UI-009 — Mobile Must Be Intentionally Designed
+New pages must include intentional mobile layout decisions.
+"It auto-wraps" is not an acceptable mobile design.
+Desktop and mobile layouts must be explicitly designed and verified for every new page.
+
+### UI-010 — AI Agents Must Reuse Before Creating
+AI agents must check the existing shared component library before creating any new UI component.
+Creating a duplicate of an existing shared component is a violation equivalent to code duplication.
+
+---
+
 ## PROHIBITED ACTIONS (ALWAYS)
 
 - Deploying to production without explicit instruction
@@ -268,4 +393,4 @@ If two authoritative sources conflict: record in `docs/decisions/DECISION_LOG.md
 
 ---
 
-*Last updated: 2026-09-09 | Authority: Project Owner*
+*Last updated: 2026-09-10 (Phase 03.5 Stage 1 — Rules 16–17 added, UI-001 through UI-010 added) | Authority: Project Owner*

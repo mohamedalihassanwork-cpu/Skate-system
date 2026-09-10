@@ -1,13 +1,14 @@
 # Project Map — KOSHK SKATE ERP
 
-**Version:** 1.4
+**Version:** 1.5
 **Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.
-**Last updated:** 2026-09-10 (Phase 03 pre-implementation — file paths planned, decisions recorded)
+**Last updated:** 2026-09-10 (Phase 03.5 Stage 1 — design system docs registered, component library paths planned)
 
 > [!IMPORTANT]
-> **PROJECT STATE: IN IMPLEMENTATION — Phase 01 & 02 COMPLETED. Phase 03 IN PRE-IMPLEMENTATION.**
-> Phase 02 auth files are committed and pushed. Paths marked VERIFIED exist on disk and have been tested.
-> Phase 03 planned paths are listed below. Update status from PLANNED → VERIFIED as files are created.
+> **PROJECT STATE: IN IMPLEMENTATION — Phase 03 FINAL GATE PASSED. Phase 03.5 Stage 1 COMPLETE.**
+> Phase 03 auth/users/skates files are committed and verified. Phase 03.5 Stage 1 documentation is committed.
+> Stage 2 (implementation) requires owner approval before starting.
+> Update status from PLANNED → VERIFIED as files are created.
 
 ---
 
@@ -17,34 +18,37 @@
 d:/Skate system/
 ├── .gitignore                   — VERIFIED
 ├── README.md                    — VERIFIED (Phase 02, Arabic, updated)
-├── docs/                        — All project documentation
-│   ├── 00-governance/           — AI rules, process, DoD
-│   │   ├── AI_AGENT_RULES.md      — VERIFIED
-│   │   ├── AI_AGENT_WORKFLOW_AR.md — VERIFIED
-│   │   ├── SOURCE_OF_TRUTH.md     — VERIFIED
-│   │   ├── DEFINITION_OF_DONE.md  — VERIFIED
-│   │   ├── CHANGE_REQUEST_PROCESS.md — VERIFIED
-│   │   └── DOCUMENTATION_RULES.md — VERIFIED
-│   ├── architecture/            — Technical architecture docs (VERIFIED, updated Phase 02)
-│   ├── modules/                 — Per-module documentation
-│   │   ├── AUTH.md              — VERIFIED (Phase 02)
-│   │   └── USERS_PERMISSIONS.md — VERIFIED (Phase 02)
-│   ├── phases/                  — Phase plans
-│   │   ├── PHASE_02_AUTHENTICATION_AND_PERMISSIONS.md — VERIFIED (full spec, Phase 02 Final Gate)
-│   │   └── PHASE_03_SKATES_MODULE.md — UPDATED (full spec written 2026-09-10 — was stub)
-│   ├── quality/                 — QA strategy and test matrix (VERIFIED)
-│   ├── decisions/               — Decision log (33 decisions through DEC-033)
-│   ├── modules/
-│   │   ├── AUTH.md              — VERIFIED (Phase 02)
-│   │   ├── USERS_PERMISSIONS.md — VERIFIED (Phase 02)
-│   │   └── SKATES.md            — UPDATED (Phase 03 pre-implementation 2026-09-10 — was stub)
-│   ├── product/                 — Master Business Spec copy (VERIFIED)
-│   ├── design/                  — Visual Design Reference copy (VERIFIED)
-│   ├── PROJECT_MAP.md           — THIS FILE
-│   ├── PROJECT_STATE.md         — Current project status (Phase 02 COMPLETED)
-│   ├── CHANGELOG.md             — Change history (v0.3.0 entry added)
-│   ├── RELEASE_HISTORY.md       — Release history
-│   └── INITIAL_PROJECT_AUDIT.md — Initial audit report
+├── KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md  — VERIFIED (source document)
+├── Skate_Rental_ERP_Master_Business_Product_Specification.md  — VERIFIED (source document)
+└── docs/                        — All project documentation
+    ├── 00-governance/           — AI rules, process, DoD
+    │   ├── AI_AGENT_RULES.md      — UPDATED v2.0 (Phase 03.5 — UI rules + DOCUMENTATION_FIRST)
+    │   ├── AI_AGENT_WORKFLOW_AR.md — VERIFIED
+    │   ├── SOURCE_OF_TRUTH.md     — UPDATED v2.0 (Phase 03.5)
+    │   ├── DEFINITION_OF_DONE.md  — UPDATED v2.0 (Phase 03.5 — UI/UX DoD expanded)
+    │   ├── CHANGE_REQUEST_PROCESS.md — VERIFIED
+    │   └── DOCUMENTATION_RULES.md — VERIFIED
+    ├── architecture/            — Technical architecture docs (VERIFIED, updated Phase 02)
+    ├── design/                  — Visual design and component library documentation
+    │   ├── VISUAL_DESIGN_REFERENCE.md — VERIFIED (copy of root-level VDR)
+    │   ├── DESIGN_SYSTEM.md       — CREATED Phase 03.5 Stage 1 — authoritative design system
+    │   └── COMPONENT_LIBRARY.md   — CREATED Phase 03.5 Stage 1 — component developer reference
+    ├── modules/                 — Per-module documentation
+    │   ├── AUTH.md              — VERIFIED (Phase 02)
+    │   ├── USERS_PERMISSIONS.md — VERIFIED (Phase 02)
+    │   └── SKATES.md            — UPDATED (Phase 03 pre-implementation 2026-09-10 — was stub)
+    ├── phases/                  — Phase plans
+    │   ├── PHASE_02_AUTHENTICATION_AND_PERMISSIONS.md — VERIFIED (full spec, Phase 02 Final Gate)
+    │   ├── PHASE_03_SKATES_MODULE.md — UPDATED (full spec written 2026-09-10)
+    │   └── PHASE_035_UI_DESIGN_SYSTEM.md — CREATED Phase 03.5 Stage 1 — full phase spec
+    ├── quality/                 — QA strategy and test matrix (VERIFIED)
+    ├── decisions/               — Decision log (40 decisions through DEC-040)
+    ├── product/                 — Master Business Spec copy (VERIFIED)
+    ├── PROJECT_MAP.md           — THIS FILE (v1.5)
+    ├── PROJECT_STATE.md         — Current project status (v2.7 — Phase 03.5 Stage 1)
+    ├── CHANGELOG.md             — Change history (Phase 03.5 Stage 1 entry added)
+    ├── RELEASE_HISTORY.md       — Release history
+    └── INITIAL_PROJECT_AUDIT.md — Initial audit report
 ├── apps/                        — Applications
 │   ├── web/                     — Frontend (VERIFIED — Phase 02)
 │   │   ├── index.html             — VERIFIED (lang=ar dir=rtl, Cairo font)
@@ -127,16 +131,39 @@ d:/Skate system/
 ├── KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md  — VERIFIED (source document)
 └── Skate_Rental_ERP_Master_Business_Product_Specification.md  — VERIFIED (source document)
 
-Planned web modules (Phase 03+):
+Planned/verified web modules (Phase 03+):
 
 ```
-apps/web/src/modules/
-├── skates/                      — [PHASE 03 — PLANNED]
-│   ├── skates.types.ts          — PLANNED
-│   ├── skates.service.ts        — PLANNED
-│   └── SkatesPage.tsx           — PLANNED
-├── customers/                   — [PHASE 04]
-└── ...
+apps/web/src/
+├── components/
+│   ├── ProtectedRoute.tsx  — VERIFIED (Phase 02)
+│   ├── PermissionGate.tsx  — VERIFIED (Phase 02)
+│   └── ui/                 — [Phase 03.5 Stage 2 — PLANNED] Shared UI component library
+│       ├── Button.tsx        — PLANNED
+│       ├── Input.tsx         — PLANNED
+│       ├── Select.tsx        — PLANNED
+│       ├── Textarea.tsx      — PLANNED
+│       ├── Modal.tsx         — PLANNED
+│       ├── Badge.tsx         — PLANNED
+│       ├── Card.tsx          — PLANNED
+│       ├── DataTable.tsx     — PLANNED
+│       ├── SearchBar.tsx     — PLANNED
+│       ├── EmptyState.tsx    — PLANNED
+│       ├── LoadingSpinner.tsx — PLANNED
+│       ├── LoadingSkeleton.tsx — PLANNED
+│       ├── Toast.tsx         — PLANNED
+│       ├── ToastProvider.tsx — PLANNED
+│       ├── ConfirmDialog.tsx — PLANNED
+│       ├── Alert.tsx         — PLANNED
+│       ├── Icon.tsx          — PLANNED
+│       ├── Pagination.tsx    — PLANNED
+│       └── index.ts          — PLANNED (barrel export)
+├── modules/
+    ├── auth/               — VERIFIED (Phase 02)
+    ├── users/              — VERIFIED (Phase 02)
+    ├── skates/             — VERIFIED (Phase 03)
+    ├── customers/          — [PHASE 04]
+    └── ...
 ```
 
 Planned API migrations (Phase 03+):
@@ -501,12 +528,14 @@ For each module: where to find code, documentation, database tables, and API rou
 
 | Component | Target Location | Status |
 |---|---|---|
-| Design system CSS | `apps/web/src/styles/design-system.css` | VERIFIED (Phase 01) |
+| Design system CSS | `apps/web/src/styles/design-system.css` | VERIFIED (Phase 01) — PLANNED correction (Phase 03.5 Stage 2) |
 | Global CSS / RTL reset | `apps/web/src/styles/index.css` | VERIFIED (Phase 01) |
-| Shared UI components | `apps/web/src/components/` | VERIFIED (Phase 02: ProtectedRoute, PermissionGate) |
+| Shared UI components | `apps/web/src/components/ui/` | PLANNED (Phase 03.5 Stage 2 — 17 components) |
+| Auth middleware | `apps/web/src/components/ProtectedRoute.tsx` | VERIFIED (Phase 02) |
+| Permission gate | `apps/web/src/components/PermissionGate.tsx` | VERIFIED (Phase 02) |
 | API client | `apps/web/src/services/api.ts` | VERIFIED (Phase 02: auth-aware, 401 retry) |
-| Auth middleware | `apps/api/src/middleware/auth.ts` | VERIFIED (Phase 02) |
-| Permission middleware | `apps/api/src/middleware/permission.ts` | VERIFIED (Phase 02) |
+| Auth middleware (backend) | `apps/api/src/middleware/auth.ts` | VERIFIED (Phase 02) |
+| Permission middleware (backend) | `apps/api/src/middleware/permission.ts` | VERIFIED (Phase 02) |
 | DB connection | `apps/api/src/db/connection.ts` | VERIFIED (Phase 01) |
 | DB schema index | `apps/api/src/db/schema/index.ts` | VERIFIED (Phase 02: all tables exported) |
 | Drizzle config | `apps/api/drizzle.config.ts` | VERIFIED (Phase 02: schema array) |
@@ -542,4 +571,4 @@ For each module: where to find code, documentation, database tables, and API rou
 
 ---
 
-*Last updated: 2026-09-09 (Phase 02 Final Gate)*
+*Last updated: 2026-09-10 (Phase 03.5 Stage 1 — design system docs registered, component library paths planned)*

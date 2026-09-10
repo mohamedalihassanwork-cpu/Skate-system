@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 2.6
-**Last updated:** 2026-09-10 (Phase 03 Final Gate — APPROVED)
-**Updated by:** AI Agent (Phase 03 Final Gate Reconciliation)
+**Version:** 2.7
+**Last updated:** 2026-09-10 (Phase 03.5 Stage 1 — Documentation & Governance Alignment)
+**Updated by:** AI Agent (Phase 03.5 Stage 1)
 
 ---
 
@@ -10,16 +10,16 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | IN IMPLEMENTATION — Phase 03 COMPLETE. Phase 04 not yet started. |
-| **Current Phase** | Phase 03 (Skates Module) — IMPLEMENTED ✅ |
-| **Current Milestone** | Phase 03 complete. DB migration applied. Backend (schema, service, routes) implemented. Frontend (SkatesPage, service, types) implemented. 16 new tests pass. 34/34 total tests pass. Both builds pass. |
-| **Last Completed Phase** | Phase 03 |
-| **Active Work** | None |
-| **Blocked Work** | None |
-| **Last Verification** | 2026-09-10 — Phase 03 FINAL GATE: API build ✅ (0 TS errors), Web build ✅ (0 TS errors, 310 kB bundle), `npm test` 34/34 PASS ✅ (16 Phase 03 + 18 Phase 02, zero regressions), DB migration `0001_glossy_darwin.sql` applied ✅, `skates` table exists ✅ (14 columns), 2 migrations total ✅, working tree clean ✅, push to `origin/master` ✅. UI verified by owner: skate create (custom + auto-gen SK-NNN), edit, search, status badges. |
-| **Last Git Commit** | `f12c5b72cdb87a2a34866c252ce63b864b7e8fdc` — feat(phase-03): implement Skates / Asset Management module |
+| **Overall Status** | IN IMPLEMENTATION — Phase 03 COMPLETE. Phase 03.5 Stage 1 IN PROGRESS. |
+| **Current Phase** | Phase 03.5 (UI/UX Design System) — STAGE 1 COMPLETE, AWAITING OWNER REVIEW |
+| **Current Milestone** | Phase 03.5 Stage 1: Documentation & Governance Alignment complete. Design system, component library, phase spec, and governance documents created/updated. |
+| **Last Completed Phase** | Phase 03 (Skates Module) |
+| **Active Work** | Phase 03.5 Stage 1 — documentation committed, awaiting owner review for Stage 2 authorization |
+| **Blocked Work** | Phase 03.5 Stage 2 (Implementation) — awaiting owner review of Stage 1 |
+| **Last Verification** | 2026-09-10 — Phase 03 FINAL GATE: API build ✅ (0 TS errors), Web build ✅ (0 TS errors, 310 kB bundle), `npm test` 34/34 PASS ✅, DB migration applied ✅, push to `origin/master` ✅. UI verified by owner. |
+| **Last Git Commit** | Phase 03.5 Stage 1 — docs(phase-03.5): establish design system and governance foundation (see GIT STATUS below) |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
-| **Recommended Next Action** | Phase 03 FINAL GATE PASSED. Await owner authorization before beginning Phase 04 (Customers Module). |
+| **Recommended Next Action** | Owner reviews Phase 03.5 Stage 1 documentation. Approves Stage 2 (Implementation) to begin. |
 
 ---
 
@@ -49,7 +49,8 @@
 | Phase 01 | Foundation & Project Setup | COMPLETED | FINAL GATE: APPROVED. Commits `f7d2810`, `35cc75a`. |
 | Phase 02 | Authentication & Permissions | **FINAL GATE PASSED** | JWT auth, RBAC, 18/18 tests pass. Latest commit `647817c`. |
 | Phase 03 | Skates Module | **FINAL GATE PASSED ✅** | 16/16 tests, 34/34 total, both builds clean, UI verified. Commit `f12c5b7`. |
-| Phase 04 | Customers Module | PLANNED | Depends on Phase 02 |
+| **Phase 03.5** | **ERP Design System & Interface Standardization** | **STAGE 1 COMPLETE — AWAITING OWNER REVIEW** | Stage 1: documentation & governance. Stage 2: implementation. No business logic change. |
+| Phase 04 | Customers Module | PLANNED | Depends on Phase 02; begins after Phase 03.5 completes |
 | Phase 05 | Rental POS (Core) | PLANNED | Depends on Phases 03, 04 |
 | Phase 06 | Payments & Treasury | PLANNED | Depends on Phase 05 |
 | Phase 07 | Returns & Inspection | PLANNED | Depends on Phase 05 |
@@ -178,30 +179,33 @@ Status: OPEN | RESOLVED
 
 | Document | Status |
 |---|---|
-| `docs/00-governance/AI_AGENT_RULES.md` | COMPLETE — reviewed |
+| `docs/00-governance/AI_AGENT_RULES.md` | UPDATED (v2.0) — UI rules UI-001..UI-010 + DOCUMENTATION_FIRST added |
 | `docs/00-governance/AI_AGENT_WORKFLOW_AR.md` | COMPLETE — created (reconciliation) |
-| `docs/00-governance/SOURCE_OF_TRUTH.md` | COMPLETE — reviewed |
-| `docs/00-governance/DEFINITION_OF_DONE.md` | COMPLETE |
+| `docs/00-governance/SOURCE_OF_TRUTH.md` | UPDATED (v2.0) — design docs registered, statuses corrected |
+| `docs/00-governance/DEFINITION_OF_DONE.md` | UPDATED (v2.0) — UI/UX DoD expanded with design system compliance |
 | `docs/00-governance/CHANGE_REQUEST_PROCESS.md` | COMPLETE |
 | `docs/00-governance/DOCUMENTATION_RULES.md` | COMPLETE |
-| `docs/decisions/DECISION_LOG.md` | COMPLETE — 33 decisions recorded (DEC-030 to DEC-033 added Phase 03) |
+| `docs/decisions/DECISION_LOG.md` | UPDATED — DEC-034 through DEC-040 added (Phase 03.5 OD decisions + governance) |
 | `docs/architecture/TECHNICAL_ARCHITECTURE.md` | COMPLETE — target only |
 | `docs/architecture/DATABASE_ARCHITECTURE.md` | COMPLETE — target schema |
 | `docs/architecture/API_ARCHITECTURE.md` | COMPLETE — target routes |
-| `docs/architecture/FRONTEND_ARCHITECTURE.md` | COMPLETE — target |
+| `docs/architecture/FRONTEND_ARCHITECTURE.md` | COMPLETE — target (update needed in Stage 4 to reflect component library) |
 | `docs/architecture/BACKEND_ARCHITECTURE.md` | COMPLETE — target |
 | `docs/architecture/SECURITY_ARCHITECTURE.md` | COMPLETE |
 | `docs/architecture/DEPLOYMENT_ARCHITECTURE.md` | COMPLETE |
-| `docs/PROJECT_MAP.md` | COMPLETE |
-| `docs/PROJECT_STATE.md` | COMPLETE (this file) |
-| `docs/CHANGELOG.md` | COMPLETE |
+| `docs/PROJECT_MAP.md` | UPDATED (v1.5) — Phase 03.5 design/docs paths added |
+| `docs/PROJECT_STATE.md` | UPDATED (v2.7) — this file |
+| `docs/CHANGELOG.md` | UPDATED — Phase 03.5 Stage 1 entry added |
 | `docs/RELEASE_HISTORY.md` | COMPLETE |
 | `docs/INITIAL_PROJECT_AUDIT.md` | COMPLETE |
+| `docs/design/VISUAL_DESIGN_REFERENCE.md` | COMPLETE (source document copy) |
+| `docs/design/DESIGN_SYSTEM.md` | CREATED (Phase 03.5 Stage 1) — authoritative design system reference |
+| `docs/design/COMPONENT_LIBRARY.md` | CREATED (Phase 03.5 Stage 1) — component developer reference |
+| `docs/phases/PHASE_035_UI_DESIGN_SYSTEM.md` | CREATED (Phase 03.5 Stage 1) — full phase specification |
 | `docs/modules/SKATES.md` | UPDATED — Phase 03 pre-implementation (DEC-030 to DEC-033 applied) |
-| `docs/phases/PHASE_03_SKATES_MODULE.md` | UPDATED — full phase spec written (was stub) |
+| `docs/phases/PHASE_03_SKATES_MODULE.md` | UPDATED — full phase spec written |
 | Other module docs (`docs/modules/`) | STUB entries — to be expanded during implementation |
 | Other phase docs (`docs/phases/`) | STUB entries |
-| Quality docs (`docs/quality/`) | COMPLETE |
 
 ---
 
@@ -226,4 +230,4 @@ Status: OPEN | RESOLVED
 
 ---
 
-*Last updated: 2026-09-10 (Phase 03 documentation reconciliation — DEC-030 to DEC-033 recorded — IMPL-001 to IMPL-004 identified) by AI Agent*
+*Last updated: 2026-09-10 (Phase 03.5 Stage 1 — documentation & governance alignment by AI Agent)*
