@@ -8,6 +8,99 @@
 
 ---
 
+## [v0.3.0] — 2026-09-10 — Phase 03: Skates / Asset Management
+
+### Added — Backend
+- `apps/api/src/db/schema/skates.ts` — Drizzle schema for `skates` table (14 columns, 6-value status enum, 3-value condition enum)
+- `apps/api/src/db/migrations/0001_glossy_darwin.sql` — Auto-generated Drizzle migration; creates `skates` table
+- `apps/api/src/modules/skates/skates.types.ts` — Backend TypeScript types (SkateDTO, CreateSkateRequest, UpdateSkateRequest, etc.)
+- `apps/api/src/modules/skates/skates.service.ts` — Business logic: `SK-NNN` auto-generation, status transition enforcement, QR/barcode auto-set, soft-disable, paginated list, history stub
+- `apps/api/src/modules/skates/skates.routes.ts` — 6 Express routes (`/available` registered before `/:id` per spec)
+- `apps/api/src/tests/skates.test.ts` — 16 integration tests (TC-SK-01 to TC-SK-16)
+
+### Added — Frontend
+- `apps/web/src/modules/skates/skates.service.ts` — Frontend types, status labels, badge colors, API wrappers
+- `apps/web/src/modules/skates/SkatesPage.tsx` — Full management UI: card grid, status badges, search/filter, create modal, edit modal, loading/empty/error states (Arabic RTL)
+
+### Modified
+- `apps/api/src/db/schema/index.ts` — Added `skates.ts` export
+- `apps/api/drizzle.config.ts` — Added `skates.ts` to schema array
+- `apps/api/src/app.ts` — Mounted `/api/v1/skates` routes; updated health/index to Phase 03
+- `apps/web/src/App.tsx` — Replaced `/skates` placeholder with `SkatesPage`; imported SkatesPage; updated phase badge to "المرحلة 03 ✓"
+
+### Business Rules Enforced
+- **DEC-030**: `skate_code` optional; auto-generated as `SK-NNN` (3-digit zero-padded MAX+1); never reused even after deactivation
+- **DEC-031**: Admin API cannot set `status = rented` or `status = reserved` (HTTP 422 `SKATE_STATUS_NOT_ALLOWED`)
+- **DEC-032**: `qr_code` and `barcode` auto-set to `skate_code` at creation; user-editable independently after creation
+- **DEC-033**: Skate Type is a free-text input — no hardcoded dropdown values
+- **DEC-009**: No hard delete — soft-disable via `is_active = false`; deactivated skates permanently hold their `skate_code`
+
+### Verification
+- API build: ✅ zero TypeScript errors
+- Web build: ✅ zero TypeScript errors (Vite bundle 310 kB)
+- Tests: ✅ 34/34 pass (16 Phase 03 + 18 Phase 02 — zero regressions)
+- Migration: ✅ `skates` table created in `koshk_skate` DB
+
+---
+
+## [Phase 03 Pre-Implementation Final] — 2026-09-10 (Phase 03 Final Owner Decisions — All Implementation Details Resolved)
+
+### Decisions Updated
+- **`docs/decisions/DECISION_LOG.md`** — DEC-030 updated: `SK-NNN` format (3-digit zero-padded sequential), never reuse codes even after deactivation (IMPL-001)
+- **`docs/decisions/DECISION_LOG.md`** — DEC-032 updated: `qr_code = skate_code`, `barcode = skate_code`; user-editable strings; no image rendering in Phase 03 (IMPL-002, IMPL-003)
+- **`docs/decisions/DECISION_LOG.md`** — DEC-033 updated: Skate Type changed from "fixed dropdown" to **free-text input** — no hardcoded type list; Settings-configurable in future (IMPL-004)
+
+### Documentation Updated
+- **`docs/phases/PHASE_03_SKATES_MODULE.md`** — All IMPL items resolved: skate code algorithm (`SK-NNN`), QR/barcode payloads (`= skate_code`), type as free-text; TC-SK-02 updated to verify `SK-NNN` pattern; Unresolved Items section removed; status updated to READY FOR IMPLEMENTATION
+- **`docs/modules/SKATES.md`** — All IMPL items resolved; unresolved items section cleared; status updated
+- **`docs/PROJECT_STATE.md`** — Version 2.4: current phase updated to READY FOR IMPLEMENTATION; all four IMPL rows updated to RESOLVED; blocked work cleared
+
+### Notes
+- No application source code was modified.
+- No database migrations were created.
+- No tests were modified.
+- Phase 03 implementation is now fully unblocked.
+
+---
+
+## [Phase 03 Pre-Implementation] — 2026-09-10 (Phase 03 Owner Decisions & Documentation Reconciliation)
+
+### Added — Decisions
+- **`docs/decisions/DECISION_LOG.md`** — DEC-030: Skate code is optional input — auto-generated when omitted; generation algorithm PENDING
+- **`docs/decisions/DECISION_LOG.md`** — DEC-031: Admin API status transition matrix — `rented`/`reserved` blocked; `available↔maintenance/damaged/lost` permitted
+- **`docs/decisions/DECISION_LOG.md`** — DEC-032: QR code and barcode auto-generated on create, user-editable; exact payload format PENDING
+- **`docs/decisions/DECISION_LOG.md`** — DEC-033: Phase 03 uses temporary fixed Skate Type dropdown; Settings module deferred; initial values PENDING
+
+### Updated — Documentation
+- **`docs/phases/PHASE_03_SKATES_MODULE.md`** — Completely rewritten from stub to full phase specification: scope, business rules, status transition matrix (DEC-031), skate code behavior (DEC-030), QR/barcode policy (DEC-032), skate type policy (DEC-033), full API routes, DB design, 16 test cases, verification criteria, known risks, unresolved items (IMPL-001 to IMPL-004)
+- **`docs/modules/SKATES.md`** — Completely rewritten from stub to full module reference: all business rules, transition table, frontend/backend/DB plan, API table, permissions table, known technical debt (TD-002, TD-003)
+- **`docs/PROJECT_STATE.md`** — Version 2.3: current status updated to Phase 03 PRE-IMPLEMENTATION; IMPL-001 to IMPL-004 added to unknowns; TD-002, TD-003 added to technical debt; docs status updated
+- **`docs/PROJECT_MAP.md`** — Version 1.4: Skates module paths updated to PLANNED; planned file tree added; decisions reference added; known risks updated
+
+### Conflicts Resolved
+- **TC-SK-02 (missing skate_code → 400)** — CORRECTED: missing `skate_code` triggers auto-generation → 201 (not 400) — per DEC-030
+- **Status transition plan ambiguity** — RESOLVED: explicit admin-permitted and admin-forbidden transitions documented per DEC-031
+- **QR/barcode "assumed to equal skate_code"** — CORRECTED: no assumption; format PENDING per DEC-032
+- **Phase 03 createSkate() contradiction** — RESOLVED: `skate_code` optional; TC-SK-02 updated per DEC-030
+
+### Remaining Unresolved (awaiting owner)
+- **IMPL-001** — `skate_code` auto-generation algorithm (format, sequence, padding)
+- **IMPL-002** — `qr_code` stored value format
+- **IMPL-003** — `barcode` stored value format
+- **IMPL-004** — Initial Skate Type values for Phase 03 fixed dropdown
+
+### Technical Debt Added
+- **TD-002** — DEC-007 enforcement deferred to Phase 09 (maintenance→available check)
+- **TD-003** — Skate Type hardcoded in Phase 03; migration to Settings required
+
+### Notes
+- No application source code was modified in this release.
+- No database migrations were created.
+- No tests were modified.
+- Phase 03 implementation blocked on IMPL-001 through IMPL-004 (awaiting owner confirmation).
+
+---
+
 ## [0.3.1] — 2026-09-09 (Phase 02 Final Gate Verification & Reconciliation)
 
 ### Fixed

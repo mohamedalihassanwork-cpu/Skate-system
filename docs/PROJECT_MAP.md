@@ -1,13 +1,13 @@
 # Project Map — KOSHK SKATE ERP
 
-**Version:** 1.3
+**Version:** 1.4
 **Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.
-**Last updated:** 2026-09-09 (Phase 02 FINAL GATE)
+**Last updated:** 2026-09-10 (Phase 03 pre-implementation — file paths planned, decisions recorded)
 
 > [!IMPORTANT]
-> **PROJECT STATE: IN IMPLEMENTATION — Phase 01 & 02 COMPLETED. Phase 03 ready to begin.**
+> **PROJECT STATE: IN IMPLEMENTATION — Phase 01 & 02 COMPLETED. Phase 03 IN PRE-IMPLEMENTATION.**
 > Phase 02 auth files are committed and pushed. Paths marked VERIFIED exist on disk and have been tested.
-> Update this file as new files are created in Phase 03+.
+> Phase 03 planned paths are listed below. Update status from PLANNED → VERIFIED as files are created.
 
 ---
 
@@ -31,9 +31,13 @@ d:/Skate system/
 │   │   └── USERS_PERMISSIONS.md — VERIFIED (Phase 02)
 │   ├── phases/                  — Phase plans
 │   │   ├── PHASE_02_AUTHENTICATION_AND_PERMISSIONS.md — VERIFIED (full spec, Phase 02 Final Gate)
-│   │   └── PHASE_03_SKATES_MODULE.md — PLANNED (stub)
+│   │   └── PHASE_03_SKATES_MODULE.md — UPDATED (full spec written 2026-09-10 — was stub)
 │   ├── quality/                 — QA strategy and test matrix (VERIFIED)
-│   ├── decisions/               — Decision log (29 decisions through DEC-029)
+│   ├── decisions/               — Decision log (33 decisions through DEC-033)
+│   ├── modules/
+│   │   ├── AUTH.md              — VERIFIED (Phase 02)
+│   │   ├── USERS_PERMISSIONS.md — VERIFIED (Phase 02)
+│   │   └── SKATES.md            — UPDATED (Phase 03 pre-implementation 2026-09-10 — was stub)
 │   ├── product/                 — Master Business Spec copy (VERIFIED)
 │   ├── design/                  — Visual Design Reference copy (VERIFIED)
 │   ├── PROJECT_MAP.md           — THIS FILE
@@ -108,16 +112,37 @@ d:/Skate system/
 │               │   ├── auth.types.ts  — VERIFIED (Phase 02)
 │               │   ├── auth.service.ts — VERIFIED (Phase 02, jti fix in Final Gate)
 │               │   └── auth.routes.ts  — VERIFIED (Phase 02)
-│               └── users/
-│                   ├── users.types.ts  — VERIFIED (Phase 02)
-│                   ├── users.service.ts — VERIFIED (Phase 02)
-│                   ├── users.routes.ts  — VERIFIED (Phase 02)
-│                   ├── roles.service.ts — VERIFIED (Phase 02)
-│                   └── roles.routes.ts  — VERIFIED (Phase 02)
+│               ├── users/
+│               │   ├── users.types.ts  — VERIFIED (Phase 02)
+│               │   ├── users.service.ts — VERIFIED (Phase 02)
+│               │   ├── users.routes.ts  — VERIFIED (Phase 02)
+│               │   ├── roles.service.ts — VERIFIED (Phase 02)
+│               │   └── roles.routes.ts  — VERIFIED (Phase 02)
+│               └── skates/              — [PHASE 03 — PLANNED]
+│                   ├── skates.types.ts  — PLANNED
+│                   ├── skates.service.ts — PLANNED
+│                   └── skates.routes.ts  — PLANNED
 ├── tests/                       — Integration tests (top-level placeholder)
 ├── scripts/                     — PLACEHOLDER
 ├── KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md  — VERIFIED (source document)
 └── Skate_Rental_ERP_Master_Business_Product_Specification.md  — VERIFIED (source document)
+
+Planned web modules (Phase 03+):
+
+```
+apps/web/src/modules/
+├── skates/                      — [PHASE 03 — PLANNED]
+│   ├── skates.types.ts          — PLANNED
+│   ├── skates.service.ts        — PLANNED
+│   └── SkatesPage.tsx           — PLANNED
+├── customers/                   — [PHASE 04]
+└── ...
+```
+
+Planned API migrations (Phase 03+):
+```
+apps/api/src/db/migrations/
+└── 0001_*.sql                   — [PHASE 03 — PLANNED] skates table
 ```
 
 ---
@@ -164,15 +189,21 @@ For each module: where to find code, documentation, database tables, and API rou
 
 | Area | Path | Status |
 |---|---|---|
-| Frontend | `apps/web/src/modules/skates/` | PLANNED |
-| Backend | `apps/api/src/modules/skates/` | PLANNED |
-| Database tables | `skates` | PLANNED |
-| API routes | `/api/v1/skates`, `/api/v1/skates/:id`, `/api/v1/skates/:id/history` | PLANNED |
-| Documentation | `docs/modules/SKATES.md` | PLANNED |
-| Tests | `tests/skates/` | PLANNED |
+| Frontend | `apps/web/src/modules/skates/` | PLANNED (Phase 03) |
+| Backend | `apps/api/src/modules/skates/` | PLANNED (Phase 03) |
+| Database tables | `skates` | PLANNED (Phase 03) |
+| API routes | `GET /api/v1/skates`, `POST /api/v1/skates`, `GET /api/v1/skates/available`, `GET /api/v1/skates/:id`, `PUT /api/v1/skates/:id`, `GET /api/v1/skates/:id/history` | PLANNED (Phase 03) |
+| Documentation | `docs/modules/SKATES.md` | UPDATED (Phase 03 pre-implementation) |
+| Tests | `apps/api/src/tests/skates.test.ts` | PLANNED (Phase 03 — 16 test cases defined) |
 
-**Dependencies:** AUTH, USERS_PERMISSIONS  
-**Key risks:** Status transitions must be atomic; concurrent rental must be prevented
+**Dependencies:** AUTH, USERS_PERMISSIONS
+**Key risks:**
+- Status transitions must be atomic; `rented`/`reserved` blocked from admin API (DEC-031)
+- `skate_code` uniqueness enforced — concurrent creation could race; DB UNIQUE constraint is the safety net
+- `GET /api/v1/skates/available` must be registered before `GET /api/v1/skates/:id` in the router
+- DEC-007 enforcement (maintenance→available requires completed record) deferred to Phase 09 (TD-002)
+**Approved decisions:** DEC-030, DEC-031, DEC-032, DEC-033
+**Unresolved implementation details:** IMPL-001 (skate_code algorithm), IMPL-002 (QR format), IMPL-003 (barcode format), IMPL-004 (skate type values)
 
 ---
 

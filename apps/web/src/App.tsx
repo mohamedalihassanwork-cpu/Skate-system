@@ -1,15 +1,16 @@
 /**
  * KOSHK SKATE ERP — App Shell
- * Phase 02 — Authentication & Permissions (updated)
+ * Phase 03 — Skates / Asset Management (updated)
  *
  * Routing:
  *   /login        → LoginPage (public)
  *   /             → Dashboard (protected — placeholder until Phase 17)
+ *   /skates       → SkatesPage (protected, requires skates.view)
  *   /users        → UsersPage (protected, requires users.view)
  *   /roles        → RolesPage (protected, requires roles.view)
  *   /*            → 404 redirect to /
  *
- * Phase 03+ will add: /skates, /customers, /rentals, etc.
+ * Phase 04+ will add: /customers, /rentals, etc.
  */
 
 import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
@@ -20,6 +21,7 @@ import { PermissionGate } from './components/PermissionGate'
 import LoginPage from './modules/auth/LoginPage'
 import UsersPage from './modules/users/UsersPage'
 import RolesPage from './modules/users/RolesPage'
+import SkatesPage from './modules/skates/SkatesPage'
 
 // ---------------------------------------------------------------------------
 // Nav items
@@ -207,7 +209,7 @@ function Topbar({ pageTitle }: { pageTitle?: string }) {
           backgroundColor: 'var(--color-success-bg)',
           color: 'var(--color-success)',
         }}>
-          المرحلة 02 ✓
+          المرحلة 03 ✓
         </span>
       </div>
     </header>
@@ -285,7 +287,7 @@ export default function App() {
                 <Route path="/" element={<PlaceholderPage title="لوحة التحكم" phase="المرحلة 17" />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/roles" element={<RolesPage />} />
-                <Route path="/skates" element={<PlaceholderPage title="الزلاجات" phase="المرحلة 03" />} />
+                <Route path="/skates" element={<SkatesPage />} />
                 <Route path="/customers" element={<PlaceholderPage title="العملاء" phase="المرحلة 04" />} />
                 <Route path="/rentals" element={<PlaceholderPage title="الإيجارات" phase="المرحلة 05" />} />
                 <Route path="/treasury" element={<PlaceholderPage title="الخزينة" phase="المرحلة 06" />} />

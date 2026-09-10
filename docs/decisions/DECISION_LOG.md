@@ -459,4 +459,140 @@ Both secrets must be cryptographically random strings (min 32 bytes), stored in 
 
 ---
 
-*Last updated: 2026-09-09 (DEC-025 to DEC-029 added — Phase 02 open questions resolved) by AI Agent*
+### DEC-030
+
+**Date:** 2026-09-10 (Phase 03 planning — owner approval)
+**Category:** Business Rule — Skate Code Entry
+**Decision:** When creating a skate, the `skate_code` is **optional on input**.
+
+- If the user provides a `skate_code`, it is used as-is (subject to uniqueness validation).
+- If the user does not provide a `skate_code`, the system **automatically generates** the next available unique code.
+- Generated codes must always be unique. No duplicate `skate_code` may exist.
+
+**Auto-Generation Algorithm — RESOLVED (2026-09-10 IMPL-001):**
+- Format: `SK-` prefix followed by a **3-digit zero-padded sequential number**.
+- Examples: `SK-001`, `SK-002`, ..., `SK-009`, `SK-010`, ..., `SK-099`, `SK-100`, ...
+- The system finds the highest existing numeric suffix across ALL skates (including deactivated ones) and increments by 1.
+- **A previously used Skate Code must NEVER be reused, even if the skate is later deactivated.** Deactivated skates still occupy their code permanently.
+- Implementation: Query `MAX` of the numeric portion of existing `skate_code` values matching the `SK-NNN` pattern; increment; format with `padStart(3, '0')`.
+- If no skates exist yet, the first generated code is `SK-001`.
+
+**Reason:** Owner-approved Phase 03 decision. Resolves conflict in the earlier Phase 03 plan where `createSkate()` assumed both auto-generation and a mandatory 400 response for missing `skate_code`. Algorithm confirmed 2026-09-10 (IMPL-001).
+
+**Impact:**
+- `createSkate()` service: `skate_code` is optional; validate uniqueness if provided; auto-generate if absent using `SK-NNN` format.
+- TC-SK-02 (previously "missing skate_code → 400") is **updated**: missing `skate_code` → system generates one → 201 (not 400).
+- TC-SK-02 now verifies auto-generated code matches `SK-NNN` format.
+- `CreateSkateRequest` type: `skate_code` is optional (`skate_code?: string`).
+- `is_active = false` does NOT release the code for reuse.
+
+**Affected Modules:** Skates
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 03 open question OD-01 (2026-09-10); algorithm confirmed IMPL-001 (2026-09-10)
+
+---
+
+### DEC-031
+
+**Date:** 2026-09-10 (Phase 03 planning — owner approval)
+**Category:** Business Rule — Skate Status Transitions (Admin API)
+**Decision:** Through the admin `PUT /api/v1/skates/:id` endpoint, the following direct status transitions are **permitted**:
+
+| From | To | Permitted by Admin? |
+|---|---|---|
+| `available` | `maintenance` | ✅ YES |
+| `available` | `damaged` | ✅ YES |
+| `available` | `lost` | ✅ YES |
+| `maintenance` | `available` | ✅ YES |
+| `damaged` | `available` | ✅ YES |
+| `lost` | `available` | ✅ YES |
+| Any | `rented` | ❌ NO — Rental workflow only (Phase 05) |
+| Any | `reserved` | ❌ NO — Reservation workflow only (Phase 10) |
+
+The Admin is the operational owner of the asset's condition/status except for `rented` and `reserved`, which are controlled exclusively by their respective business workflows.
+
+No additional transition restrictions beyond those listed above are to be applied unless required by another approved decision.
+
+Note: DEC-007 remains active — a skate requiring maintenance cannot become `available` until the maintenance record is completed. However, in Phase 03, no maintenance records exist yet (Phase 09). This rule will be enforced in the maintenance workflow phase. In Phase 03, the admin can set `maintenance → available` directly without a maintenance record check.
+
+**Reason:** Owner-approved Phase 03 decision. Resolves OD-02.
+
+**Impact:**
+- `updateSkate()` service: validate that new status ≠ `rented` and ≠ `reserved`; allow all other direct transitions.
+- TC-SK-09 updated: attempt to set `status=rented` via admin API → 422.
+- DEC-007 enforcement deferred to Phase 09 (maintenance workflow).
+
+**Affected Modules:** Skates; deferred impact on Rentals (Phase 05), Reservations (Phase 10), Maintenance (Phase 09)
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 03 open question OD-02 (2026-09-10)
+
+---
+
+### DEC-032
+
+**Date:** 2026-09-10 (Phase 03 planning — owner approval)
+**Category:** Business Rule — QR Code & Barcode Generation
+**Decision:** QR code and barcode values are **automatically generated** by the system when a skate is created.
+
+- The system must store the generated values in the `qr_code` and `barcode` columns.
+- The user is allowed to **edit** the stored QR/barcode values after creation when needed.
+
+**QR Code Payload — RESOLVED (2026-09-10 IMPL-002):**
+- `qr_code` value = the skate's `skate_code`.
+- Example: `skate_code = SK-025` → `qr_code = "SK-025"`.
+- This value is set at creation time and defaults to the generated or user-provided `skate_code`.
+- The stored value remains **user-editable** after creation.
+- **QR image rendering is NOT part of Phase 03.** Only the string value is stored and displayed.
+
+**Barcode Value — RESOLVED (2026-09-10 IMPL-003):**
+- `barcode` value defaults to the skate's `skate_code`.
+- Example: `skate_code = SK-025` → `barcode = "SK-025"`.
+- This value is set at creation time and defaults to the generated or user-provided `skate_code`.
+- The stored value remains **user-editable** after creation.
+- **Barcode image rendering is NOT part of Phase 03.** Only the string value is stored and displayed.
+
+**Reason:** Owner-approved Phase 03 decision. Resolves OD-03. Payload formats confirmed 2026-09-10 (IMPL-002, IMPL-003).
+
+**Impact:**
+- `skates` schema: `qr_code` VARCHAR(255) NULL; `barcode` VARCHAR(255) NULL.
+- `createSkate()` service: set `qr_code = skate_code` and `barcode = skate_code` at creation.
+- `updateSkate()` service: allow `qr_code` and `barcode` to be updated independently.
+- Frontend: show `qr_code` and `barcode` as editable text inputs (pre-filled with skate_code on create).
+- No QR or barcode image rendering library required in Phase 03.
+
+**Affected Modules:** Skates
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 03 open question OD-03 (2026-09-10); formats confirmed IMPL-002, IMPL-003 (2026-09-10)
+
+---
+
+### DEC-033
+
+**Date:** 2026-09-10 (Phase 03 planning — owner approval; updated 2026-09-10 IMPL-004)
+**Category:** Product — Skate Type in Phase 03
+**Decision:** In Phase 03, Skate Type is implemented as a **free-text input field**. No hardcoded type list is invented.
+
+- The Settings module will NOT be implemented in Phase 03.
+- **Do NOT invent or hard-code a final business list of Skate Types.** No approved documentation defines initial type values.
+- Skate Type is implemented as a plain free-text `<input type="text">` field in Phase 03. This avoids locking the system into an invented temporary list.
+- The `type` column is `VARCHAR(50)` — free text, forward-compatible with future Settings-driven dropdown migration.
+- When the Settings phase is implemented, Skate Type can be migrated from free-text entry to a configurable dropdown without a schema change.
+- Phase 03 must not be blocked by the absence of a final Skate Type list.
+
+**Supersedes:** The earlier statement in DEC-033 that Phase 03 would use a "temporary fixed dropdown" is **corrected** by IMPL-004. A fixed dropdown is not appropriate because it would require inventing type values that have no approved source. Free-text input is the correct Phase 03 implementation.
+
+**Reason:** Owner-approved Phase 03 decision. Resolves OD-04. Updated by IMPL-004 (2026-09-10) to replace "fixed dropdown" with "free-text input" — no type values exist in approved documentation.
+
+**Impact:**
+- No Settings module work in Phase 03.
+- Frontend `SkatesPage`: Skate Type shown as a plain `<input type="text">` (not a `<select>`). No hardcoded options.
+- `type` column remains `VARCHAR(50)` — no change to schema.
+- TD-003 remains: migration to Settings-configurable dropdown required in a future phase.
+
+**Affected Modules:** Skates; deferred impact on Settings (future phase)
+**Status:** ACTIVE
+**Source:** Owner approval — Phase 03 open question OD-04 (2026-09-10); updated IMPL-004 (2026-09-10)
+
+---
+
+*Last updated: 2026-09-10 (DEC-030 to DEC-033 updated — IMPL-001 to IMPL-004 resolved — Phase 03 fully specified) by AI Agent*

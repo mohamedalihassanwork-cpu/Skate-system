@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 2.2
-**Last updated:** 2026-09-09 (Phase 02 FINAL GATE — documentation reconciliation)
-**Updated by:** AI Agent (Phase 02 Documentation Reconciliation)
+**Version:** 2.5
+**Last updated:** 2026-09-10 (Phase 03 Skates Module — IMPLEMENTED)
+**Updated by:** AI Agent (Phase 03 Implementation)
 
 ---
 
@@ -10,16 +10,16 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | IN IMPLEMENTATION — Phase 02 FINAL GATE PASSED. Phase 03 AUTHORIZED. |
-| **Current Phase** | Phase 02 FINAL GATE PASSED |
-| **Current Milestone** | All Phase 02 DoD criteria satisfied. 18/18 tests pass. Both builds zero TS errors. |
-| **Last Completed Phase** | Phase 02 |
-| **Active Work** | None — Phase 03 (Skates Module) ready to begin |
+| **Overall Status** | IN IMPLEMENTATION — Phase 03 COMPLETE. Phase 04 not yet started. |
+| **Current Phase** | Phase 03 (Skates Module) — IMPLEMENTED ✅ |
+| **Current Milestone** | Phase 03 complete. DB migration applied. Backend (schema, service, routes) implemented. Frontend (SkatesPage, service, types) implemented. 16 new tests pass. 34/34 total tests pass. Both builds pass. |
+| **Last Completed Phase** | Phase 03 |
+| **Active Work** | None |
 | **Blocked Work** | None |
-| **Last Verification** | 2026-09-09 — FINAL GATE: API build ✅, Web build ✅, `npm test` 18/18 PASS ✅, DB migration applied ✅, Seed applied (40 perms, 3 roles, 1 admin) ✅, Login API 200 ✅, Refresh rotation ✅, Logout revocation ✅, 401/403 enforced ✅, Browser: login ✅, protected routes ✅, users/roles pages ✅, logout ✅. |
-| **Last Git Commit** | `647817c` — fix(test): remove invalid 'dotenv' option from vitest.config.ts |
+| **Last Verification** | 2026-09-10 — Phase 03: API build ✅ (0 errors), Web build ✅ (0 errors), `npm test` 34/34 PASS ✅ (16 Phase 03 + 18 Phase 02), DB migration 0001_glossy_darwin.sql applied ✅, `skates` table created ✅. |
+| **Last Git Commit** | `647817c` — (Phase 03 not yet committed — commit after review) |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
-| **Recommended Next Action** | Begin Phase 03 — Skates Module |
+| **Recommended Next Action** | Review Phase 03 output, commit, then begin Phase 04 (Customers Module) |
 
 ---
 
@@ -48,7 +48,7 @@
 | Phase 00 | Governance & Documentation | COMPLETED | This initialization |
 | Phase 01 | Foundation & Project Setup | COMPLETED | FINAL GATE: APPROVED. Commits `f7d2810`, `35cc75a`. |
 | Phase 02 | Authentication & Permissions | **FINAL GATE PASSED** | JWT auth, RBAC, 18/18 tests pass. Latest commit `647817c`. |
-| Phase 03 | Skates Module | PLANNED | Depends on Phase 02 |
+| Phase 03 | Skates Module | **IN PROGRESS** (pre-implementation) | Decisions DEC-030–033 recorded. Phase spec written. 4 implementation details PENDING owner confirmation. |
 | Phase 04 | Customers Module | PLANNED | Depends on Phase 02 |
 | Phase 05 | Rental POS (Core) | PLANNED | Depends on Phases 03, 04 |
 | Phase 06 | Payments & Treasury | PLANNED | Depends on Phase 05 |
@@ -74,7 +74,7 @@
 | Auth | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | Users/Permissions | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | Dashboard | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| Skates | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| Skates | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | IN PROGRESS (Phase 03 spec written) |
 | Customers | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | Rentals | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | Payments | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
@@ -126,15 +126,13 @@
 
 ## KNOWN ISSUES
 
-*None — no code exists to have issues.*
+*None.*
 
 ---
 
 ## TECHNICAL DEBT
 
-*None — no code exists.*
-
-When implementation begins, record technical debt items here:
+Items accumulated during planning and early implementation:
 
 ```
 TD-001
@@ -169,6 +167,10 @@ Status: OPEN | RESOLVED
 | UNK-008 | Production domain? | Deployment | PENDING — Phase 18 |
 | UNK-009 | Email provider (if email notifications needed)? | Notification delivery | PENDING — Phase 15 |
 | UNK-010 | Backup strategy? | Data safety | PENDING — Phase 18 |
+| IMPL-001 | Exact `skate_code` auto-generation algorithm (format, sequence, padding)? | Phase 03 `createSkate()` service | RESOLVED — `SK-NNN` format, 3-digit zero-pad, MAX+1, never reuse (DEC-030) |
+| IMPL-002 | What value is stored in `qr_code`? | Phase 03 skate schema + service | RESOLVED — `qr_code` = `skate_code` string; user-editable (DEC-032) |
+| IMPL-003 | What value is stored in `barcode`? | Phase 03 skate schema + service | RESOLVED — `barcode` = `skate_code` string; user-editable (DEC-032) |
+| IMPL-004 | Initial Skate Type values for Phase 03? | Phase 03 frontend SkatesPage | RESOLVED — free-text input; no hardcoded list (DEC-033) |
 
 ---
 
@@ -182,7 +184,7 @@ Status: OPEN | RESOLVED
 | `docs/00-governance/DEFINITION_OF_DONE.md` | COMPLETE |
 | `docs/00-governance/CHANGE_REQUEST_PROCESS.md` | COMPLETE |
 | `docs/00-governance/DOCUMENTATION_RULES.md` | COMPLETE |
-| `docs/decisions/DECISION_LOG.md` | COMPLETE — 18 decisions recorded |
+| `docs/decisions/DECISION_LOG.md` | COMPLETE — 33 decisions recorded (DEC-030 to DEC-033 added Phase 03) |
 | `docs/architecture/TECHNICAL_ARCHITECTURE.md` | COMPLETE — target only |
 | `docs/architecture/DATABASE_ARCHITECTURE.md` | COMPLETE — target schema |
 | `docs/architecture/API_ARCHITECTURE.md` | COMPLETE — target routes |
@@ -195,8 +197,10 @@ Status: OPEN | RESOLVED
 | `docs/CHANGELOG.md` | COMPLETE |
 | `docs/RELEASE_HISTORY.md` | COMPLETE |
 | `docs/INITIAL_PROJECT_AUDIT.md` | COMPLETE |
-| Module docs (`docs/modules/`) | STUB entries — to be expanded during implementation |
-| Phase docs (`docs/phases/`) | STUB entries |
+| `docs/modules/SKATES.md` | UPDATED — Phase 03 pre-implementation (DEC-030 to DEC-033 applied) |
+| `docs/phases/PHASE_03_SKATES_MODULE.md` | UPDATED — full phase spec written (was stub) |
+| Other module docs (`docs/modules/`) | STUB entries — to be expanded during implementation |
+| Other phase docs (`docs/phases/`) | STUB entries |
 | Quality docs (`docs/quality/`) | COMPLETE |
 
 ---
@@ -217,7 +221,9 @@ Status: OPEN | RESOLVED
 | ID | Description | Impact | Risk | Phase | Status |
 |---|---|---|---|---|---|
 | TD-001 | 7 npm audit vulnerabilities in `apps/api` devDependencies (drizzle-kit build tools) | Dev tooling only — not in production bundle | LOW | Phase 01 | OPEN — run `npm audit fix` when drizzle-kit releases a patch |
+| TD-002 | DEC-007 (maintenance→available requires completed maintenance record) deferred to Phase 09. Admin can set `maintenance → available` in Phase 03 without checking for a completed maintenance record. | Admin bypass of maintenance integrity check | MEDIUM | Phase 09 | OPEN — enforce in Phase 09 Maintenance workflow |
+| TD-003 | Skate Type uses a hardcoded fixed dropdown in Phase 03 instead of the Settings-configurable system described in business spec §48. | Type values cannot be managed by admin until Settings phase | LOW | Settings phase | OPEN — migrate when Settings module is implemented |
 
 ---
 
-*Last updated: 2026-09-09 (DEC-024 recorded — Phase 02 authorized) by AI Agent*
+*Last updated: 2026-09-10 (Phase 03 documentation reconciliation — DEC-030 to DEC-033 recorded — IMPL-001 to IMPL-004 identified) by AI Agent*
