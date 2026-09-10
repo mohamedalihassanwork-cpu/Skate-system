@@ -8,7 +8,11 @@
 
 ---
 
-## [v0.3.0] — 2026-09-10 — Phase 03: Skates / Asset Management
+## [v0.3.0 — FINAL GATE PASSED ✅] — 2026-09-10 — Phase 03: Skates / Asset Management
+
+**Commit:** `f12c5b72cdb87a2a34866c252ce63b864b7e8fdc`
+**Gate result:** APPROVED — all automated and manual checks passed.
+
 
 ### Added — Backend
 - `apps/api/src/db/schema/skates.ts` — Drizzle schema for `skates` table (14 columns, 6-value status enum, 3-value condition enum)
