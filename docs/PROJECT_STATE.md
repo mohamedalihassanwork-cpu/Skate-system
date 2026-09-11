@@ -17,7 +17,7 @@
 | **Active Work** | None — Phase 03.5 corrective fix complete, ready for Phase 04 (Customers Module) |
 | **Blocked Work** | None |
 | **Last Verification** | 2026-09-11 — Phase 03.5 Corrective Fix: Web build ✅ (0 TS errors, 353KB bundle), `npm test` 34/34 PASS ✅. |
-| **Last Git Commit** | Pending — fix(phase-03.5): restore sidebar expand control |
+| **Last Git Commit** | `d622cb5` — fix(phase-03.5): restore sidebar expand control |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Begin Phase 04 (Customers Module) |
 
