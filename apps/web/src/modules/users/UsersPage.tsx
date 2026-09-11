@@ -118,17 +118,13 @@ export default function UsersPage() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div style={{ padding: 'var(--space-8)', maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+    <div className="page-container">
 
       {/* Page header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
-        <div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--color-navy-800)', margin: 0 }}>
-            إدارة المستخدمين
-          </h1>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', margin: 'var(--space-1) 0 0' }}>
-            حسابات موظفي النظام
-          </p>
+      <div className="page-header">
+        <div className="page-header-text">
+          <h1 className="page-header-title">إدارة المستخدمين</h1>
+          <p className="page-header-subtitle">حسابات موظفي النظام</p>
         </div>
         <PermissionGate permission="users.create">
           <Button
@@ -152,68 +148,178 @@ export default function UsersPage() {
       {/* Loading */}
       {loading && <PageLoader label="جارٍ تحميل المستخدمين" />}
 
-      {/* Users table */}
+      {/* Users table — desktop/tablet (>= 640px) */}
       {!loading && !error && (
-        <div className="table-wrapper" style={{ borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-          <table className="ds-table" style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl', fontFamily: 'var(--font-family-base)' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--color-page-bg)', borderBottom: '1px solid var(--color-border)' }}>
-                {['الاسم', 'البريد الإلكتروني', 'الأدوار', 'الحالة', 'إجراءات'].map(h => (
-                  <th key={h} style={{ padding: 'var(--space-3) var(--space-4)', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-muted)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
-                    لا يوجد مستخدمون بعد
-                  </td>
-                </tr>
-              ) : (
-                users.map(user => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
-                      <span style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-navy-800)' }}>{user.name}</span>
-                    </td>
-                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
-                      <span style={{ direction: 'ltr', display: 'inline-block', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)' }}>{user.email}</span>
-                    </td>
-                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
-                      <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
-                        {user.roles.map(r => (
-                          <span key={r.id} style={{ padding: '1px var(--space-2)', backgroundColor: 'var(--color-navy-50)', color: 'var(--color-navy-700)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>
-                            {r.nameAr}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
-                      <Badge status={user.isActive ? 'active' : 'inactive'}>
-                        {user.isActive ? 'نشط' : 'معطّل'}
-                      </Badge>
-                    </td>
-                    <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle', textAlign: 'center' }}>
-                      <PermissionGate permission="users.delete">
-                        {user.isActive && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeactivateClick(user)}
-                            style={{ color: 'var(--color-danger-text)' }}
-                          >
-                            تعطيل
-                          </Button>
-                        )}
-                      </PermissionGate>
-                    </td>
+        <>
+          {/* Desktop/tablet: data table */}
+          <div className="users-desktop-table" style={{ borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="ds-table" style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl', fontFamily: 'var(--font-family-base)' }}>
+                <thead>
+                  <tr style={{ backgroundColor: 'var(--color-page-bg)', borderBottom: '1px solid var(--color-border)' }}>
+                    {['الاسم', 'البريد الإلكتروني', 'الأدوار', 'الحالة', 'إجراءات'].map(h => (
+                      <th key={h} style={{ padding: 'var(--space-3) var(--space-4)', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-muted)' }}>{h}</th>
+                    ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
+                        لا يوجد مستخدمون بعد
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map(user => (
+                      <tr key={user.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                          <span style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-navy-800)' }}>{user.name}</span>
+                        </td>
+                        <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                          <span style={{ direction: 'ltr', display: 'inline-block', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)' }}>{user.email}</span>
+                        </td>
+                        <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
+                            {user.roles.map(r => (
+                              <span key={r.id} style={{ padding: '1px var(--space-2)', backgroundColor: 'var(--color-navy-50)', color: 'var(--color-navy-700)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>
+                                {r.nameAr}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle' }}>
+                          <Badge status={user.isActive ? 'active' : 'inactive'}>
+                            {user.isActive ? 'نشط' : 'معطّل'}
+                          </Badge>
+                        </td>
+                        <td style={{ padding: 'var(--space-4)', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <PermissionGate permission="users.delete">
+                            {user.isActive && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeactivateClick(user)}
+                                style={{ color: 'var(--color-danger-text)' }}
+                              >
+                                تعطيل
+                              </Button>
+                            )}
+                          </PermissionGate>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile: card-list view (< 640px) — OD-MOBILE-001 Option B */}
+          <div className="users-mobile-cards">
+            {users.length === 0 ? (
+              <div style={{
+                backgroundColor: 'var(--color-white)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--color-border)',
+                padding: 'var(--space-8)',
+                textAlign: 'center',
+                color: 'var(--color-text-muted)',
+                fontSize: 'var(--font-size-sm)',
+              }}>
+                لا يوجد مستخدمون بعد
+              </div>
+            ) : (
+              users.map(user => (
+                <div key={user.id} style={{
+                  backgroundColor: 'var(--color-white)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--color-border)',
+                  boxShadow: 'var(--shadow-xs)',
+                  padding: 'var(--space-4)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-3)',
+                }}>
+                  {/* User identity row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    {/* Avatar */}
+                    <div style={{
+                      width: 40, height: 40, flexShrink: 0,
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: 'var(--color-navy-100)',
+                      color: 'var(--color-navy-800)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 'var(--font-weight-bold)',
+                      fontSize: 'var(--font-size-sm)',
+                    }} aria-hidden="true">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-navy-800)', fontSize: 'var(--font-size-sm)' }}>
+                        {user.name}
+                      </p>
+                      <p style={{ margin: '2px 0 0', direction: 'ltr', textAlign: 'right', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {user.email}
+                      </p>
+                    </div>
+                    <Badge status={user.isActive ? 'active' : 'inactive'}>
+                      {user.isActive ? 'نشط' : 'معطّل'}
+                    </Badge>
+                  </div>
+
+                  {/* Roles */}
+                  {user.roles.length > 0 && (
+                    <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
+                      {user.roles.map(r => (
+                        <span key={r.id} style={{
+                          padding: '2px var(--space-2)',
+                          backgroundColor: 'var(--color-navy-50)',
+                          color: 'var(--color-navy-700)',
+                          borderRadius: 'var(--radius-full)',
+                          fontSize: 'var(--font-size-xs)',
+                          fontWeight: 600,
+                        }}>
+                          {r.nameAr}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <PermissionGate permission="users.delete">
+                    {user.isActive && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        fullWidth
+                        onClick={() => handleDeactivateClick(user)}
+                        style={{ color: 'var(--color-danger-text)', borderColor: 'var(--color-danger-bg)', backgroundColor: 'var(--color-danger-bg)' }}
+                      >
+                        تعطيل الحساب
+                      </Button>
+                    )}
+                  </PermissionGate>
+                </div>
+              ))
+            )}
+          </div>
+        </>
       )}
+
+      <style>{`
+        /* Desktop/tablet table — show above 640px */
+        .users-desktop-table { display: block; }
+        .users-mobile-cards  { display: none; }
+
+        @media (max-width: 639px) {
+          .users-desktop-table { display: none; }
+          .users-mobile-cards  {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+          }
+        }
+      `}</style>
 
       {/* Create User Modal */}
       <Modal

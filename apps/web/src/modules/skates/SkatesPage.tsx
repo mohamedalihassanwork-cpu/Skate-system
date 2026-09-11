@@ -183,7 +183,7 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
             />
           </Field>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div className="form-grid-2col">
             <Field label="الحالة">
               <select
                 id="create-skate-status"
@@ -211,7 +211,7 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
             </Field>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div className="form-grid-2col">
             <Field label="تاريخ الشراء">
               <input
                 id="create-skate-purchase-date"
@@ -328,7 +328,7 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
             <input id="edit-skate-type" style={inputStyle} type="text" placeholder="نوع الزلاجة" value={form.type ?? ''} onChange={e => set('type', e.target.value)} />
           </Field>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div className="form-grid-2col">
             <Field label="الحالة">
               <select id="edit-skate-status" style={inputStyle} value={form.status} onChange={e => set('status', e.target.value as SkateStatus)}>
                 {statusOptions.map(s => (
@@ -347,7 +347,7 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
             </Field>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div className="form-grid-2col">
             <Field label="تاريخ الشراء">
               <input id="edit-skate-purchase-date" style={inputStyle} type="date" value={form.purchaseDate ?? ''} onChange={e => set('purchaseDate', e.target.value || null)} />
             </Field>
@@ -357,7 +357,7 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
           </div>
 
           {/* DEC-032: QR code and barcode are user-editable strings */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div className="form-grid-2col">
             <Field label="قيمة رمز QR">
               <input id="edit-skate-qr" style={inputStyle} type="text" value={form.qrCode ?? ''} onChange={e => set('qrCode', e.target.value || null)} />
             </Field>
@@ -441,14 +441,12 @@ export default function SkatesPage() {
   ]
 
   return (
-    <div style={{ padding: 'var(--space-8)', maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+    <div className="page-container">
       {/* Page header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
-        <div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-navy-800)', margin: 0 }}>
-            إدارة الزلاجات
-          </h1>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)', margin: 'var(--space-1) 0 0' }}>
+      <div className="page-header">
+        <div className="page-header-text">
+          <h1 className="page-header-title">إدارة الزلاجات</h1>
+          <p className="page-header-subtitle">
             {loading ? '...' : `${total} زلاجة إجمالاً`}
           </p>
         </div>
@@ -465,10 +463,7 @@ export default function SkatesPage() {
       </div>
 
       {/* Filters row */}
-      <div style={{
-        display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-6)',
-        flexWrap: 'wrap', alignItems: 'center',
-      }}>
+      <div className="filters-row">
         {/* Search */}
         <SearchBar
           value={search}
@@ -527,11 +522,7 @@ export default function SkatesPage() {
 
       {/* Skates grid */}
       {!loading && !error && skatesList.length > 0 && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: 'var(--space-4)',
-        }}>
+        <div className="skates-grid">
           {skatesList.map(skate => (
             <SkateCard
               key={skate.id}

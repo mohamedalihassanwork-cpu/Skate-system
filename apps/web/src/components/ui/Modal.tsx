@@ -202,7 +202,12 @@ export function Modal({
             transform: none;
             width: 100%;
             max-width: 100%;
+            max-height: 85dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            /* Safe area: account for home indicator on iOS */
+            padding-bottom: env(safe-area-inset-bottom, 0);
             animation: modal-sheet-enter var(--transition-slow);
           }
 
@@ -210,7 +215,23 @@ export function Modal({
             from { transform: translateY(100%); }
             to   { transform: translateY(0); }
           }
+
+          .modal-body {
+            padding: var(--space-4);
+          }
+
+          .modal-footer {
+            padding: var(--space-4);
+            flex-direction: column;
+            gap: var(--space-2);
+          }
+
+          .modal-footer .btn {
+            width: 100%;
+            justify-content: center;
+          }
         }
+
       `}</style>
     </>
   )

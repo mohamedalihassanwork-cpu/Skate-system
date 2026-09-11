@@ -6,6 +6,47 @@
 
 ## [Unreleased]
 
+### Phase 03.5 — Mobile / Phone View Review & Improvement (2026-09-11)
+
+**Mobile UX Audit & Implementation — all responsive improvements**
+
+#### Added
+- `index.css`: `.page-container` shared utility (32px desktop / 16px mobile padding, responsive)
+- `index.css`: `.page-header` shared utility (flex header, wraps to column on < 480px)
+- `index.css`: `.page-header-title` / `.page-header-subtitle` typography utilities
+- `index.css`: `.form-grid-2col` shared utility (2-col desktop, 1-col at < 640px) — OD-MOBILE-002
+- `index.css`: `.skates-grid` shared utility (auto-fill cards, forced 1-col at < 480px)
+- `index.css`: `.filters-row` shared utility (flex filters, column on < 480px)
+- `UsersPage.tsx`: Mobile card-list view (< 640px) — OD-MOBILE-001 Option B. Avatar, name, email, roles, status, action per card. Desktop table kept for >= 640px.
+
+#### Fixed
+- `App.tsx`: Hamburger button touch target enlarged from 36×36px to 44×44px (WCAG compliant)
+- `App.tsx`: Mobile drawer close button enlarged to 44×44px with focus-visible ring
+- `App.tsx`: Topbar role badge protected with `max-width: 100px` + ellipsis overflow
+- `App.tsx`: Desktop-only sidebar collapse toggle hidden inside mobile drawer (isMobile flag)
+- `App.tsx`: Mobile drawer rebuilt inline to render correct nav without collapse toggle
+- `App.tsx`: Safe-area-inset support added to topbar (`padding-top`, height calc)
+- `App.tsx`: Safe-area-inset support added to sidebar mobile drawer (top/bottom/right padding)
+- `App.tsx`: Mobile drawer close button gets `background-color` hover + focus-visible outline
+- `App.tsx`: `PlaceholderPage` uses `.page-container` (16px padding on mobile)
+- `Modal.tsx`: Bottom-sheet gets `max-height: 85dvh` + `overflow-y: auto` (scroll long forms)
+- `Modal.tsx`: Bottom-sheet adds `padding-bottom: env(safe-area-inset-bottom)` for iOS home indicator
+- `Modal.tsx`: Modal body padding reduces to 16px on mobile (< 640px)
+- `Modal.tsx`: Modal footer stacks to full-width column on mobile for better thumb reach
+- `SkatesPage.tsx`: Page container, page header, skates grid converted to shared CSS classes
+- `SkatesPage.tsx`: All 5 inline 2-col form grids → `.form-grid-2col` (OD-MOBILE-002)
+- `SkatesPage.tsx`: Filters row uses `.filters-row` (column layout on < 480px)
+- `UsersPage.tsx`: Page container + page header converted to shared CSS classes
+- `UsersPage.tsx`: Desktop table wrapped in `overflow-x: auto` container (M-010 resolved)
+- `RolesPage.tsx`: Page container + title converted to shared CSS classes
+- `RolesPage.tsx`: Role card header uses `flex-wrap` + `gap` to prevent overflow
+- `RolesPage.tsx`: Role card permission badge gets `flex-shrink: 0`
+
+#### Verification
+- `npm run build` (apps/web): ✅ 0 TypeScript errors, 358KB bundle
+- `npm test` (apps/api): ✅ 34/34 pass
+- Breakpoints covered: 375px, 390px, 430px (mobile), 640px (mobile/tablet threshold), 768px (sidebar visible), 1280px (desktop)
+
 ---
 
 ## [Phase 03.5 Corrective Fix] — 2026-09-11 — Sidebar Expand Control Restored

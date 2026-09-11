@@ -86,9 +86,11 @@ interface SidebarProps {
   mobileOpen: boolean
   onMobileClose: () => void
   onLogout: () => void
+  /** When true (mobile drawer), hide the desktop-only collapse toggle */
+  isMobile?: boolean
 }
 
-function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLogout }: SidebarProps) {
+function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLogout, isMobile = false }: SidebarProps) {
   const { user } = useAuth()
 
   const NavItem = ({ icon: Icon, label, to, exact }: { icon: typeof Package; label: string; to: string; exact?: boolean }) => (
@@ -115,19 +117,21 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       <div className={['sidebar-header', collapsed ? 'sidebar-header--collapsed' : ''].filter(Boolean).join(' ')}>
         <div className="sidebar-logo" aria-hidden="true">KS</div>
         {!collapsed && <span className="sidebar-brand">KOSHK SKATE ERP</span>}
-        {/* Collapse toggle — always visible in both expanded and collapsed state */}
-        <button
-          type="button"
-          className={['sidebar-collapse-btn', collapsed ? 'sidebar-collapse-btn--collapsed' : ''].filter(Boolean).join(' ')}
-          onClick={onToggleCollapse}
-          aria-label={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
-          title={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
-        >
-          {collapsed
-            ? <PanelRightClose size={16} aria-hidden="true" />
-            : <PanelRightOpen  size={16} aria-hidden="true" />
-          }
-        </button>
+        {/* Collapse toggle — desktop only; hidden inside mobile drawer */}
+        {!isMobile && (
+          <button
+            type="button"
+            className={['sidebar-collapse-btn', collapsed ? 'sidebar-collapse-btn--collapsed' : ''].filter(Boolean).join(' ')}
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
+            title={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
+          >
+            {collapsed
+              ? <PanelRightClose size={16} aria-hidden="true" />
+              : <PanelRightOpen  size={16} aria-hidden="true" />
+            }
+          </button>
+        )}
       </div>
 
       {/* Main nav */}
@@ -215,7 +219,87 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
             >
               <X size={20} aria-hidden="true" />
             </button>
-            {sidebarContent}
+            {/* Re-render sidebar with isMobile=true to hide desktop-only collapse toggle */}
+            <aside
+              className="sidebar"
+              role="navigation"
+              aria-label="القائمة الرئيسية"
+            >
+              <div className="sidebar-header">
+                <div className="sidebar-logo" aria-hidden="true">KS</div>
+                <span className="sidebar-brand">KOSHK SKATE ERP</span>
+                {/* No collapse toggle on mobile */}
+              </div>
+              <nav className="sidebar-nav" aria-label="التنقل الرئيسي">
+                {NAV_ITEMS.map(item =>
+                  item.permission ? (
+                    <PermissionGate key={item.to} permission={item.permission}>
+                      <NavLink
+                        to={item.to}
+                        end={item.exact}
+                        className={({ isActive }) => ['nav-item', isActive ? 'nav-item--active' : ''].filter(Boolean).join(' ')}
+                        onClick={onMobileClose}
+                        aria-label={item.label}
+                      >
+                        <item.icon size={18} aria-hidden="true" className="nav-item-icon" />
+                        <span className="nav-item-label">{item.label}</span>
+                      </NavLink>
+                    </PermissionGate>
+                  ) : (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.exact}
+                      className={({ isActive }) => ['nav-item', isActive ? 'nav-item--active' : ''].filter(Boolean).join(' ')}
+                      onClick={onMobileClose}
+                    >
+                      <item.icon size={18} aria-hidden="true" className="nav-item-icon" />
+                      <span className="nav-item-label">{item.label}</span>
+                    </NavLink>
+                  )
+                )}
+                <div className="sidebar-section-divider">
+                  <span className="sidebar-section-label">الإدارة</span>
+                </div>
+                {ADMIN_NAV_ITEMS.map(item => (
+                  <PermissionGate key={item.to} permission={item.permission}>
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) => ['nav-item', isActive ? 'nav-item--active' : ''].filter(Boolean).join(' ')}
+                      onClick={onMobileClose}
+                    >
+                      <item.icon size={18} aria-hidden="true" className="nav-item-icon" />
+                      <span className="nav-item-label">{item.label}</span>
+                    </NavLink>
+                  </PermissionGate>
+                ))}
+              </nav>
+              <div className="sidebar-footer">
+                {user && (
+                  <div className="sidebar-user-block">
+                    <div className="sidebar-user-avatar" aria-hidden="true">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="sidebar-user-info">
+                      <p className="sidebar-user-name">{user.name}</p>
+                      <p className="sidebar-user-role">
+                        {user.roles?.[0]?.nameAr ?? 'مستخدم'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  id="logout-btn-mobile"
+                  className="nav-item nav-item--logout"
+                  onClick={() => { onMobileClose(); onLogout() }}
+                  aria-label="تسجيل الخروج"
+                >
+                  <LogOut size={18} aria-hidden="true" className="nav-item-icon" />
+                  <span className="nav-item-label">تسجيل الخروج</span>
+                </button>
+              </div>
+            </aside>
           </div>
         </>
       )}
@@ -468,6 +552,10 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
           animation: drawer-slide-in var(--transition-slow);
           display: flex;
           flex-direction: column;
+          /* Safe area — notched phones */
+          padding-top: env(safe-area-inset-top, 0);
+          padding-bottom: env(safe-area-inset-bottom, 0);
+          padding-right: env(safe-area-inset-right, 0);
         }
 
         @keyframes drawer-slide-in {
@@ -477,16 +565,19 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
 
         .sidebar-mobile-close {
           position: absolute;
-          top: var(--space-4);
-          left: var(--space-4);
-          background: none; border: none; cursor: pointer;
-          color: rgba(255,255,255,0.6);
-          padding: var(--space-2); border-radius: var(--radius-sm);
+          top: var(--space-3);
+          left: var(--space-3);
+          background: rgba(255,255,255,0.08); border: none; cursor: pointer;
+          color: rgba(255,255,255,0.7);
+          border-radius: var(--radius-base);
           display: flex; align-items: center; justify-content: center;
+          /* 44×44px touch target */
+          width: 44px; height: 44px;
           z-index: 1;
-          transition: color var(--transition-fast);
+          transition: color var(--transition-fast), background-color var(--transition-fast);
         }
-        .sidebar-mobile-close:hover { color: var(--color-white); }
+        .sidebar-mobile-close:hover { color: var(--color-white); background: rgba(255,255,255,0.14); }
+        .sidebar-mobile-close:focus-visible { outline: 2px solid var(--color-gold-500); outline-offset: 2px; }
 
         /* Hide desktop sidebar on mobile */
         @media (max-width: 767px) {
@@ -605,7 +696,8 @@ function Topbar({ pageTitle, onMobileMenuOpen }: TopbarProps) {
         .topbar-mobile-menu {
           display: none;
           align-items: center; justify-content: center;
-          width: 36px; height: 36px;
+          /* 44×44px touch target (WCAG / design system requirement) */
+          width: 44px; height: 44px;
           background: none; border: none; cursor: pointer;
           border-radius: var(--radius-base);
           color: var(--color-text-muted);
@@ -613,10 +705,22 @@ function Topbar({ pageTitle, onMobileMenuOpen }: TopbarProps) {
           flex-shrink: 0;
         }
         .topbar-mobile-menu:hover { background-color: var(--color-page-bg); color: var(--color-navy-800); }
+        .topbar-mobile-menu:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
 
         @media (max-width: 767px) {
-          .topbar { padding: 0 var(--space-4); }
+          .topbar {
+            padding: 0 var(--space-4);
+            /* Safe area — notched phones */
+            padding-top: env(safe-area-inset-top, 0);
+            /* Adjust height to include safe area */
+            height: calc(var(--header-height) + env(safe-area-inset-top, 0));
+          }
           .topbar-mobile-menu { display: flex; }
+          .topbar-role-badge {
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       `}</style>
     </>
@@ -629,7 +733,7 @@ function Topbar({ pageTitle, onMobileMenuOpen }: TopbarProps) {
 
 function PlaceholderPage({ title, phase }: { title: string; phase: string }) {
   return (
-    <div style={{ padding: 'var(--space-8)', maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+    <div className="page-container">
       <div style={{
         backgroundColor: 'var(--color-white)',
         borderRadius: 'var(--radius-lg)',

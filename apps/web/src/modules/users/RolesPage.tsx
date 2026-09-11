@@ -39,14 +39,10 @@ export default function RolesPage() {
   }
 
   return (
-    <div style={{ padding: 'var(--space-8)', maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+    <div className="page-container">
       <div style={{ marginBottom: 'var(--space-6)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--color-navy-800)', margin: 0 }}>
-          الأدوار والصلاحيات
-        </h1>
-        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', margin: 'var(--space-1) 0 0' }}>
-          إدارة أدوار المستخدمين وصلاحياتهم
-        </p>
+        <h1 className="page-header-title">الأدوار والصلاحيات</h1>
+        <p className="page-header-subtitle">إدارة أدوار المستخدمين وصلاحياتهم</p>
       </div>
 
       {error && (
@@ -61,9 +57,16 @@ export default function RolesPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {roles.map(role => (
             <Card key={role.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-4)' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: 'var(--space-4)',
+                gap: 'var(--space-3)',
+                flexWrap: 'wrap',
+              }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                     <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-navy-800)', margin: 0 }}>
                       {role.nameAr}
                     </h2>
@@ -92,6 +95,7 @@ export default function RolesPage() {
                   fontSize: 'var(--font-size-xs)',
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}>
                   {role.permissions.length} صلاحية
                 </span>

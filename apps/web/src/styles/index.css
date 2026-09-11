@@ -165,3 +165,115 @@ button {
 [dir="rtl"] .flip-rtl {
   transform: scaleX(-1);
 }
+
+/* -----------------------------------------------------------------------------
+   PAGE LAYOUT UTILITIES — responsive, shared across all ERP pages
+   ----------------------------------------------------------------------------- */
+
+/* Standard page container — 32px padding desktop, 16px mobile */
+.page-container {
+  padding: var(--page-padding);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  .page-container {
+    padding: var(--page-padding-mobile);
+  }
+}
+
+/* Page header row — title + primary action button */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.page-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-header-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-navy-800);
+  margin: 0;
+}
+
+.page-header-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .page-header-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .page-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 2-column form grid — collapses to 1-col on mobile */
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 639px) {
+  .form-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Skates card grid — auto-fill, 1-col at very narrow */
+.skates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 479px) {
+  .skates-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Filters row — search + filters + refresh */
+.filters-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 479px) {
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .filters-row select {
+    width: 100%;
+  }
+}
+
