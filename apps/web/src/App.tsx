@@ -112,15 +112,16 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       aria-label="القائمة الرئيسية"
     >
       {/* Header: Logo + collapse toggle */}
-      <div className="sidebar-header">
+      <div className={['sidebar-header', collapsed ? 'sidebar-header--collapsed' : ''].filter(Boolean).join(' ')}>
         <div className="sidebar-logo" aria-hidden="true">KS</div>
         {!collapsed && <span className="sidebar-brand">KOSHK SKATE ERP</span>}
-        {/* Collapse toggle — desktop only */}
+        {/* Collapse toggle — always visible in both expanded and collapsed state */}
         <button
           type="button"
-          className="sidebar-collapse-btn"
+          className={['sidebar-collapse-btn', collapsed ? 'sidebar-collapse-btn--collapsed' : ''].filter(Boolean).join(' ')}
           onClick={onToggleCollapse}
           aria-label={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
+          title={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
         >
           {collapsed
             ? <PanelRightClose size={16} aria-hidden="true" />
@@ -256,6 +257,20 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
           flex-shrink: 0;
         }
 
+        /*
+         * Collapsed header: switch to column layout so the logo and toggle
+         * button both fit within the 64px collapsed width without being clipped.
+         * In expanded mode the row layout with margin-auto on the button is fine
+         * because there is plenty of horizontal space (240px).
+         */
+        .sidebar-header--collapsed {
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: var(--space-3) var(--space-2);
+          gap: var(--space-2);
+        }
+
         .sidebar-logo {
           width: 36px; height: 36px;
           border-radius: var(--radius-base);
@@ -276,6 +291,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
           overflow: hidden;
         }
 
+        /* Expanded: push button to the trailing (left in RTL) edge */
         .sidebar-collapse-btn {
           background: none; border: none; cursor: pointer;
           padding: var(--space-1); border-radius: var(--radius-sm);
@@ -283,9 +299,21 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
           display: flex; align-items: center; justify-content: center;
           transition: color var(--transition-fast), background-color var(--transition-fast);
           flex-shrink: 0;
-          margin-right: auto;
+          margin-inline-start: auto;
+          min-width: 24px; min-height: 24px;
         }
+
+        /* Collapsed: centered, full reset of auto margin */
+        .sidebar-collapse-btn--collapsed {
+          margin-inline-start: 0;
+          width: 36px; height: 36px;
+          border-radius: var(--radius-base);
+          background-color: rgba(255,255,255,0.06);
+          color: rgba(255,255,255,0.65);
+        }
+
         .sidebar-collapse-btn:hover { color: rgba(255,255,255,0.85); background-color: rgba(255,255,255,0.08); }
+        .sidebar-collapse-btn--collapsed:hover { background-color: rgba(255,255,255,0.12); color: var(--color-white); }
         .sidebar-collapse-btn:focus-visible { outline: 2px solid var(--color-gold-500); outline-offset: 2px; }
 
         /* ===== NAV ===== */

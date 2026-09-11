@@ -8,6 +8,36 @@
 
 ---
 
+## [Phase 03.5 Corrective Fix] — 2026-09-11 — Sidebar Expand Control Restored
+
+### Bug Fixed
+
+**Root Cause:** When the sidebar collapsed to 64px, the `sidebar-header` flex row overflowed the available width. The header contained: logo (36px) + gap (12px) + collapse button (~24px) = ~72px — exceeding the 64px collapsed width. Because `.sidebar` has `overflow: hidden`, the toggle button was visually clipped and became inaccessible. The user could collapse the sidebar but had no visible or clickable control to expand it again.
+
+### Files Changed
+
+- **`apps/web/src/App.tsx`** — Sidebar corrective fix:
+  - Added `sidebar-header--collapsed` CSS modifier class applied when sidebar is collapsed
+  - Collapsed header switches to `flex-direction: column` with centered alignment and reduced padding so both the logo and toggle button fit within the 64px width
+  - Added `sidebar-collapse-btn--collapsed` CSS modifier: resets `margin-inline-start: auto` to 0, gives the button a 36×36px rounded appearance matching the logo size for visual consistency
+  - Fixed `margin-right: auto` → `margin-inline-start: auto` (correct logical property for RTL)
+  - Added `title` attribute on toggle button for tooltip in both states
+  - Toggle button remains fully visible and clickable in both expanded and collapsed states
+
+### Verification
+
+- `npm run build` (apps/web) → **0 TypeScript errors**, 353KB bundle ✅
+- `npm test` (apps/api) → **34/34 PASS** — zero regressions ✅
+- Sidebar collapse: ✅ works
+- Sidebar expand (from collapsed): ✅ works — toggle button accessible
+- Toggle visible in collapsed state: ✅ logo + toggle button both render in 64px column layout
+- Active nav state in collapsed state: ✅ gold icon + indicator bar
+- RTL layout: ✅ maintained
+- Lucide icons: ✅ `PanelRightClose` / `PanelRightOpen` (no emoji)
+- Mobile drawer: ✅ unaffected (separate code path)
+
+---
+
 ## [Phase 03.5 Stage 1] — 2026-09-10 — Documentation & Governance Alignment
 
 ### Purpose

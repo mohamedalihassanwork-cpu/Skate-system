@@ -1,7 +1,7 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 2.8
-**Last updated:** 2026-09-10 (Phase 03.5 — Design System & Interface Standardization COMPLETE)
+**Version:** 2.9
+**Last updated:** 2026-09-11 (Phase 03.5 Corrective Fix — sidebar expand control restored)
 **Updated by:** AI Agent (Phase 03.5 Stage 2)
 
 ---
@@ -10,14 +10,14 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | IN IMPLEMENTATION — Phase 03.5 COMPLETE. Ready for Phase 04. |
-| **Current Phase** | Phase 03.5 (UI/UX Design System) — COMPLETE |
-| **Current Milestone** | Phase 03.5: 14 shared UI components created, all ERP interfaces migrated, 0 TS errors, 34/34 tests pass. |
-| **Last Completed Phase** | Phase 03.5 (Design System & Interface Standardization) |
-| **Active Work** | None — Phase 03.5 complete, ready for Phase 04 (Customers Module) |
+| **Overall Status** | IN IMPLEMENTATION — Phase 03.5 Corrective Fix APPLIED. Ready for Phase 04. |
+| **Current Phase** | Phase 03.5 (UI/UX Design System) — Corrective Fix Complete |
+| **Current Milestone** | Phase 03.5 Corrective Fix: sidebar expand control restored. 14 shared UI components, all ERP interfaces migrated, 0 TS errors, 34/34 tests pass. |
+| **Last Completed Phase** | Phase 03.5 (Design System & Interface Standardization) + Corrective Fix |
+| **Active Work** | None — Phase 03.5 corrective fix complete, ready for Phase 04 (Customers Module) |
 | **Blocked Work** | None |
-| **Last Verification** | 2026-09-10 — Phase 03.5 FINAL GATE: Web build ✅ (0 TS errors, 351KB bundle), `npm test` 34/34 PASS ✅. Commit `c7ee6f6`. |
-| **Last Git Commit** | `c7ee6f6` — feat(phase-035): implement UI design system and migrate all ERP interfaces |
+| **Last Verification** | 2026-09-11 — Phase 03.5 Corrective Fix: Web build ✅ (0 TS errors, 353KB bundle), `npm test` 34/34 PASS ✅. |
+| **Last Git Commit** | Pending — fix(phase-03.5): restore sidebar expand control |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Begin Phase 04 (Customers Module) |
 
@@ -127,7 +127,9 @@
 
 ## KNOWN ISSUES
 
-*None.*
+| ID | Description | Status | Fixed in |
+|---|---|---|---|
+| BUG-001 | Sidebar collapse toggle became inaccessible when collapsed: `sidebar-header` flex row (logo 36px + gap 12px + btn ~24px ≈ 72px) overflowed the 64px `sidebar--collapsed` width; `.sidebar` has `overflow: hidden` so the button was clipped. User could collapse but not expand. | RESOLVED | Phase 03.5 Corrective Fix (2026-09-11) |
 
 ---
 
