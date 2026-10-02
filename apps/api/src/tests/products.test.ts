@@ -4,7 +4,7 @@ import app from '../app.js'
 import { db } from '../db/connection.js'
 import { users, userRoles, roles } from '../db/schema/index.js'
 import bcrypt from 'bcryptjs'
-import { eq, like, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { productCategories, products } from '../db/schema/products.js'
 
 async function loginAdmin(): Promise<string> {
@@ -42,14 +42,16 @@ describe('Products API', () => {
   })
 
   afterAll(async () => {
-    const testProds = await db.select().from(products).where(like(products.name, '%Test%'))
-    if (testProds.length) {
-      const pIds = testProds.map(p => p.id)
+    // Use ID-based cleanup (not name pattern) to avoid cross-test FK conflicts.
+    if (productId) {
       const { saleItems } = await import('../db/schema/sales.js')
-      await db.delete(saleItems).where(inArray(saleItems.productId, pIds))
+      await db.delete(saleItems).where(eq(saleItems.productId, productId)).catch(() => {})
+      await db.delete(products).where(eq(products.id, productId)).catch(() => {})
     }
-    await db.delete(products).where(like(products.name, '%Test%'))
-    await db.delete(productCategories).where(like(productCategories.name, '%Test%'))
+    if (categoryId) {
+      await db.delete(products).where(eq(products.categoryId, categoryId)).catch(() => {})
+      await db.delete(productCategories).where(eq(productCategories.id, categoryId)).catch(() => {})
+    }
   })
 
   it('Admin can create a category', async () => {

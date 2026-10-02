@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { db } from '../db/connection'
 import { maintenanceRecords, maintenanceParts, skates, users, auditLogs } from '../db/schema'
 import { maintenanceService } from '../modules/maintenance/maintenance.service'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { AppError, BusinessRuleError } from '../utils/errors'
 
 describe('Maintenance Service', () => {
@@ -54,13 +54,25 @@ describe('Maintenance Service', () => {
   })
 
   afterAll(async () => {
-    // cleanup
+    // cleanup — all deletes scoped to this test's own IDs so they never
+    // affect records created by other test files (maintenance-payments.test.ts).
+    // Previously: db.delete(maintenanceRecords) had NO WHERE clause — it deleted
+    // every row in the table, causing TC-MAINT-PAY-06 to fail when maintenance.test.ts
+    // ran before maintenance-payments.test.ts (Gate 4.2 intermittent regression).
     await db.delete(auditLogs).where(eq(auditLogs.userId, adminId))
-    await db.delete(maintenanceParts)
-    await db.delete(maintenanceRecords)
+    // Scope to records created by this test's user only
+    const ourRecords = await db
+      .select({ id: maintenanceRecords.id })
+      .from(maintenanceRecords)
+      .where(eq(maintenanceRecords.createdBy, adminId))
+    if (ourRecords.length) {
+      const ids = ourRecords.map(r => r.id)
+      await db.delete(maintenanceParts).where(inArray(maintenanceParts.maintenanceId, ids)).catch(() => {})
+    }
+    await db.delete(maintenanceRecords).where(eq(maintenanceRecords.createdBy, adminId))
     await db.delete(skates).where(eq(skates.id, skateId1))
     await db.delete(skates).where(eq(skates.id, skateId2))
-    await db.execute(require('drizzle-orm').sql`DELETE FROM audit_logs`); await db.delete(users).where(eq(users.id, adminId))
+    await db.delete(users).where(eq(users.id, adminId))
   })
 
   it('should create a maintenance record and ensure skate is maintenance', async () => {

@@ -263,7 +263,19 @@ export async function collectCharge(
       'SELECT id FROM cashier_shifts WHERE cashier_id = ? AND closed_at IS NULL LIMIT 1',
       [cashierId]
     )
-    const shiftId = shiftRows[0]?.id || null;
+    const shiftId = shiftRows[0]?.id ?? null
+
+    // F-007 fix (Gate 4.2 Batch 1): Enforce active cashier shift — consistent with
+    // startRental, returnRental, cancelRental, createSale, cancelSale, recordExpense,
+    // and payRecord. Previously, shiftId was silently null, causing treasury_movements
+    // to be recorded with shift_id = NULL and no financial-shift traceability.
+    if (!shiftId) {
+      await connection.rollback()
+      throw new BusinessRuleError(
+        'عملية تحصيل رسوم الضرر تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
+        'NO_ACTIVE_SHIFT'
+      )
+    }
 
     const paymentMethodIds = data.payments.map(p => p.paymentMethodId)
     const placeholders = paymentMethodIds.map(() => '?').join(',')

@@ -21,6 +21,8 @@ describe('System Actor & Background Operations', () => {
 
   beforeAll(async () => {
     // Run seed to ensure System Actor is present
+    // execSync is intentionally used here: the seed must complete fully before any
+    // System Actor test runs. The 60s timeout accommodates bcrypt (12 rounds) + DB ops.
     execSync('npm run db:seed:test', { stdio: 'ignore' })
     
     // Find admin user to use for creating a reservation
@@ -43,10 +45,23 @@ describe('System Actor & Background Operations', () => {
       status: 'available'
     })
     skateId = skateRes.insertId
-  })
+  }, 60_000)
 
   afterAll(async () => {
     vi.restoreAllMocks()
+    // Clean up test fixtures to prevent cross-run state accumulation.
+    // Without this, consecutive full-suite runs leave expired reservations
+    // that lazyExpireReservations() picks up, producing extra audit entries
+    // that break test 7's concurrent audit guard assertion.
+    if (customerId) {
+      await db.delete(reservations).where(eq(reservations.customerId, customerId))
+    }
+    if (skateId) {
+      await db.delete(skates).where(eq(skates.id, skateId))
+    }
+    if (customerId) {
+      await db.delete(customers).where(eq(customers.id, customerId))
+    }
   })
 
   it('1. System Actor exists in the database', async () => {

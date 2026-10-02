@@ -9,6 +9,7 @@ import {
 import { authenticate } from '../../middleware/auth.js'
 import { requirePermission } from '../../middleware/permission.js'
 import type { Request, Response, NextFunction } from 'express'
+import { ValidationError } from '../../utils/errors.js'
 
 export const reservationsRouter = Router()
 
@@ -36,8 +37,7 @@ reservationsRouter.get('/:id', requirePermission('reservations.view'), async (re
   try {
     const id = parseInt(req.params.id as string, 10)
     if (isNaN(id)) {
-      res.status(400).json({ code: 'VALIDATION_ERROR', message: 'معرف غير صالح' })
-      return
+      throw new ValidationError('معرف غير صالح')
     }
     const data = await getReservation(id)
     res.json(data)
@@ -50,8 +50,7 @@ reservationsRouter.put('/:id', requirePermission('reservations.edit'), async (re
   try {
     const id = parseInt(req.params.id as string, 10)
     if (isNaN(id)) {
-      res.status(400).json({ code: 'VALIDATION_ERROR', message: 'معرف غير صالح' })
-      return
+      throw new ValidationError('معرف غير صالح')
     }
     const data = await updateReservation(id, req.body)
     res.json(data)
@@ -64,8 +63,7 @@ reservationsRouter.post('/:id/cancel', requirePermission('reservations.cancel'),
   try {
     const id = parseInt(req.params.id as string, 10)
     if (isNaN(id)) {
-      res.status(400).json({ code: 'VALIDATION_ERROR', message: 'معرف غير صالح' })
-      return
+      throw new ValidationError('معرف غير صالح')
     }
     const data = await cancelReservation(id, req.user!.sub)
     res.json(data)

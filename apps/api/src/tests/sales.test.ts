@@ -4,10 +4,10 @@ import app from '../app.js'
 import { db } from '../db/connection.js'
 import { users, userRoles, roles } from '../db/schema/index.js'
 import { treasuryMovements, paymentMethods } from '../db/schema/payments.js'
-import { eq, desc, like } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { sales, saleItems, salePayments } from '../db/schema/sales.js'
 import { cashierShifts } from '../db/schema/treasury.js'
-import { inArray, sql, and } from 'drizzle-orm'
+import { sql, and } from 'drizzle-orm'
 import { productCategories, products } from '../db/schema/products.js'
 import bcrypt from 'bcryptjs'
 
@@ -81,19 +81,22 @@ describe('Sales API', () => {
   })
 
   afterAll(async () => {
-    // Teardown test data
+    // 1. Delete sale-specific rows (preserves FK order: payments → items → sales)
     if (saleId) {
-      await db.delete(salePayments).where(eq(salePayments.saleId, saleId))
-      await db.delete(saleItems).where(eq(saleItems.saleId, saleId))
-      await db.delete(sales).where(eq(sales.id, saleId))
+      await db.delete(salePayments).where(eq(salePayments.saleId, saleId)).catch(() => {})
+      await db.delete(saleItems).where(eq(saleItems.saleId, saleId)).catch(() => {})
+      await db.delete(sales).where(eq(sales.id, saleId)).catch(() => {})
     }
-    const testProds = await db.select().from(products).where(like(products.name, '%Test%'))
-    if (testProds.length) {
-      const pIds = testProds.map(p => p.id)
-      await db.delete(saleItems).where(inArray(saleItems.productId, pIds))
+    // 2. Delete test product by specific ID — purge any lingering sale_items first
+    if (productId) {
+      await db.delete(saleItems).where(eq(saleItems.productId, productId)).catch(() => {})
+      await db.delete(products).where(eq(products.id, productId)).catch(() => {})
     }
-    await db.delete(products).where(like(products.name, '%Test%'))
-    await db.delete(productCategories).where(like(productCategories.name, '%Test%'))
+    // 3. Delete test category by specific ID — purge any products still referencing it first
+    if (categoryId) {
+      await db.delete(products).where(eq(products.categoryId, categoryId)).catch(() => {})
+      await db.delete(productCategories).where(eq(productCategories.id, categoryId)).catch(() => {})
+    }
   })
 
   it('Creates a sale, deducts stock, and records treasury movement', async () => {

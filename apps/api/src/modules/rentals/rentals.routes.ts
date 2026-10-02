@@ -23,6 +23,8 @@ import { requirePermission } from '../../middleware/permission.js'
 import * as rentalSvc from './rentals.service.js'
 import type { ListRentalsQuery, StartRentalRequest } from './rentals.types.js'
 
+import { AuthenticationError, ForbiddenError } from '../../utils/errors.js'
+
 const router = Router()
 
 // ---------------------------------------------------------------------------
@@ -116,8 +118,7 @@ router.post(
       // TokenPayload.sub holds the user ID — NOT .id
       const cashierId = (req as any).user?.sub
       if (!cashierId) {
-        res.status(401).json({ success: false, error: { code: 'AUTHENTICATION_REQUIRED', message: 'يجب تسجيل الدخول أولاً' } })
-        return
+        throw new AuthenticationError('يجب تسجيل الدخول أولاً')
       }
       const data = await rentalSvc.startRental(cashierId, req.body as StartRentalRequest)
       res.status(201).json({ success: true, data })
@@ -158,8 +159,7 @@ router.post(
     try {
       const cashierId = (req as any).user?.sub
       if (!cashierId) {
-        res.status(401).json({ success: false, error: { code: 'AUTHENTICATION_REQUIRED', message: 'يجب تسجيل الدخول أولاً' } })
-        return
+        throw new AuthenticationError('يجب تسجيل الدخول أولاً')
       }
       const data = await rentalSvc.cancelRental(parseInt(String(req.params['id']), 10), cashierId)
       res.json({ success: true, data })
@@ -184,15 +184,13 @@ router.post(
       const canWaive = userPermissions.includes('waivers.approve')
 
       if (!cashierId) {
-        res.status(401).json({ success: false, error: { code: 'AUTHENTICATION_REQUIRED', message: 'يجب تسجيل الدخول أولاً' } })
-        return
+        throw new AuthenticationError('يجب تسجيل الدخول أولاً')
       }
       
       // If the request includes a waiver, the user must have waivers.approve permission
       const waivedFee = req.body.waivedFee ? parseFloat(String(req.body.waivedFee)) : 0;
       if (waivedFee > 0 && !canWaive) {
-        res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'لا تملك صلاحية الموافقة على التنازل عن الرسوم' } })
-        return
+        throw new ForbiddenError('لا تملك صلاحية الموافقة على التنازل عن الرسوم')
       }
 
       const data = await rentalSvc.returnRental(parseInt(String(req.params['id']), 10), cashierId, req.body)

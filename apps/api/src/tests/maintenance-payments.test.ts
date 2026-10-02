@@ -11,6 +11,7 @@ describe('Maintenance Payment API', () => {
   let paymentMethodId: number
   let skateId: number
   let accountId: number
+  let noShiftUserId: number | null = null  // tracks user created in TC-MAINT-PAY-09
 
   beforeAll(async () => {
     const ts = Date.now()
@@ -81,8 +82,15 @@ describe('Maintenance Payment API', () => {
     await db.delete(paymentMethods).where(eq(paymentMethods.id, paymentMethodId))
     await db.delete(treasuryAccounts).where(eq(treasuryAccounts.id, accountId))
     await db.delete(skates).where(eq(skates.id, skateId))
+    // Delete audit logs scoped to this test's user — line below already covers adminId.
+    // The global DELETE FROM audit_logs was removed: it deleted records belonging to
+    // other test suites and was the source of cross-test state pollution (Gate 4.1.2).
     await db.delete(auditLogs).where(eq(auditLogs.userId, adminId))
-    await db.execute(require('drizzle-orm').sql`DELETE FROM audit_logs`); await db.delete(users).where(eq(users.id, adminId))
+    await db.delete(users).where(eq(users.id, adminId))
+    // Clean up no-shift user created by TC-MAINT-PAY-09
+    if (noShiftUserId !== null) {
+      await db.delete(users).where(eq(users.id, noShiftUserId)).catch(() => {})
+    }
   })
 
   async function setupRecord(cost: number = 330, status: 'pending' | 'in_progress' | 'completed' = 'completed', payStatus: 'unpaid'|'paid'|'paid_external'|'legacy'|'no_cost' = 'unpaid') {
@@ -108,7 +116,7 @@ describe('Maintenance Payment API', () => {
     const [rec] = await db.select().from(maintenanceRecords).where(eq(maintenanceRecords.id, id))
     expect(rec.paymentStatus).toBe('paid')
     
-    const [tm] = await db.select().from(treasuryMovements).where(eq(treasuryMovements.referenceId, id))
+    const [tm] = await db.select().from(treasuryMovements).where(and(eq(treasuryMovements.referenceId, id), eq(treasuryMovements.referenceType, 'maintenance_payment')))
     expect(tm).toBeDefined()
     expect(tm.type).toBe('out')
     expect(tm.amount).toBe('330.00')
@@ -164,6 +172,7 @@ describe('Maintenance Payment API', () => {
     const [u] = await db.insert(users).values({
       name: 'No Shift', email: `no.shift.${Date.now()}@test.com`, passwordHash: '1', isActive: true, createdAt: new Date(), updatedAt: new Date()
     })
+    noShiftUserId = u.insertId  // track for afterAll cleanup
     const id = await setupRecord(330, 'completed', 'unpaid')
     await expect(maintenanceService.payRecord(id, u.insertId, paymentMethodId)).rejects.toThrow(/وردية نشطة/)
   })

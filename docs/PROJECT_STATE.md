@@ -19,10 +19,10 @@
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
 | **Active Work** | Phase 13 Backend (Testing and hardening) |
 | **Blocked Work** | None |
-| **Last Verification** | 2026-09-26 — Governance Reconciliation, Tests 213/213 PASS ✅ |
+| **Last Verification** | 2026-10-02 — Gate 4.2 Batch 3 closed. Tests 289/289 PASS (3 consecutive clean runs). Build PASS. |
 | **Last Git Commit** | `0a69001` — docs: finalize governance report with actual DB inspection |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
-| **Recommended Next Action** | Complete frontend for Phase 13 Reports |
+| **Recommended Next Action** | Proceed to remaining findings or Phase 13 |
 
 ---
 
@@ -201,7 +201,58 @@
 
 ---
 
-## TECHNICAL DEBT
+---
+
+## GATE 4 AUDIT STATUS
+
+**Audit Date:** 2026-10-02  
+**Gate 4.1 Status:** CONDITIONALLY CLOSED ✅ (F-002 deferred to first production deployment)  
+**Gate 4.2 Status:** PARTIAL — GATE 4 REQUIRES FOLLOW-UP
+
+### Gate 4.2 Batch Tracker
+
+| Batch | Findings | Status |
+|-------|----------|--------|
+| Batch 1 — Financial Integrity | F-007 ✅ VERIFIED, F-005 🔴 BLOCKED (OWNER-001) | **COMPLETE** |
+| Batch 2 — Concurrency/Uniqueness | F-010 (TOCTOU) | **COMPLETE** |
+| Batch 3 — Permissions/Auth/Validation | F-012, F-013, F-016, F-017, F-018, F-019 | **COMPLETE** |
+| Batch 4 | Remaining Findings | PLANNED |
+
+### Finding Status
+
+| ID | Description | Status |
+|----|-------------|--------|
+| F-001 | Rental invoice sequence race condition | ✅ VERIFIED (Gate 4.1) |
+| F-002 | Treasury reference_id nullable | 🔴 BLOCKED — PRODUCTION EVIDENCE UNAVAILABLE |
+| F-003 | Sales invoice sequence race condition | ✅ VERIFIED (Gate 4.1) |
+| F-004 | Concurrent rental shift enforcement | ✅ VERIFIED (Gate 4.1) |
+| F-005 | Payment logic scattered across modules | 🔴 BLOCKED — OWNER DECISION REQUIRED (OWNER-001) |
+| F-006 | Double maintenance-record creation risk | ⚠️ OPEN — REMEDIATION REQUIRED (Planned Batch 4) |
+| F-007 | Damage collection missing active-shift guard | ✅ VERIFIED (Gate 4.2 Batch 1) |
+| F-010 | cancelReservation() TOCTOU race | ✅ VERIFIED (Gate 4.2 Batch 2) |
+| F-012 | saleCode not uniqueness-guaranteed | ✅ VERIFIED (Gate 4.2 Batch 3.2) |
+| F-013 | Shift open/close missing permission enforcement | ✅ VERIFIED (Gate 4.2 Batch 3) |
+| F-014 | Report counts include cancelled rentals | 🔴 DEFERRED RISK — REQUIRES EXPLICIT OWNER DECISION |
+| F-016 | Dashboard missing permission check | ✅ VERIFIED (Gate 4.2 Batch 3) |
+| F-017 | Settings PATCH missing value validation | ✅ VERIFIED (Gate 4.2 Batch 3) |
+| F-018 | Inconsistent error response shape | ✅ VERIFIED (Gate 4.2 Batch 3) |
+| F-019 | Maintenance generic Error instead of ValidationError | ✅ VERIFIED (Gate 4.2 Batch 3) |
+
+### Owner Decisions Pending
+
+| ID | Decision | Blocks |
+|----|----------|--------|
+| OWNER-001 | Payment consolidation strategy (Option A/B/C) | F-005 |
+| OWNER-002 | Audit failure policy (hard-fail vs. non-blocking) | F-016 adjacent |
+
+### Gate 4.2 Baseline
+
+| Run | Tests | Duration |
+|-----|-------|----------|
+| V1 | 289/289 PASS | 29.16 s |
+| V2 | 289/289 PASS | 27.12 s |
+| V3 | 289/289 PASS | 27.03 s |
+| Build | PASS (zero TS errors) | — |
 
 ---
 
@@ -292,4 +343,4 @@
 
 ---
 
-*Last updated: 2026-09-21 (Phase 05 Closure Gate — FINAL GATE PASSED ✅. DOC-01 resolved: test count corrected 168→170, commit reference updated to f7bc21a, Rentals module row updated, Phase 05 status COMPLETE. DEC-060 through DEC-070 all documented. by AI Agent)*
+*Last updated: 2026-10-02 (Gate 4.2 Batch 1 closed — F-007 VERIFIED, F-005 BLOCKED awaiting OWNER-001. Baseline 269/269 PASS × 3 consecutive runs. Test isolation fixes applied to sales.test.ts, products.test.ts, maintenance.test.ts. Vitest 5 singleFork migration applied. By AI Agent)*

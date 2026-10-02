@@ -529,13 +529,16 @@ export async function startRental(
     // Capture server time (BR-19)
     // (Variables startedAt and expectedEndAt already calculated above for reservation check)
 
-    // Phase 14: Unified Invoice Number Generation
+    // Phase 14: Unified Invoice Number Generation — F-003 fix
+    // Use LAST_INSERT_ID(value + 1) so the incremented value is session-scoped.
+    // SELECT LAST_INSERT_ID() reads ONLY the value this session wrote, preventing
+    // concurrent transactions from reading each other's sequence value.
     await connection.execute(
       `INSERT INTO sequences (name, value) VALUES ('invoice_number', 1)
-       ON DUPLICATE KEY UPDATE value = value + 1`
+       ON DUPLICATE KEY UPDATE value = LAST_INSERT_ID(value + 1)`
     )
     const [seqRows] = await connection.execute<any[]>(
-      `SELECT value FROM sequences WHERE name = 'invoice_number'`
+      `SELECT LAST_INSERT_ID() AS value`
     )
     const invoiceVal = seqRows[0].value
     const invoiceNumber = `INV-${String(invoiceVal).padStart(6, '0')}`
@@ -856,9 +859,9 @@ export async function cancelRental(rentalId: number, cashierId: number): Promise
       await connection.rollback()
       throw new NotFoundError(`الإيجار رقم ${rentalId} غير موجود`)
     }
-    if (rental.status !== 'active' && rental.status !== 'returned') {
+    if (rental.status !== 'active') {
       await connection.rollback()
-      throw new BusinessRuleError('لا يمكن إلغاء هذا الإيجار', 'RENTAL_NOT_CANCELLABLE')
+      throw new BusinessRuleError('لا يمكن إلغاء هذا الإيجار. يمكن إلغاء الإيجارات النشطة فقط.', 'RENTAL_NOT_CANCELLABLE')
     }
 
     // 2. Fetch payments for this rental with treasury_account info

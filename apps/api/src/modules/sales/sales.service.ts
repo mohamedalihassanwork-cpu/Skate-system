@@ -7,11 +7,19 @@ import { auditService } from '../audit/audit.service.js'
 import { CreateSaleDTO, SaleDTO } from './sales.types.js'
 import { BusinessRuleError, NotFoundError, AppError } from '../../utils/errors.js'
 
+// F-012 fix (Gate 4.2 Batch 2):
+// Use full Date.now() (13 digits) + 5-digit random to reduce collision probability
+// from ~1/1,000 to ~1/100,000 per concurrent millisecond slot.
+// The DB UNIQUE constraint `sales_sale_code_unique` (migration 0012) remains the
+// authoritative safety net; this change just makes retries practically unnecessary.
 function generateSaleCode(): string {
-  const timestamp = Date.now().toString().slice(-6)
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+  const timestamp = Date.now().toString()
+  const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0')
   return `SAL-${timestamp}${random}`
 }
+
+// MySQL error number for duplicate key entry
+const MYSQL_ERR_DUPLICATE_ENTRY = 1062
 
 export class SalesService {
   static async listSales(): Promise<SaleDTO[]> {
@@ -82,144 +90,174 @@ export class SalesService {
       throw new BusinessRuleError('عملية إنشاء البيع تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.', 'NO_ACTIVE_SHIFT')
     }
 
-    const saleId = await db.transaction(async (tx) => {
-      let computedTotalAmount = 0
-      const processedItems = []
+    // F-012 fix: retry the transaction up to 3 times on duplicate saleCode.
+    // On each attempt generateSaleCode() produces a fresh code so collision
+    // probability decreases with each retry. If all attempts fail the last
+    // MySQL error is re-thrown (will surface as HTTP 500 — extremely unlikely).
+    const MAX_ATTEMPTS = 3
+    let lastError: unknown
 
-      // 1. Process items and lock products
-      for (const item of data.items) {
-        if (item.quantity <= 0) {
-          throw new BusinessRuleError('الكمية غير صالحة', 'INVALID_QUANTITY')
-        }
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const saleId = await db.transaction(async (tx) => {
+          let computedTotalAmount = 0
+          const processedItems = []
 
-        // Lock row FOR UPDATE
-        const [productRow] = await tx.execute(
-          sql`SELECT * FROM products WHERE id = ${item.productId} FOR UPDATE`
-        )
+          // 1. Process items and lock products
+          for (const item of data.items) {
+            if (item.quantity <= 0) {
+              throw new BusinessRuleError('الكمية غير صالحة', 'INVALID_QUANTITY')
+            }
 
-        const product = (productRow as unknown as any[])[0]
-        if (!product) {
-          throw new NotFoundError('المنتج غير موجود')
-        }
+            // Lock row FOR UPDATE
+            const [productRow] = await tx.execute(
+              sql`SELECT * FROM products WHERE id = ${item.productId} FOR UPDATE`
+            )
 
-        if (!product.is_active) {
-          throw new BusinessRuleError('المنتج غير مفعل', 'PRODUCT_INACTIVE')
-        }
+            const product = (productRow as unknown as any[])[0]
+            if (!product) {
+              throw new NotFoundError('المنتج غير موجود')
+            }
 
-        if (product.stock_quantity < item.quantity) {
-          throw new BusinessRuleError('المخزون غير كاف', 'INSUFFICIENT_STOCK')
-        }
+            if (!product.is_active) {
+              throw new BusinessRuleError('المنتج غير مفعل', 'PRODUCT_INACTIVE')
+            }
 
-        const unitPrice = parseFloat(product.price)
-        const totalPrice = unitPrice * item.quantity
-        computedTotalAmount += totalPrice
+            if (product.stock_quantity < item.quantity) {
+              throw new BusinessRuleError('المخزون غير كاف', 'INSUFFICIENT_STOCK')
+            }
 
-        processedItems.push({
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice,
-          totalPrice
+            const unitPrice = parseFloat(product.price)
+            const totalPrice = unitPrice * item.quantity
+            computedTotalAmount += totalPrice
+
+            processedItems.push({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice,
+              totalPrice
+            })
+
+            // Deduct stock
+            await tx.update(products)
+              .set({ stockQuantity: product.stock_quantity - item.quantity })
+              .where(eq(products.id, item.productId))
+          }
+
+          // 2. Validate payments
+          let totalPaymentProvided = 0
+          for (const p of data.payments) {
+            if (p.amount <= 0) throw new BusinessRuleError('مبلغ الدفعة غير صالح', 'INVALID_PAYMENT_AMOUNT')
+            
+            // Verify payment method to treasury account mapping
+            const [pmRow] = await tx.select().from(paymentMethods).where(eq(paymentMethods.id, p.paymentMethodId)).limit(1)
+            if (!pmRow) throw new BusinessRuleError('طريقة الدفع غير صالحة', 'INVALID_PAYMENT_METHOD')
+            
+            // Auto-assign treasury account
+            p.treasuryAccountId = pmRow.treasuryAccountId
+
+            totalPaymentProvided += p.amount
+          }
+
+          // Floating point safe comparison
+          if (Math.abs(computedTotalAmount - totalPaymentProvided) > 0.01) {
+            throw new BusinessRuleError('المدفوعات لا تتطابق مع الإجمالي', 'PAYMENT_MISMATCH')
+          }
+
+          // Phase 14: Unified Invoice Number — F-003 fix
+          // Use LAST_INSERT_ID(value + 1) so the incremented value is session-scoped.
+          // SELECT LAST_INSERT_ID() reads ONLY the value this session wrote, preventing
+          // concurrent transactions from reading each other's sequence value.
+          await tx.execute(sql`INSERT INTO sequences (name, value) VALUES ('invoice_number', 1) ON DUPLICATE KEY UPDATE value = LAST_INSERT_ID(value + 1)`)
+          const [seqRows] = await tx.execute(sql`SELECT LAST_INSERT_ID() AS value`)
+          const invoiceVal = (seqRows as unknown as any[])[0].value
+          const invoiceNumber = `INV-${String(invoiceVal).padStart(6, '0')}`
+
+          // 3. Create Sale (generateSaleCode() called fresh on each attempt)
+          const [saleResult] = await tx.insert(sales).values({
+            saleCode: generateSaleCode(),
+            invoiceNumber,
+            customerId: data.customerId || null,
+            cashierId: data.cashierId,
+            shiftId: activeShift.id,
+            totalAmount: computedTotalAmount.toString(),
+            notes: data.notes || null,
+            status: 'completed'
+          })
+
+          const newSaleId = saleResult.insertId
+
+          // 4. Create Sale Items
+          for (const pItem of processedItems) {
+            await tx.insert(saleItems).values({
+              saleId: newSaleId,
+              productId: pItem.productId,
+              quantity: pItem.quantity,
+              unitPrice: pItem.unitPrice.toString(),
+              totalPrice: pItem.totalPrice.toString()
+            })
+          }
+
+          // 5. Create Sale Payments & Treasury Movements
+          for (const p of data.payments) {
+            const [paymentResult] = await tx.insert(salePayments).values({
+              saleId: newSaleId,
+              paymentMethodId: p.paymentMethodId,
+              amount: p.amount.toString(),
+              treasuryAccountId: p.treasuryAccountId
+            })
+
+            await tx.insert(treasuryMovements).values({
+              treasuryAccountId: p.treasuryAccountId,
+              amount: p.amount.toString(),
+              type: 'in',
+              referenceType: 'sale_payment',
+              referenceId: newSaleId, // link to sale ID
+              cashierId: data.cashierId,
+              shiftId: activeShift.id,
+              notes: `Payment for Sale ${newSaleId}`
+            })
+
+            // Update Treasury Account Balance
+            const [accRow] = await tx.select().from(treasuryAccounts).where(eq(treasuryAccounts.id, p.treasuryAccountId)).limit(1)
+            if (accRow) {
+              const newBalance = parseFloat(accRow.balance as string) + parseFloat(p.amount.toString())
+              await tx.update(treasuryAccounts)
+                .set({ balance: newBalance.toString() })
+                .where(eq(treasuryAccounts.id, p.treasuryAccountId))
+            }
+          }
+
+          await auditService.log({
+            userId: data.cashierId,
+            action: 'CREATE_SALE',
+            entityType: 'SALE',
+            entityId: String(newSaleId),
+            newValue: { totalAmount: computedTotalAmount }
+          }, tx)
+
+          return newSaleId
         })
 
-        // Deduct stock
-        await tx.update(products)
-          .set({ stockQuantity: product.stock_quantity - item.quantity })
-          .where(eq(products.id, item.productId))
-      }
+        return (await this.getSale(saleId))!
 
-      // 2. Validate payments
-      let totalPaymentProvided = 0
-      for (const p of data.payments) {
-        if (p.amount <= 0) throw new BusinessRuleError('مبلغ الدفعة غير صالح', 'INVALID_PAYMENT_AMOUNT')
-        
-        // Verify payment method to treasury account mapping
-        const [pmRow] = await tx.select().from(paymentMethods).where(eq(paymentMethods.id, p.paymentMethodId)).limit(1)
-        if (!pmRow) throw new BusinessRuleError('طريقة الدفع غير صالحة', 'INVALID_PAYMENT_METHOD')
-        
-        // Auto-assign treasury account
-        p.treasuryAccountId = pmRow.treasuryAccountId
-
-        totalPaymentProvided += p.amount
-      }
-
-      // Floating point safe comparison
-      if (Math.abs(computedTotalAmount - totalPaymentProvided) > 0.01) {
-        throw new BusinessRuleError('المدفوعات لا تتطابق مع الإجمالي', 'PAYMENT_MISMATCH')
-      }
-
-      // Phase 14: Unified Invoice Number
-      await tx.execute(sql`INSERT INTO sequences (name, value) VALUES ('invoice_number', 1) ON DUPLICATE KEY UPDATE value = value + 1`)
-      const [seqRows] = await tx.execute(sql`SELECT value FROM sequences WHERE name = 'invoice_number'`)
-      const invoiceVal = (seqRows as unknown as any[])[0].value
-      const invoiceNumber = `INV-${String(invoiceVal).padStart(6, '0')}`
-
-      // 3. Create Sale
-      const [saleResult] = await tx.insert(sales).values({
-        saleCode: generateSaleCode(),
-        invoiceNumber,
-        customerId: data.customerId || null,
-        cashierId: data.cashierId,
-        shiftId: activeShift.id,
-        totalAmount: computedTotalAmount.toString(),
-        notes: data.notes || null,
-        status: 'completed'
-      })
-
-      const newSaleId = saleResult.insertId
-
-      // 4. Create Sale Items
-      for (const pItem of processedItems) {
-        await tx.insert(saleItems).values({
-          saleId: newSaleId,
-          productId: pItem.productId,
-          quantity: pItem.quantity,
-          unitPrice: pItem.unitPrice.toString(),
-          totalPrice: pItem.totalPrice.toString()
-        })
-      }
-
-      // 5. Create Sale Payments & Treasury Movements
-      for (const p of data.payments) {
-        const [paymentResult] = await tx.insert(salePayments).values({
-          saleId: newSaleId,
-          paymentMethodId: p.paymentMethodId,
-          amount: p.amount.toString(),
-          treasuryAccountId: p.treasuryAccountId
-        })
-
-        await tx.insert(treasuryMovements).values({
-          treasuryAccountId: p.treasuryAccountId,
-          amount: p.amount.toString(),
-          type: 'in',
-          referenceType: 'sale_payment',
-          referenceId: newSaleId, // link to sale ID
-          cashierId: data.cashierId,
-          shiftId: activeShift.id,
-          notes: `Payment for Sale ${newSaleId}`
-        })
-
-        // Update Treasury Account Balance
-        const [accRow] = await tx.select().from(treasuryAccounts).where(eq(treasuryAccounts.id, p.treasuryAccountId)).limit(1)
-        if (accRow) {
-          const newBalance = parseFloat(accRow.balance as string) + parseFloat(p.amount.toString())
-          await tx.update(treasuryAccounts)
-            .set({ balance: newBalance.toString() })
-            .where(eq(treasuryAccounts.id, p.treasuryAccountId))
+      } catch (err: any) {
+        // Retry only on duplicate saleCode — other errors propagate immediately
+        if (
+          err?.errno === MYSQL_ERR_DUPLICATE_ENTRY &&
+          typeof err?.sqlMessage === 'string' &&
+          err.sqlMessage.includes('sale_code') &&
+          attempt < MAX_ATTEMPTS
+        ) {
+          lastError = err
+          continue
         }
+        throw err
       }
+    }
 
-      await auditService.log({
-        userId: data.cashierId,
-        action: 'CREATE_SALE',
-        entityType: 'SALE',
-        entityId: String(newSaleId),
-        newValue: { totalAmount: computedTotalAmount }
-      }, tx)
-
-      return newSaleId
-    })
-
-    return (await this.getSale(saleId))!
+    // All retry attempts exhausted (probability: effectively zero for normal load)
+    throw lastError
   }
 
   static async cancelSale(saleId: number, adminUserId: number): Promise<SaleDTO> {

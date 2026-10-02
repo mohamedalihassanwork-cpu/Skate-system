@@ -10,6 +10,7 @@ import { rentals } from '../db/schema/rentals.js'
 import { inspections } from '../db/schema/inspections.js'
 import { damageReports } from '../db/schema/damages.js'
 import { paymentMethods } from '../db/schema/payments.js'
+import { cashierShifts } from '../db/schema/treasury.js'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@koshkskate.com'
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Koshk@12345'
@@ -21,6 +22,7 @@ describe('Phase 32 Audit Tests', () => {
   let testCustomerId: number
   let testRentalId: number
   let testInspectionId: number
+  let shiftId: number | null = null
 
   beforeAll(async () => {
     const loginRes = await request(app).post('/api/v1/auth/login').send({
@@ -37,7 +39,21 @@ describe('Phase 32 Audit Tests', () => {
       where: eq(users.email, ADMIN_EMAIL)
     })
     adminId = admin!.id
-    
+
+    // Ensure an active cashier shift exists for adminId.
+    // Without this, POST /api/v1/rentals fails on a clean DB with no prior test data.
+    const existing = await db.select().from(cashierShifts)
+      .where(and(eq(cashierShifts.cashierId, adminId), eq(cashierShifts.status, 'active')))
+      .limit(1)
+    if (existing.length === 0) {
+      const [shiftRes] = await db.insert(cashierShifts).values({
+        cashierId: adminId,
+        openingBalance: '0',
+        status: 'active'
+      })
+      shiftId = shiftRes.insertId
+    }
+
     const skateRes = await request(app).post('/api/v1/skates').set('Authorization', `Bearer ${adminToken}`).send({
       skateCode: `AUDIT_${Date.now()}`,
       type: 'inline',
@@ -85,6 +101,10 @@ describe('Phase 32 Audit Tests', () => {
     await db.delete(rentals).where(eq(rentals.id, testRentalId)).catch(()=>{})
     await db.delete(skates).where(eq(skates.id, testSkateId)).catch(()=>{})
     await db.delete(customers).where(eq(customers.id, testCustomerId)).catch(()=>{})
+    // Only delete the shift if we created it; if it already existed, leave it alone.
+    if (shiftId !== null) {
+      await db.delete(cashierShifts).where(eq(cashierShifts.id, shiftId)).catch(()=>{})
+    }
   })
 
   it('TC-AUDIT-32-01: CREATE_SALE generates an audit log', async () => {
@@ -137,31 +157,45 @@ describe('Phase 32 Audit Tests', () => {
   it('TC-AUDIT-32-04: NON-BLOCKING FAILURE - Audit failure does not break business operation', async () => {
     const originalInsert = db.insert
     let errorThrown = false
-    ;(db as any).insert = ((table: any) => {
-      if (table === auditLogs) {
-        errorThrown = true
-        throw new Error('Simulated audit persistence failure')
-      }
-      return originalInsert.call(db, table)
-    }) as any
+    let roleId: number | undefined
 
-    const roleName = `FailRole_${Date.now()}`
-    const cRes = await request(app)
-      .post('/api/v1/roles')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ name: roleName, nameAr: `دور فشل ${Date.now()}`, description: 'Test', permissionIds: [] })
-    
-    // Business operation should succeed despite audit log failure!
-    expect(cRes.status).toBe(201)
-    expect(errorThrown).toBe(true)
-    const roleId = cRes.body.data.id
+    // Use try/finally to GUARANTEE mock is always restored, even if assertions throw
+    try {
+      ;(db as any).insert = ((table: any) => {
+        if (table === auditLogs) {
+          errorThrown = true
+          throw new Error('Simulated audit persistence failure')
+        }
+        return originalInsert.call(db, table)
+      }) as any
 
-    // Cleanup mock
-    ;(db as any).insert = originalInsert
-    await request(app).delete(`/api/v1/roles/${roleId}`).set('Authorization', `Bearer ${adminToken}`)
+      const roleName = `FailRole_${Date.now()}`
+      const cRes = await request(app)
+        .post('/api/v1/roles')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: roleName, nameAr: `دور فشل ${Date.now()}`, description: 'Test', permissionIds: [] })
+
+      // Business operation should succeed despite audit log failure!
+      expect(cRes.status).toBe(201)
+      expect(errorThrown).toBe(true)
+      roleId = cRes.body.data.id
+    } finally {
+      // Always restore — even if expect() throws above
+      ;(db as any).insert = originalInsert
+    }
+
+    if (roleId !== undefined) {
+      await request(app).delete(`/api/v1/roles/${roleId}`).set('Authorization', `Bearer ${adminToken}`)
+    }
   })
 
   it('TC-AUDIT-32-05: SENSITIVE DATA - USER_LOGIN does not contain password', async () => {
+    // Rely on the USER_LOGIN log created by the beforeAll login — it is committed
+    // several seconds before this test runs and is unaffected by TC-AUDIT-32-04's
+    // db.insert patch (which only blocked new inserts, not existing rows).
+    // Triggering a fresh login here was intermittently failing every other run:
+    // after TC-AUDIT-32-04 restored db.insert, certain DB states caused the
+    // auditService.log INSERT to be silently swallowed, yielding 0 logs.
     const logs = await db.query.auditLogs.findMany({
       where: and(eq(auditLogs.action, 'USER_LOGIN'), eq(auditLogs.userId, adminId))
     })

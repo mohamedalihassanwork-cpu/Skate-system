@@ -3,6 +3,7 @@ import { authenticate } from '../../middleware/auth.js'
 import { requirePermission } from '../../middleware/permission.js'
 import * as ShiftsService from './shifts.service.js'
 import type { OpenShiftInput, CloseShiftInput } from './shifts.types.js'
+import { ValidationError } from '../../utils/errors.js'
 
 const router = Router()
 
@@ -20,11 +21,11 @@ router.get('/current', async (req, res, next) => {
 })
 
 // POST /api/v1/shifts/open - Open a new shift
-router.post('/open', async (req, res, next) => {
+router.post('/open', requirePermission('shifts.manage'), async (req, res, next) => {
   try {
     const validated = req.body as OpenShiftInput
     if (typeof validated.openingBalance !== 'number' || validated.openingBalance < 0) {
-      return res.status(400).json({ message: 'رصيد الافتتاح يجب أن يكون 0 أو أكثر' })
+      throw new ValidationError('رصيد الافتتاح يجب أن يكون 0 أو أكثر')
     }
     const shift = await ShiftsService.openShift(req.user!.sub, validated)
     res.status(201).json(shift)
@@ -34,15 +35,15 @@ router.post('/open', async (req, res, next) => {
 })
 
 // POST /api/v1/shifts/:id/close - Close a shift
-router.post('/:id/close', async (req, res, next) => {
+router.post('/:id/close', requirePermission('shifts.manage'), async (req, res, next) => {
   try {
-    const shiftId = parseInt(req.params.id, 10)
+    const shiftId = parseInt(req.params.id as string, 10)
     const validated = req.body as CloseShiftInput
     if (typeof validated.actualBalance !== 'number' || validated.actualBalance < 0) {
-      return res.status(400).json({ message: 'الرصيد الفعلي يجب أن يكون 0 أو أكثر' })
+      throw new ValidationError('الرصيد الفعلي يجب أن يكون 0 أو أكثر')
     }
     if (validated.closedAt !== undefined && typeof validated.closedAt !== 'string') {
-      return res.status(400).json({ message: 'وقت الإغلاق يجب أن يكون نص (تاريخ)' })
+      throw new ValidationError('وقت الإغلاق يجب أن يكون نص (تاريخ)')
     }
     const shift = await ShiftsService.closeShift(shiftId, validated, req.user!.sub)
     res.json(shift)

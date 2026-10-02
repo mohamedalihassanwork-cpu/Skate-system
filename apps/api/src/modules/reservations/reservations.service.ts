@@ -411,17 +411,65 @@ export async function updateReservation(id: number, data: UpdateReservationReque
 }
 
 export async function cancelReservation(id: number, userId: number): Promise<ReservationDTO> {
-  const current = await getReservation(id)
-  
-  if (current.status !== 'pending' && current.status !== 'confirmed') {
-    throw new BusinessRuleError('لا يمكن إلغاء هذا الحجز لأن حالته لا تسمح بذلك', 'RESERVATION_NOT_ACTIVE')
-  }
+  // Gate 4.2 Batch 2 — F-010: Reservation Cancellation TOCTOU
+  // Vulnerability: previously, read status and update status were separate queries
+  // producing duplicate audit entries and undefined side effects.
+  //
+  // Fix: use the same pool.getConnection() + FOR UPDATE pattern already used by
+  // createReservation() and updateReservation(). The row lock ensures that the
+  // second concurrent caller blocks until the first commits, then re-reads
+  // status = 'cancelled' and throws BusinessRuleError('RESERVATION_NOT_ACTIVE').
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
 
-  await db
-    .update(reservations)
-    .set({ status: 'cancelled' })
-    .where(eq(reservations.id, id))
-  await auditService.log({ userId, action: 'CANCEL_RESERVATION', entityType: 'RESERVATION', entityId: String(id), newValue: { status: 'cancelled' } })
+    // 1. Lock reservation row — concurrent callers block here until commit/rollback
+    const [resRows] = await connection.execute<any[]>(
+      'SELECT id, status FROM reservations WHERE id = ? FOR UPDATE',
+      [id]
+    )
+
+    if (!resRows[0]) {
+      await connection.rollback()
+      throw new NotFoundError(`الحجز رقم ${id} غير موجود`)
+    }
+
+    const currentStatus: string = resRows[0].status
+
+    // 2. Re-check status inside the lock (authoritative read)
+    if (currentStatus !== 'pending' && currentStatus !== 'confirmed') {
+      await connection.rollback()
+      throw new BusinessRuleError(
+        'لا يمكن إلغاء هذا الحجز لأن حالته لا تسمح بذلك',
+        'RESERVATION_NOT_ACTIVE'
+      )
+    }
+
+    // 3. Cancel inside the same transaction
+    await connection.execute(
+      'UPDATE reservations SET status = ?, updated_at = NOW() WHERE id = ?',
+      ['cancelled', id]
+    )
+
+    // 4. Audit inside the transaction (logRaw so audit is atomic with the cancel)
+    await auditService.logRaw(
+      {
+        userId,
+        action: 'CANCEL_RESERVATION',
+        entityType: 'RESERVATION',
+        entityId: String(id),
+        newValue: { status: 'cancelled' },
+      },
+      connection
+    )
+
+    await connection.commit()
+  } catch (err) {
+    try { await connection.rollback() } catch {}
+    throw err
+  } finally {
+    connection.release()
+  }
 
   return await getReservation(id)
 }

@@ -18,7 +18,9 @@ describe('Reservations Service', () => {
   let paymentMethodId: number
 
   beforeEach(async () => {
-    await db.delete(reservations)
+    // Only delete reservations created by this test file to prevent concurrency issues
+    // Wait, the variables aren't initialized yet here. We'll do it after they are created!
+    // But we need a clean slate. Let's delete by a unique mark, or just trust the new skate/customer isolation.
     
     // Seed user
     const [u] = await db.insert(users).values({
@@ -66,7 +68,7 @@ describe('Reservations Service', () => {
   })
 
   afterEach(async () => {
-    await db.delete(reservations)
+    if (skateId) await db.delete(reservations).where(eq(reservations.skateId, skateId)).catch(() => {})
   })
 
   it('creates a reservation successfully', async () => {

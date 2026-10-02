@@ -9,6 +9,8 @@ import type {
   AddMaintenancePartPayload
 } from './maintenance.types.js'
 
+import { ValidationError } from '../../utils/errors.js'
+
 const router = Router()
 
 // List records
@@ -97,7 +99,7 @@ router.post('/:id/pay', authenticate, requirePermission('maintenance.pay'), asyn
   try {
     const paymentMethodId = Number(req.body.paymentMethodId)
     if (!paymentMethodId || isNaN(paymentMethodId)) {
-      throw new Error('paymentMethodId is required')
+      throw new ValidationError('paymentMethodId is required')
     }
     await maintenanceService.payRecord(Number(req.params.id), (req as any).user!.sub, paymentMethodId)
     const record = await maintenanceService.getRecord(Number(req.params.id))

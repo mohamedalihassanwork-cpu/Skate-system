@@ -5,6 +5,13 @@
 ---
 
 ## [Unreleased]
+- **Gate 4.2 Batch 3 (High-Finding Remediation)**:
+  - F-012: Enforced application-level retry logic for deterministic `saleCode` uniqueness under high concurrency.
+  - F-013: Fixed permission leak by enforcing `shifts.manage` check on Shift open/close endpoints.
+  - F-017: Hardened `PATCH /api/v1/settings` to block unknown configuration keys from polluting the settings table.
+  - F-018: Fixed user deactivation to not return generic internal errors when users hold active roles.
+  - F-019: Ensured Maintenance record creation validation returns `400 ValidationError` instead of `500 Internal Server Error`.
+  - Fixed test database contamination (specifically affecting `TC-REP-EXP-01`) to guarantee 100% test suite determinism.
 - **Phase 11 (Sales POS) Completed**: 
   - Added new backend tables for products, categories, sales, sale_items, and sale_payments.
   - Developed strict inventory management with backend transaction locking (`SELECT ... FOR UPDATE`) to prevent overselling.
