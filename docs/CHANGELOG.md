@@ -4,6 +4,159 @@
 
 ---
 
+## [2026-10-03] — Gate 5.3: Documentation Reconciliation (P13–P18)
+
+**Type:** DOCUMENTATION ONLY — no application source code changed.
+
+**Scope:** Phase specifications for P13–P18 reconciled from `PLANNED`/`IN PROGRESS`/conflicting
+stubs to evidence-traceable documents per Gate 5.3 governance mandate.
+
+### Changed
+
+- **`PHASE_13_REPORTS.md`**: Replaced IN PROGRESS stub with full evidence-traceable specification.
+  11 report endpoints documented. Backend tests (~13) documented. F-014 DEFERRED preserved.
+  Browser verification and export verification classified as NOT VERIFIED (browser blocked).
+  Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_14_INVOICES_AND_PRINTING.md`**: Replaced PLANNED stub (status was inaccurate —
+  implementation exists). Gate 5.1 G5-F-008 invoice endpoint tests documented. G5-F-002 print
+  infrastructure static verification documented. Owner decisions (6) preserved. Auto-print
+  and print_invoices_enabled integration classified as UNKNOWN (not independently verified).
+  Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_15_NOTIFICATIONS.md`**: Replaced PLANNED stub (status was inaccurate — implementation
+  exists). HTTP polling mechanism documented as the adopted delivery approach (implicit decision).
+  4 backend tests (ENDING_SOON, EXPIRED) documented. NotificationBell component with sound,
+  deduplication, live countdown documented. UNK-005 preserved as PENDING OWNER RATIFICATION.
+  Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_16_AUDIT_LOG.md`**: Replaced PLANNED stub (status was inaccurate — implementation
+  exists). 15+ `auditService.log`/`logRaw` call sites across 10 modules documented via grep.
+  Non-blocking design (error swallowed) documented. Gap: rental creation START_RENTAL not
+  audited. OWNER-002 preserved as PENDING. Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_17_DASHBOARD.md`**: Replaced contradictory document (header: COMPLETE, footer:
+  BLOCKED). Status conflict resolved. Backend service + DashboardPage.tsx (38KB) documented.
+  3 backend tests (admin full view, cashier RBAC, validation) documented. RBAC enforcement
+  (financial data conditional on reports.view) verified. Browser verification blocked.
+  Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_18_PRODUCTION_READINESS.md`**: Replaced PLANNED stub with evidence-based assessment.
+  Verified: no deployment artifacts, no Docker/CI/CD, no Hostinger account, no production
+  environment. PLANNED status confirmed as accurate. Known risks (JWT secrets, in-memory rate
+  limiter) documented.
+  Status: **PLANNED** (confirmed accurate).
+
+- **`PROJECT_STATE.md`**: Updated to v5.3. P13–P17 phase status corrected from IN PROGRESS/PLANNED
+  to PARTIALLY VERIFIED. P18 PLANNED confirmed. Current Status table updated. Module
+  implementation table corrected for Reports, Invoices, Notifications, Audit Log, Dashboard.
+
+- **`PHASE_INDEX.md`**: P13 updated from IN PROGRESS to PARTIALLY VERIFIED. P14–P17 updated
+  from PLANNED to PARTIALLY VERIFIED. P18 PLANNED unchanged.
+
+### Cross-Phase Findings
+
+| Finding | Phases Affected | Description |
+|---|---|---|
+| Browser verification blocked | P13, P14, P15, P16, P17 | Playwright driver failure (404 from Azure edge node). All browser-dependent requirements remain UNVERIFIED. |
+| PROJECT_MAP.md is stale | All | PROJECT_MAP still shows modules P06–P17 as PLANNED. It has not been updated since Phase 05. |
+| P14 PLANNED was inaccurate | P14 | Implementation exists; tests were added in Gate 5.1. Stub predated the implementation. |
+| P15 PLANNED was inaccurate | P15 | HTTP polling notification system exists; NotificationBell in topbar exists. |
+| P16 PLANNED was inaccurate | P16 | Full audit infrastructure exists across 10 modules. |
+| P17 status conflict | P17 | Document had COMPLETE in header and BLOCKED at footer. Resolved to PARTIALLY VERIFIED. |
+
+### Open Items Carried Forward from Gate 5.3
+
+| ID | Phase | Description |
+|---|---|---|
+| OWNER-001 | P06, P12 | Active-shift enforcement governance strategy |
+| OWNER-002 | P16 | Audit failure blocking vs non-blocking decision |
+| UNK-005 | P15 | Notification delivery (HTTP polling vs SSE/WebSocket) ratification |
+| F-014 | P13 | Deferred defect — do not resolve without Gate 5.4 authorization |
+| G5-F-002 | P14 | Browser print verification blocked |
+| G-P16-01 | P16 | START_RENTAL not audited — gap |
+| G-P17-01 | P17 | DashboardPage browser verification blocked |
+| PROJECT_MAP | All | Stale — modules P06–P17 still show as PLANNED |
+
+### Rationale
+
+Gate 5.3 mandate: P13–P18 documentation must accurately describe reality.
+Prior statuses (PLANNED, IN PROGRESS, COMPLETE, BLOCKED) were inaccurate in multiple cases.
+Per governance rules, documentation must be honest about what is VERIFIED vs PARTIALLY
+VERIFIED vs IMPLEMENTED vs UNKNOWN. The reconciliation changes documentation only.
+
+### Application-Code Safety
+
+Application source files changed: **NONE**.
+No tests were added, modified, or removed.
+No migrations were added or modified.
+No package dependencies were changed.
+All changes are documentation (`.md` files in `docs/`).
+
+---
+
+## [2026-10-03] — Gate 5.2: Documentation Reconciliation (P06–P12)
+
+
+**Type:** DOCUMENTATION ONLY — no application source code changed.
+
+**Scope:** Phase specifications for P06–P12 reconciled from `PLANNED` stubs to
+evidence-traceable documents per Gate 5.2 governance mandate.
+
+### Changed
+
+- **`PHASE_06_PAYMENTS_AND_TREASURY.md`**: Replaced 48-line closure stub with full
+  Requirement Evidence Matrix, Verification Matrix, test coverage details, F-002 BLOCKED
+  status, OWNER-001 pending status, known gap G-P06-02 (multi-method split not isolated-tested).
+  Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_07_RETURNS_AND_INSPECTION.md`**: Replaced PLANNED stub with evidence-traceable
+  specification derived from CHANGELOG, `returns.test.ts`, and `rentals.service.ts`.
+  Documents ~8 tested scenarios, G-P07-02 (active-shift at return not isolated-tested).
+  Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_08_DAMAGE_MANAGEMENT.md`**: Replaced PLANNED stub. Documents F-006/F-007
+  remediation as retrospective audit findings (not original requirements). Identifies
+  missing standalone `damage.test.ts`. Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_09_MAINTENANCE.md`**: Replaced PLANNED stub. Accurately represents F-006
+  remediation history (Gate 5.1 idempotency + Gate 5.1.1 concurrency). DEC-007, TD-002
+  resolution documented. Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_10_RESERVATIONS.md`**: Replaced PLANNED stub with specification derived from
+  `reservations.service.ts` and `reservations.test.ts` (6 tests). Lazy-expiration design
+  decision noted. Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_11_SALES_POS.md`**: Replaced PLANNED stub. F-012 (sale code retry), F-003
+  (invoice sequence) remediation history documented. Status: **PARTIALLY VERIFIED**.
+
+- **`PHASE_12_EXPENSES_AND_CASHIER_SHIFTS.md`**: Replaced PLANNED stub. OWNER-001
+  (active-shift governance) reflected as pending. Missing standalone test files
+  (shifts.test.ts, expenses.test.ts) identified as gaps. Status: **PARTIALLY VERIFIED**.
+
+- **`PROJECT_STATE.md`**: Updated to v5.2. Phase status for P06–P12 changed from
+  `CLOSED ✅` to `PARTIALLY VERIFIED`. Module documentation column updated. Version bumped.
+
+### Rationale
+
+Gate 5 audit finding: P06–P12 documentation consisted of PLANNED stubs while implementation
+was substantially/fully present. The prior CLOSED ✅ status overstated verification level.
+Per Gate 5.2 mandate and governance rules, documentation must be honest about what is
+VERIFIED vs PARTIALLY VERIFIED vs IMPLEMENTED vs UNKNOWN.
+
+### Open Items (Carried Forward from Gate 5.2)
+
+| ID | Phase | Description |
+|---|---|---|
+| F-002 | P06 | treasury_movements.reference_id nullable — production evidence unavailable |
+| OWNER-001 | P06, P12 | Active-shift enforcement governance strategy unresolved |
+| G-P07-02 | P07 | Active-shift enforcement at return not isolated-tested |
+| G-P08-01 | P08 | No standalone damage.test.ts (HTTP-level) |
+| G-P12-01 | P12 | No standalone shifts.test.ts |
+| G-P12-02 | P12 | No standalone expenses.test.ts |
+
+---
+
 ## [Unreleased]
 - **Gate 4.2 Batch 3 (High-Finding Remediation)**:
   - F-012: Enforced application-level retry logic for deterministic `saleCode` uniqueness under high concurrency.

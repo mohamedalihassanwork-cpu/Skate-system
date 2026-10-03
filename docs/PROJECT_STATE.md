@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 5.1  
-**Last updated:** 2026-10-03 (Gate 5.1.1 — F-006 concurrency fix, G5-F-002 static verification, G5-F-008 invoice endpoint tests)  
-**Updated by:** AI Agent (Gate 5.1.1 Closure)
+**Version:** 5.3  
+**Last updated:** 2026-10-03 (Gate 5.3 — Documentation Reconciliation P13–P18. Phase 13–17 specification stubs replaced with evidence-traceable documents. P14/P15/P16/P17 reclassified from PLANNED to PARTIALLY VERIFIED. P17 status conflict (COMPLETE vs BLOCKED) resolved. P18 PLANNED confirmed accurate. PROJECT_MAP stale module entries flagged.)  
+**Updated by:** AI Agent (Gate 5.3 — Documentation Reconciliation)
 
 ---
 
@@ -10,19 +10,19 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | Phase 13 (Reports) **IN PROGRESS ⏳** — Gate 5.1.1 closed |
-| **Current Phase** | Phase 13 IN PROGRESS. |
-| **Current Milestone** | Phase 13: Reports — IN PROGRESS ⏳ |
-| **Last Completed Phase** | Phase 12 — Expenses & Cashier Shifts — 2026-09-25 |
+| **Overall Status** | Documentation gates 5.2 and 5.3 complete. P06–P17 PARTIALLY VERIFIED. P18 PLANNED. No deployment. |
+| **Current Phase** | Gate 5.3 closed. Next: owner decisions + remaining test coverage gaps. |
+| **Current Milestone** | Gate 5.3 — P13–P18 Documentation Reconciliation: CLOSED |
+| **Last Completed Phase** | Phase 17 (Dashboard) — PARTIALLY VERIFIED (browser verification pending) |
 | **Environment** | Node.js (ESM), Vite, React 19, Drizzle ORM, MySQL 8 |
 | **Databases** | `koshk_skate` (Development/Demo), `koshk_skate_test` (Automated Tests Only — **WARNING: Tests must never run against development DB.**) |
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
-| **Active Work** | Phase 13 Backend (Testing and hardening) |
-| **Blocked Work** | None |
+| **Active Work** | None (documentation gate) |
+| **Blocked Work** | Browser verification (Playwright driver failure — 404 from Azure edge node) affects P13, P14, P15, P16, P17 |
 | **Last Verification** | 2026-10-03 — Gate 5.1.1 closed. Tests 319/319 PASS (3 consecutive clean runs). Backend build PASS. Frontend build PASS. |
 | **Last Git Commit** | `e998c43` — fix(maintenance): Gate 5.1.1 — F-006 concurrency safety, route user.sub fix, invoice tests |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
-| **Recommended Next Action** | Proceed to remaining Gate 5 owner decisions or Phase 13 |
+| **Recommended Next Action** | Resolve OWNER-001, OWNER-002, UNK-005 decisions; resolve browser verification block; address test coverage gaps |
 
 ---
 
@@ -34,7 +34,7 @@
 | Visual Design Reference | VERIFIED — complete |
 | Governance documentation | COMPLETED |
 | Architecture documentation | COMPLETED — updated with Phase 04 decisions |
-| Module documentation | AUTH.md ✅, USERS_PERMISSIONS.md ✅, SKATES.md ✅, CUSTOMERS.md ✅, RENTALS.md ✅, PHASE_06-12 docs ✅, PHASE_13 IN PROGRESS ⏳ |
+| Module documentation | AUTH.md ✅, USERS_PERMISSIONS.md ✅, SKATES.md ✅, CUSTOMERS.md ✅, RENTALS.md ✅, PHASE_06-12 PARTIALLY VERIFIED (Gate 5.2), PHASE_13-17 PARTIALLY VERIFIED (Gate 5.3), PHASE_18 PLANNED (accurate) |
 | Source code — Frontend | VERIFIED ✅ — Phase 12 completely implemented. Phase 13 frontend pending. Built ✅ zero TS errors. |
 | Source code — Backend | VERIFIED ✅ — Phase 13 backend implemented. Built ✅ zero TS errors. |
 | Database | VERIFIED ✅ — Phase 13 schema active, verified via `db:verify`. |
@@ -55,13 +55,13 @@
 | **Phase 03.5** | **ERP Design System & Interface Standardization** | **CLOSED ✅** | |
 | Phase 04 | Customers Module | **CLOSED ✅** | |
 | Phase 05 | Rental POS (Core) | **CLOSED ✅** | |
-| Phase 06 | Payments & Treasury | **CLOSED ✅** | Closure Gate complete 2026-09-21. |
-| Phase 07 | Returns & Inspection | **CLOSED ✅** | Closure Gate complete 2026-09-22. Skate return workflow, late fee calculation, condition reporting, waivers RBAC. |
-| Phase 08 | Damage Management | **CLOSED ✅** | Closure Gate complete 2026-09-22. Damage reports, customer charges, payment collection, waivers. |
-| Phase 09 | Maintenance | **CLOSED ✅** | Depends on Phase 08 |
-| Phase 10 | Reservations | **CLOSED ✅** | Depends on Phases 03, 04 |
-| Phase 11 | Sales POS | **CLOSED ✅** | Closure Gate complete. Depends on Phase 06 |
-| Phase 12 | Expenses & Cashier Shifts | **CLOSED ✅** | Depends on Phase 06 |
+| Phase 06 | Payments & Treasury | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: 6/6 PASS. Open: F-002 (BLOCKED-production), OWNER-001 pending, multi-method split not isolated-tested. Phase doc reconciled Gate 5.2. |
+| Phase 07 | Returns & Inspection | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: ~8 PASS. Open: active-shift at return not isolated-tested; no pre-impl spec existed. Phase doc reconciled Gate 5.2. |
+| Phase 08 | Damage Management | **PARTIALLY VERIFIED** | Implementation VERIFIED. No standalone damage.test.ts. F-006/F-007 tested. Missing: direct HTTP tests for CRUD/charge/waiver. Phase doc reconciled Gate 5.2. |
+| Phase 09 | Maintenance | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: 5+10+F006 PASS. HTTP RBAC not isolated. DEC-007 enforced. Phase doc reconciled Gate 5.2. |
+| Phase 10 | Reservations | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: 6 PASS. RBAC and update endpoint not isolated-tested. Phase doc reconciled Gate 5.2. |
+| Phase 11 | Sales POS | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: sales.test.ts + batch3 PASS. Product RBAC not isolated-tested. Phase doc reconciled Gate 5.2. |
+| Phase 12 | Expenses & Cashier Shifts | **PARTIALLY VERIFIED** | Implementation VERIFIED. F-013 tested. No standalone shifts.test.ts or expenses.test.ts. OWNER-001 pending. Phase doc reconciled Gate 5.2. |
 | Phase 13 | Reports | **IN PROGRESS ⏳** | Depends on all data phases |
 | Phase 14 | Invoices & Printing | PLANNED | Depends on Phases 05, 11 |
 | Phase 15 | Notifications | PLANNED | Depends on Phase 05 |
@@ -81,21 +81,22 @@
 | Skates | IMPLEMENTED ✅ | IMPLEMENTED ✅ | IMPLEMENTED ✅ | IMPLEMENTED ✅ | VERIFIED (16/16) ✅ | VERIFIED ✅ |
 | Customers | IMPLEMENTED ✅ | IMPLEMENTED ✅ | IMPLEMENTED ✅ | IMPLEMENTED ✅ | VERIFIED (28/28) ✅ | COMPLETE ✅ |
 | Rentals | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED (74/74) ✅ | VERIFIED ✅ |
-| Payments | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED (6/6) ✅ | VERIFIED ✅ |
-| Treasury | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Returns/Inspection | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Damage | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Maintenance | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Reservations | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Sales POS | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED (6/6) ✅ | VERIFIED ✅ |
-| Products | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED (6/6) ✅ | VERIFIED ✅ |
-| Expenses | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Cashier Shifts | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Reports | PENDING | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ |
-| Invoices/Printing | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| Notifications | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| Audit Log | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| Settings | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| Payments | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (6/6) | PARTIALLY VERIFIED (Gate 5.2) |
+| Treasury | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | INDIRECTLY TESTED | PARTIALLY VERIFIED (Gate 5.2) |
+| Returns/Inspection | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (~8) | PARTIALLY VERIFIED (Gate 5.2) |
+| Damage | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | PARTIALLY (no standalone damage.test.ts) | PARTIALLY VERIFIED (Gate 5.2) |
+| Maintenance | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (5+10+F006 tests) | PARTIALLY VERIFIED (Gate 5.2) |
+| Reservations | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (6) | PARTIALLY VERIFIED (Gate 5.2) |
+| Sales POS | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (sales+batch3) | PARTIALLY VERIFIED (Gate 5.2) |
+| Products | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | INDIRECTLY TESTED | PARTIALLY VERIFIED (Gate 5.2) |
+| Expenses | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | PARTIALLY (no standalone expenses.test.ts) | PARTIALLY VERIFIED (Gate 5.2) |
+| Cashier Shifts | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | PARTIALLY (F-013 only; no standalone shifts.test.ts) | PARTIALLY VERIFIED (Gate 5.2) |
+| Reports | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (~13 backend) | PARTIALLY VERIFIED (Gate 5.3) |
+| Invoices/Printing | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (G5-F-008 gate51-invoices) | PARTIALLY VERIFIED (Gate 5.3) |
+| Notifications | VERIFIED ✅ (NotificationBell) | VERIFIED ✅ | N/A (no table) | VERIFIED ✅ | TESTED (4 — ENDING_SOON, EXPIRED) | PARTIALLY VERIFIED (Gate 5.3) |
+| Audit Log | VERIFIED ✅ (AuditLogsPage) | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (audit.test.ts + audit-phase32) | PARTIALLY VERIFIED (Gate 5.3) |
+| Dashboard | VERIFIED ✅ (DashboardPage) | VERIFIED ✅ | N/A (reads only) | VERIFIED ✅ | TESTED (3 — dashboard.test.ts) | PARTIALLY VERIFIED (Gate 5.3) |
+| Settings | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (gate42-batch3 F-017) | PARTIALLY VERIFIED |
 
 ---
 

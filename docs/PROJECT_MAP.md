@@ -9,6 +9,16 @@
 > All Phase 01–12 files are committed and verified.
 > Phase 13 Backend is verified. Phase 13 Frontend is pending.
 
+> [!WARNING]
+> **Gate 5.3 — STALE NOTICE (2026-10-03):** This PROJECT_MAP was last updated at Phase 05
+> closure (2026-09-21). The Module Navigation Map section below still shows modules
+> P06–P17 as PLANNED. This is inaccurate. All modules through Phase 17 are implemented.
+> The PROJECT_MAP requires a dedicated update pass to reflect the actual verified state
+> of: Payments, Treasury, Returns/Inspections, Damage, Maintenance, Reservations, Sales,
+> Products, Expenses, Cashier Shifts, Reports, Invoices, Notifications, Audit Log, Dashboard.
+> Do NOT use this map's module section to determine implementation status for P06–P17.
+> Use PROJECT_STATE.md and the individual phase documents instead.
+
 ---
 
 ## Repository Root
