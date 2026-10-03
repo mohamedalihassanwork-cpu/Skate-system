@@ -20,7 +20,7 @@
 | **Active Work** | Phase 13 Backend (Testing and hardening) |
 | **Blocked Work** | None |
 | **Last Verification** | 2026-10-03 — Gate 5.1.1 closed. Tests 319/319 PASS (3 consecutive clean runs). Backend build PASS. Frontend build PASS. |
-| **Last Git Commit** | TBD — Gate 5.1.1 closure commit (pending) |
+| **Last Git Commit** | `e998c43` — fix(maintenance): Gate 5.1.1 — F-006 concurrency safety, route user.sub fix, invoice tests |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Proceed to remaining Gate 5 owner decisions or Phase 13 |
 
