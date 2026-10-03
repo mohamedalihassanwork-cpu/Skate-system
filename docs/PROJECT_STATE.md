@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 5.0  
-**Last updated:** 2026-09-26 (Governance documentation and migration hardening complete)  
-**Updated by:** AI Agent (Governance Reconciliation)
+**Version:** 5.1  
+**Last updated:** 2026-10-03 (Gate 5.1.1 — F-006 concurrency fix, G5-F-002 static verification, G5-F-008 invoice endpoint tests)  
+**Updated by:** AI Agent (Gate 5.1.1 Closure)
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | Phase 13 (Reports) **IN PROGRESS ⏳** |
+| **Overall Status** | Phase 13 (Reports) **IN PROGRESS ⏳** — Gate 5.1.1 closed |
 | **Current Phase** | Phase 13 IN PROGRESS. |
 | **Current Milestone** | Phase 13: Reports — IN PROGRESS ⏳ |
 | **Last Completed Phase** | Phase 12 — Expenses & Cashier Shifts — 2026-09-25 |
@@ -19,10 +19,10 @@
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
 | **Active Work** | Phase 13 Backend (Testing and hardening) |
 | **Blocked Work** | None |
-| **Last Verification** | 2026-10-02 — Gate 4.2 Batch 3 closed. Tests 289/289 PASS (3 consecutive clean runs). Build PASS. |
-| **Last Git Commit** | `0a69001` — docs: finalize governance report with actual DB inspection |
+| **Last Verification** | 2026-10-03 — Gate 5.1.1 closed. Tests 319/319 PASS (3 consecutive clean runs). Backend build PASS. Frontend build PASS. |
+| **Last Git Commit** | TBD — Gate 5.1.1 closure commit (pending) |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
-| **Recommended Next Action** | Proceed to remaining findings or Phase 13 |
+| **Recommended Next Action** | Proceed to remaining Gate 5 owner decisions or Phase 13 |
 
 ---
 

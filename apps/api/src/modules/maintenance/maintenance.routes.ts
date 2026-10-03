@@ -37,7 +37,7 @@ router.get('/:id', authenticate, requirePermission('maintenance.view'), async (r
 router.post('/', authenticate, requirePermission('maintenance.create'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = req.body as CreateMaintenanceRecordPayload
-    const insertId = await maintenanceService.createRecord(payload, (req as any).user!.id)
+    const insertId = await maintenanceService.createRecord(payload, (req as any).user!.sub)
     const record = await maintenanceService.getRecord(insertId)
     res.status(201).json({ success: true, data: record })
   } catch (error) {

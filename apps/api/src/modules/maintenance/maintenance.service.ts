@@ -116,7 +116,15 @@ export class MaintenanceService {
   }
 
   /**
-   * Create a new pending maintenance record
+   * Create a new pending maintenance record.
+   *
+   * F-006 (Gate 5.1): Idempotency guard added.
+   * If a damageReportId or inspectionId is provided, we check whether a
+   * maintenance_record already exists for that reference before inserting.
+   * This prevents the double-record risk where:
+   *   1. damage.service.createDamageReport() auto-creates a record (when
+   *      maintenanceRequired=true), AND
+   *   2. a cashier manually calls POST /maintenance for the same event.
    */
   async createRecord(payload: CreateMaintenanceRecordPayload, userId: number) {
     return await db.transaction(async (tx) => {
@@ -131,8 +139,48 @@ export class MaintenanceService {
         throw new NotFoundError('الزلاجة غير موجودة')
       }
 
-      // If manual creation, we might need to enforce the skate is in maintenance status.
-      // But we will allow creating it, and ensure the skate is set to 'maintenance'.
+      // ── F-006 IDEMPOTENCY GUARD (concurrency-safe) ────────────────────────
+      // SELECT ... FOR UPDATE acquires a next-key lock on the index range for
+      // this damageReportId / inspectionId. Under REPEATABLE-READ a plain
+      // SELECT reads a consistent snapshot, so two concurrent transactions
+      // both see 0 rows and both proceed to insert — producing a duplicate.
+      // FOR UPDATE serialises concurrent attempts: the second transaction
+      // blocks until the first commits, then re-reads and finds the existing
+      // record, throwing DUPLICATE_MAINTENANCE_RECORD.
+      if (payload.damageReportId) {
+        const [existing] = await tx
+          .select({ id: maintenanceRecords.id })
+          .from(maintenanceRecords)
+          .where(eq(maintenanceRecords.damageReportId, payload.damageReportId))
+          .limit(1)
+          .for('update')
+
+        if (existing) {
+          throw new BusinessRuleError(
+            'يوجد سجل صيانة مرتبط بهذا التقرير بالفعل',
+            'DUPLICATE_MAINTENANCE_RECORD'
+          )
+        }
+      }
+
+      // Check for an existing maintenance record linked to the same inspection.
+      if (payload.inspectionId) {
+        const [existing] = await tx
+          .select({ id: maintenanceRecords.id })
+          .from(maintenanceRecords)
+          .where(eq(maintenanceRecords.inspectionId, payload.inspectionId))
+          .limit(1)
+          .for('update')
+
+        if (existing) {
+          throw new BusinessRuleError(
+            'يوجد سجل صيانة مرتبط بهذا الفحص بالفعل',
+            'DUPLICATE_MAINTENANCE_RECORD'
+          )
+        }
+      }
+      // ── END F-006 GUARD ────────────────────────────────────────────────────
+
       if (skate.status !== 'maintenance') {
         await tx.update(skates)
           .set({ status: 'maintenance', updatedAt: new Date() })
