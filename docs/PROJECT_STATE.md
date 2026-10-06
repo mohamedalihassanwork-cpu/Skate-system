@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 5.3  
-**Last updated:** 2026-10-03 (Gate 5.3 — Documentation Reconciliation P13–P18. Phase 13–17 specification stubs replaced with evidence-traceable documents. P14/P15/P16/P17 reclassified from PLANNED to PARTIALLY VERIFIED. P17 status conflict (COMPLETE vs BLOCKED) resolved. P18 PLANNED confirmed accurate. PROJECT_MAP stale module entries flagged.)  
-**Updated by:** AI Agent (Gate 5.3 — Documentation Reconciliation)
+**Version:** 5.4  
+**Last updated:** 2026-10-03 (Phase 05.5 — Settings Administration. SettingsPage fully implemented. Backend validation hardened. 29 new tests. Total: 350/350 PASS. Frontend build PASS. DEC-075–DEC-080 recorded.)  
+**Updated by:** AI Agent (Phase 05.5 — Settings Administration)
 
 ---
 
@@ -10,16 +10,16 @@
 
 | Field | Value |
 |---|---|
-| **Overall Status** | Documentation gates 5.2 and 5.3 complete. P06–P17 PARTIALLY VERIFIED. P18 PLANNED. No deployment. |
-| **Current Phase** | Gate 5.3 closed. Next: owner decisions + remaining test coverage gaps. |
-| **Current Milestone** | Gate 5.3 — P13–P18 Documentation Reconciliation: CLOSED |
-| **Last Completed Phase** | Phase 17 (Dashboard) — PARTIALLY VERIFIED (browser verification pending) |
+| **Overall Status** | Phase 05.5 Settings Administration IMPLEMENTED. Documentation gates 5.2 and 5.3 complete. P06–P17 PARTIALLY VERIFIED. P18 PLANNED. No deployment. |
+| **Current Phase** | Phase 05.5 closed (PARTIALLY VERIFIED — browser blocked). Next: owner decisions + remaining test coverage gaps. |
+| **Current Milestone** | Phase 05.5 — Settings Administration: IMPLEMENTED |
+| **Last Completed Phase** | Phase 05.5 (Settings Administration) — PARTIALLY VERIFIED (browser verification BLOCKED) |
 | **Environment** | Node.js (ESM), Vite, React 19, Drizzle ORM, MySQL 8 |
 | **Databases** | `koshk_skate` (Development/Demo), `koshk_skate_test` (Automated Tests Only — **WARNING: Tests must never run against development DB.**) |
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
-| **Active Work** | None (documentation gate) |
-| **Blocked Work** | Browser verification (Playwright driver failure — 404 from Azure edge node) affects P13, P14, P15, P16, P17 |
-| **Last Verification** | 2026-10-03 — Gate 5.1.1 closed. Tests 319/319 PASS (3 consecutive clean runs). Backend build PASS. Frontend build PASS. |
+| **Active Work** | None |
+| **Blocked Work** | Browser verification (Playwright driver failure — 404 from Azure edge node) affects P05.5, P13, P14, P15, P16, P17 |
+| **Last Verification** | 2026-10-03 — Phase 05.5. Tests 350/350 PASS (1 run). Backend build PASS. Frontend build PASS. |
 | **Last Git Commit** | `e998c43` — fix(maintenance): Gate 5.1.1 — F-006 concurrency safety, route user.sub fix, invoice tests |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Resolve OWNER-001, OWNER-002, UNK-005 decisions; resolve browser verification block; address test coverage gaps |
@@ -96,7 +96,7 @@
 | Notifications | VERIFIED ✅ (NotificationBell) | VERIFIED ✅ | N/A (no table) | VERIFIED ✅ | TESTED (4 — ENDING_SOON, EXPIRED) | PARTIALLY VERIFIED (Gate 5.3) |
 | Audit Log | VERIFIED ✅ (AuditLogsPage) | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (audit.test.ts + audit-phase32) | PARTIALLY VERIFIED (Gate 5.3) |
 | Dashboard | VERIFIED ✅ (DashboardPage) | VERIFIED ✅ | N/A (reads only) | VERIFIED ✅ | TESTED (3 — dashboard.test.ts) | PARTIALLY VERIFIED (Gate 5.3) |
-| Settings | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (gate42-batch3 F-017) | PARTIALLY VERIFIED |
+| Settings | IMPLEMENTED ✅ | IMPLEMENTED ✅ | VERIFIED ✅ | VERIFIED ✅ | TESTED (32 — settings.test.ts + gate42-batch3 F-017) | PARTIALLY VERIFIED (Phase 05.5) |
 
 ---
 
@@ -344,4 +344,4 @@
 
 ---
 
-*Last updated: 2026-10-02 (Gate 4.2 Batch 1 closed — F-007 VERIFIED, F-005 BLOCKED awaiting OWNER-001. Baseline 269/269 PASS × 3 consecutive runs. Test isolation fixes applied to sales.test.ts, products.test.ts, maintenance.test.ts. Vitest 5 singleFork migration applied. By AI Agent)*
+*Last updated: 2026-10-03 (Phase 05.5 Settings Administration — IMPLEMENTED. SettingsPage rewritten. Backend validation hardened. TagInput shared component created. 29 new tests. 350/350 PASS. Both builds PASS. DEC-075–080 recorded. By AI Agent)*

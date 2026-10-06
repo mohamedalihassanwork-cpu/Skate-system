@@ -97,22 +97,22 @@ function NoAccessPage({ permission }: { permission: string }) {
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'لوحة التحكم', to: '/', exact: true },
-  { icon: Package,         label: 'الزلاجات',    to: '/skates',      permission: 'skates.view' },
-  { icon: Tags,            label: 'المنتجات',     to: '/products',   permission: 'products.view' },
-  { icon: ShoppingCart,    label: 'نقطة البيع',  to: '/sales-pos',   permission: 'sales.create' },
-  { icon: ListOrdered,     label: 'سجل المبيعات',to: '/sales',       permission: 'sales.view' },
-  { icon: Users,           label: 'العملاء',     to: '/customers',   permission: 'customers.view' },
-  { icon: Calendar,        label: 'الحجوزات',    to: '/reservations', permission: 'reservations.view' },
-  { icon: Ticket,          label: 'الإيجارات',   to: '/rentals',     permission: 'rentals.view' },
-  { icon: AlertTriangle,   label: 'أضرار الزلاجات', to: '/damages',  permission: 'damage.view' },
-  { icon: Landmark,        label: 'الخزينة',     to: '/treasury',    permission: 'shifts.manage' },
-  { icon: Wrench,          label: 'الصيانة',     to: '/maintenance', permission: 'maintenance.view' },
-  { icon: BarChart2,       label: 'التقارير',    to: '/reports',     permission: 'reports.view' },
+  { icon: Package, label: 'الاسكيتات', to: '/skates', permission: 'skates.view' },
+  { icon: Tags, label: 'المنتجات', to: '/products', permission: 'products.view' },
+  { icon: ShoppingCart, label: 'نقطة البيع', to: '/sales-pos', permission: 'sales.create' },
+  { icon: ListOrdered, label: 'سجل المبيعات', to: '/sales', permission: 'sales.view' },
+  { icon: Users, label: 'العملاء', to: '/customers', permission: 'customers.view' },
+  { icon: Calendar, label: 'الحجوزات', to: '/reservations', permission: 'reservations.view' },
+  { icon: Ticket, label: 'الإيجارات', to: '/rentals', permission: 'rentals.view' },
+  { icon: AlertTriangle, label: 'أضرار الاسكيتات', to: '/damages', permission: 'damage.view' },
+  { icon: Landmark, label: 'الخزينة', to: '/treasury', permission: 'shifts.manage' },
+  { icon: Wrench, label: 'الصيانة', to: '/maintenance', permission: 'maintenance.view' },
+  { icon: BarChart2, label: 'التقارير', to: '/reports', permission: 'reports.view' },
 ]
 
 const ADMIN_NAV_ITEMS = [
-  { icon: UserCog,  label: 'المستخدمون', to: '/users',    permission: 'users.view' },
-  { icon: KeyRound, label: 'الأدوار',    to: '/roles',    permission: 'roles.view' },
+  { icon: UserCog, label: 'المستخدمون', to: '/users', permission: 'users.view' },
+  { icon: KeyRound, label: 'الأدوار', to: '/roles', permission: 'roles.view' },
   { icon: Settings, label: 'الإعدادات', to: '/settings', permission: 'settings.view' },
   { icon: Activity, label: 'سجل التدقيق', to: '/audit-logs', permission: 'audit.view' },
 ]
@@ -170,7 +170,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       if (els.length === 0) return
 
       const first = els[0]
-      const last  = els[els.length - 1]
+      const last = els[els.length - 1]
 
       if (e.shiftKey) {
         // Shift+Tab: if on first element, wrap to last
@@ -228,7 +228,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
           >
             {collapsed
               ? <PanelRightClose size={16} aria-hidden="true" />
-              : <PanelRightOpen  size={16} aria-hidden="true" />
+              : <PanelRightOpen size={16} aria-hidden="true" />
             }
           </button>
         )}
@@ -1132,7 +1132,14 @@ export default function App() {
                     <ReportsPage />
                   </PermissionGate>
                 } />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings" element={
+                  <PermissionGate
+                    permission="settings.view"
+                    fallback={<NoAccessPage permission="settings.view" />}
+                  >
+                    <SettingsPage />
+                  </PermissionGate>
+                } />
                 <Route path="/audit-logs" element={
                   <PermissionGate
                     permission="audit.view"

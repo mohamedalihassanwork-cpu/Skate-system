@@ -12,6 +12,7 @@ All phases must follow the project governance rules (`docs/00-governance/`).
 | 03.5 | UI Design System | **CLOSED ✅** | [Phase 03.5](phases/PHASE_035_UI_DESIGN_SYSTEM.md) |
 | 04 | Customers Module | **CLOSED ✅** | [Phase 04](phases/PHASE_04_CUSTOMERS_MODULE.md) |
 | 05 | Rental POS Core | **CLOSED ✅** | [Phase 05](phases/PHASE_05_RENTAL_POS_CORE.md) |
+| 05.5 | Settings Administration | **PARTIALLY VERIFIED** | [Phase 05.5](phases/PHASE_055_SETTINGS_ADMINISTRATION.md) |
 | 06 | Payments & Treasury | **PARTIALLY VERIFIED** | [Phase 06](phases/PHASE_06_PAYMENTS_AND_TREASURY.md) |
 | 07 | Returns & Inspection | **PARTIALLY VERIFIED** | [Phase 07](phases/PHASE_07_RETURNS_AND_INSPECTION.md) |
 | 08 | Damage Management | **PARTIALLY VERIFIED** | [Phase 08](phases/PHASE_08_DAMAGE_MANAGEMENT.md) |

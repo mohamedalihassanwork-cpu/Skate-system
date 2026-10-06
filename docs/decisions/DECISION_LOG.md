@@ -1740,3 +1740,73 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 ---
 
 *Last updated: 2026-09-25 (DEC-071 through DEC-074 added — Phase 12 Entry Gate Owner Decisions) by AI Agent*
+
+---
+
+### DEC-075
+
+**Date:** 2026-10-03 (Phase 05.5 — Settings Administration)
+**Category:** Phase Governance
+**Decision (SETT-001):** The Settings Administration feature is formally documented as Phase 05.5 (sub-phase of Phase 05 shared infrastructure, following the 03.5 precedent). Owner approval of the Implementation Execution Prompt constitutes approval for Phase 05.5. No separate approval gate is required.
+**Affected Modules:** Settings
+**Status:** ACTIVE
+**Source:** Implementation Execution Prompt — owner-approved 2026-10-03
+
+---
+
+### DEC-076
+
+**Date:** 2026-10-03 (Phase 05.5 — Settings Administration)
+**Category:** Security — Permission Model
+**Decision (SETT-002):** The `/settings` route is protected by `<PermissionGate permission="settings.view">` with a `NoAccessPage` fallback. The backend `PATCH /api/v1/settings` endpoint enforces `settings.manage` via `requirePermission`. The Save button is additionally gated client-side by `<PermissionGate permission="settings.manage">`. The `GET /api/v1/settings` endpoint intentionally does NOT require `settings.view` — all authenticated users can read settings because other modules (rentals config, notifications, invoices) programmatically consume this endpoint.
+**Affected Modules:** Settings, Rentals, Notifications, Invoices
+**Status:** ACTIVE
+**Source:** Implementation Execution Prompt — owner-approved 2026-10-03
+
+---
+
+### DEC-077
+
+**Date:** 2026-10-03 (Phase 05.5 — Settings Administration)
+**Category:** Business Rule — Validation
+**Decision (SETT-003):** `rental_duration_options` must satisfy all of: non-empty array, all elements are positive integers (> 0 and `Number.isInteger`), no duplicate values, values in ascending order. Violations produce HTTP 400 VALIDATION_ERROR (Arabic message). These rules are enforced server-side (routes.ts) and visually on the frontend via TagInput per-tag validation.
+**Affected Modules:** Settings, Rentals
+**Status:** ACTIVE
+**Source:** Implementation Execution Prompt — owner-approved 2026-10-03
+
+---
+
+### DEC-078
+
+**Date:** 2026-10-03 (Phase 05.5 — Settings Administration)
+**Category:** Business Rule — Validation
+**Decision (SETT-004):** `late_fee_per_minute` must be >= 0. Zero is valid and means no late fee is charged. Negative values are rejected (HTTP 400). `rental_hourly_rate` must be > 0 (zero or negative would make all future rentals free — financial risk RISK-001). Both enforced server-side.
+**Affected Modules:** Settings, Returns (Phase 07)
+**Status:** ACTIVE
+**Source:** Implementation Execution Prompt — owner-approved 2026-10-03
+
+---
+
+### DEC-079
+
+**Date:** 2026-10-03 (Phase 05.5 — Settings Administration)
+**Category:** UI — New Component
+**Decision (SETT-005):** A new shared `TagInput` component is created at `apps/web/src/components/ui/TagInput.tsx` (Option B from planning). This is justified because no existing shared component provides array-of-number editing with chip display. The component is added to the shared library (`index.ts`) per UI-010. It follows the FormFields.tsx style injection pattern, is RTL-aware, and provides WCAG 2.5.5 compliant touch targets on remove buttons.
+**Affected Modules:** Settings (initial use); available for future phases
+**Status:** ACTIVE
+**Source:** Implementation Execution Prompt — owner-approved 2026-10-03
+
+---
+
+### DEC-080
+
+**Date:** 2026-10-03 (Phase 05.5 — Settings Administration)
+**Category:** UX — Save Behavior
+**Decision (SETT-006):** SettingsPage saves only changed settings (Option 2 — changed-only PATCH). The frontend computes a diff between `initialSettings` (snapshot from last server load/save) and `form` (current edit state). Only changed keys are sent in the PATCH body. If no keys changed, the PATCH is not issued and a toast "no changes to save" is shown. On successful save, `initialSettings` is updated from the server response, which is the new baseline for future diffs.
+**Affected Modules:** Settings
+**Status:** ACTIVE
+**Source:** Implementation Execution Prompt — owner-approved 2026-10-03
+
+---
+
+*Last updated: 2026-10-03 (DEC-075 through DEC-080 added — Phase 05.5 Settings Administration) by AI Agent*

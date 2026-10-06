@@ -42,3 +42,5 @@ export type { TableColumn } from './DataTable'
 export { Pagination } from './Pagination'
 
 export { ErrorBoundary } from './ErrorBoundary'
+
+export { TagInput } from './TagInput'

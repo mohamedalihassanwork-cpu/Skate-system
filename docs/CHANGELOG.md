@@ -4,6 +4,67 @@
 
 ---
 
+## [2026-10-03] — Phase 05.5: Settings Administration
+
+**Type:** FEATURE + BUG FIX
+
+**Scope:** Settings Administration — frontend UI, backend hardening, shared TagInput component, test coverage.
+
+### Added
+
+- **`apps/web/src/modules/settings/SettingsPage.tsx`** — Complete rewrite. All 5 settings now rendered:
+  - `rental_hourly_rate` — Input[type=number] with validation
+  - `rental_duration_options` — TagInput chip editor (SETT-005)
+  - `late_fee_per_minute` — Input[type=number] with validation
+  - `print_invoices_enabled` — CheckboxField
+  - `notification_sound_enabled` — CheckboxField
+  - Dirty state indicator ("توجد تغييرات غير محفوظة")
+  - PermissionGate on Save button (`settings.manage`)
+  - SETT-006: changed-only PATCH (only sends diff to server)
+  - Mobile layout: single-column, full-width save button
+  - All governance fixes: Card replaces raw divs (UI-007), CheckboxField replaces raw `<input>` (UI-002)
+
+- **`apps/web/src/components/ui/TagInput.tsx`** — New shared component (SETT-005, DEC-079).
+  Chip editor for array-of-number settings. RTL-aware, WCAG-compliant, keyboard-navigable.
+  Exported from `apps/web/src/components/ui/index.ts`.
+
+- **`apps/api/src/tests/settings.test.ts`** — 29 new test cases covering:
+  GET auth + all-5-keys, PATCH auth (401/403/200), input validation (5 cases),
+  business-rule validation (13 cases — SETT-003/SETT-004), update behavior (3 cases), audit (2 cases).
+
+- **`docs/phases/PHASE_055_SETTINGS_ADMINISTRATION.md`** — Full phase specification.
+
+### Changed
+
+- **`apps/api/src/modules/settings/settings.routes.ts`** — Hardened PATCH validation:
+  - `rental_hourly_rate`: must be > 0 (RISK-001)
+  - `late_fee_per_minute`: must be >= 0 (SETT-004)
+  - `rental_duration_options`: non-empty, positive integers, no duplicates, ascending (SETT-003)
+
+- **`apps/api/src/modules/settings/settings.service.ts`** — Fixed RISK-003 audit comparison:
+  Changed `oldValue !== updates[key]` (reference equality) to `JSON.stringify` comparison.
+  Arrays now correctly produce NO audit entry when the value is semantically unchanged.
+
+- **`apps/web/src/App.tsx`** — `/settings` route now wrapped in `PermissionGate(settings.view)` with NoAccessPage fallback (SETT-002). Previously had no protection.
+
+- **`docs/modules/SETTINGS.md`** — Full rewrite from PLANNED stub to IMPLEMENTED documentation.
+- **`docs/PHASE_INDEX.md`** — Phase 05.5 entry added.
+- **`docs/PROJECT_STATE.md`** — v5.4. Settings status updated to IMPLEMENTED. Tests count updated to 350/350.
+- **`docs/decisions/DECISION_LOG.md`** — DEC-075 through DEC-080 recorded.
+
+### Tests
+
+- Before: 321 tests (29 test files) — these already included F-017 in gate42-batch3
+- After: 350 tests (29 test files) — +29 new settings.test.ts cases
+- All 350/350 PASS ✅ — zero regressions
+
+### Builds
+
+- Backend: PASS ✅ (zero TS errors)
+- Frontend: PASS ✅ (zero TS errors, built in 2.01s)
+
+---
+
 ## [2026-10-03] — Gate 5.3: Documentation Reconciliation (P13–P18)
 
 **Type:** DOCUMENTATION ONLY — no application source code changed.
@@ -482,7 +543,7 @@ Remediation Pass 1 agent committed (`3783c61`) and pushed to `origin/master` des
   - `DataTable` import + `TableColumn` type added to UI barrel imports.
 
 - `modules/skates/SkatesPage.tsx` (SYS-010): Replaced raw `<input type="checkbox">` + inline `<label>` in EditSkateModal with shared `<CheckboxField>`.
-  - "زلاجة نشطة" behavior, form state, checked/unchecked, RTL, and 44px touch target preserved via CheckboxField.
+  - "اسكيت نشطة" behavior, form state, checked/unchecked, RTL, and 44px touch target preserved via CheckboxField.
   - This closes the D-012 regression identified in SYS-010.
 
 - `components/ui/Alert.tsx` (SYS-017): Fixed Alert dismiss button touch target to meet WCAG 2.5.5 ≥44px.
