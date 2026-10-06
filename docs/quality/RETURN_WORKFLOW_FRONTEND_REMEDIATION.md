@@ -55,7 +55,7 @@ Automated UI testing is currently impossible due to a recurring Playwright drive
 Until automated E2E tests are unblocked, perform the following exact manual verification on `http://localhost:5173`:
 1. Log in as an Administrator.
 2. Navigate to Customers -> Open a Customer with an Active Rental.
-3. Click "إرجاع الزلاجة". The Return Modal should appear.
+3. Click "إرجاع الاسكيت". The Return Modal should appear.
 4. Fill out the inspection (select a damaged part to test the damage workflow).
 5. Ensure the Late Fee automatically populates the payment amount if overdue (The button will not be disabled).
 6. Click Submit.

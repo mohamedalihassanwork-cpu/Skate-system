@@ -184,8 +184,8 @@ export async function lazyExpireReservations(): Promise<void> {
 export async function createReservation(userId: number, data: CreateReservationRequest): Promise<ReservationDTO> {
   // Input Validation
   if (!data.customerId || !Number.isInteger(data.customerId)) throw new ValidationError('معرف العميل مطلوب')
-  if (!data.skateId || !Number.isInteger(data.skateId)) throw new ValidationError('معرف الزلاجة مطلوب (الحجز المخصص)')
-  
+  if (!data.skateId || !Number.isInteger(data.skateId)) throw new ValidationError('معرف الاسكيت مطلوب (الحجز المخصص)')
+
   const from = new Date(data.reservedFrom)
   const until = new Date(data.reservedUntil)
 
@@ -206,7 +206,7 @@ export async function createReservation(userId: number, data: CreateReservationR
     )
     if (!skateRows[0]) {
       await connection.rollback()
-      throw new NotFoundError('الزلاجة غير موجودة')
+      throw new NotFoundError('الاسكيت غير موجودة')
     }
 
     // 2. Lock the customer
@@ -220,7 +220,7 @@ export async function createReservation(userId: number, data: CreateReservationR
     }
     if (!custRows[0].is_active) {
       await connection.rollback()
-      throw new BusinessRuleError('لا يمكن حجز زلاجة لعميل معطل', 'CUSTOMER_INACTIVE')
+      throw new BusinessRuleError('لا يمكن حجز اسكيت لعميل معطل', 'CUSTOMER_INACTIVE')
     }
 
     // 3. Prevent Overlaps (BR-5)
@@ -236,7 +236,7 @@ export async function createReservation(userId: number, data: CreateReservationR
 
     if (overlapRows.length > 0) {
       await connection.rollback()
-      throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الزلاجة', 'RESERVATION_CONFLICT')
+      throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الاسكيت', 'RESERVATION_CONFLICT')
     }
 
     // 4. Insert Reservation
@@ -249,7 +249,7 @@ export async function createReservation(userId: number, data: CreateReservationR
     await auditService.logRaw({ userId: userId, action: 'CREATE_RESERVATION', entityType: 'RESERVATION', entityId: String(newId), newValue: { skateId: data.skateId, customerId: data.customerId, reservedFrom: from.toISOString(), reservedUntil: until.toISOString() } }, connection)
     await connection.commit()
   } catch (err) {
-    try { await connection.rollback() } catch {}
+    try { await connection.rollback() } catch { }
     throw err
   } finally {
     connection.release()
@@ -337,7 +337,7 @@ export async function getReservation(id: number): Promise<ReservationDTO> {
 
 export async function updateReservation(id: number, data: UpdateReservationRequest): Promise<ReservationDTO> {
   const current = await getReservation(id)
-  
+
   if (current.status !== 'pending' && current.status !== 'confirmed') {
     throw new BusinessRuleError('لا يمكن تعديل حجز ملغي أو منتهي', 'RESERVATION_NOT_ACTIVE')
   }
@@ -372,7 +372,7 @@ export async function updateReservation(id: number, data: UpdateReservationReque
       )
       if (!skateRows[0]) {
         await connection.rollback()
-        throw new NotFoundError('الزلاجة غير موجودة')
+        throw new NotFoundError('الاسكيت غير موجودة')
       }
     }
 
@@ -389,7 +389,7 @@ export async function updateReservation(id: number, data: UpdateReservationReque
 
     if (overlapRows.length > 0) {
       await connection.rollback()
-      throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الزلاجة', 'RESERVATION_CONFLICT')
+      throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الاسكيت', 'RESERVATION_CONFLICT')
     }
 
     await connection.execute(
@@ -401,7 +401,7 @@ export async function updateReservation(id: number, data: UpdateReservationReque
 
     await connection.commit()
   } catch (err) {
-    try { await connection.rollback() } catch {}
+    try { await connection.rollback() } catch { }
     throw err
   } finally {
     connection.release()
@@ -465,7 +465,7 @@ export async function cancelReservation(id: number, userId: number): Promise<Res
 
     await connection.commit()
   } catch (err) {
-    try { await connection.rollback() } catch {}
+    try { await connection.rollback() } catch { }
     throw err
   } finally {
     connection.release()

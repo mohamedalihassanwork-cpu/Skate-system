@@ -21,7 +21,7 @@ describe('Reservations Service', () => {
     // Only delete reservations created by this test file to prevent concurrency issues
     // Wait, the variables aren't initialized yet here. We'll do it after they are created!
     // But we need a clean slate. Let's delete by a unique mark, or just trust the new skate/customer isolation.
-    
+
     // Seed user
     const [u] = await db.insert(users).values({
       name: 'Test Admin',
@@ -68,7 +68,7 @@ describe('Reservations Service', () => {
   })
 
   afterEach(async () => {
-    if (skateId) await db.delete(reservations).where(eq(reservations.skateId, skateId)).catch(() => {})
+    if (skateId) await db.delete(reservations).where(eq(reservations.skateId, skateId)).catch(() => { })
   })
 
   it('creates a reservation successfully', async () => {
@@ -111,7 +111,7 @@ describe('Reservations Service', () => {
         reservedFrom: from.toISOString(),
         reservedUntil: until.toISOString(),
       })
-    ).rejects.toThrow('يوجد تعارض في مواعيد الحجز لهذه الزلاجة')
+    ).rejects.toThrow('يوجد تعارض في مواعيد الحجز لهذه الاسكيت')
   })
 
   it('allows reservation creation if previous reservation is cancelled', async () => {
@@ -216,6 +216,6 @@ describe('Reservations Service', () => {
         durationMinutes: 60,
         payments: [{ paymentMethodId, amount: 120 }],
       })
-    ).rejects.toThrow('الزلاجة محجوزة حاليا ولا يمكن استئجارها')
+    ).rejects.toThrow('الاسكيت محجوزة حاليا ولا يمكن استئجارها')
   })
 })

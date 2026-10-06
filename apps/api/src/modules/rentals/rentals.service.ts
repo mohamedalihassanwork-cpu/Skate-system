@@ -203,19 +203,19 @@ interface RawRentalRow {
 
 function rawToDTO(row: RawRentalRow): RentalDTO {
   const skate: RentalSkateInfo = {
-    id:        row.skateId,
+    id: row.skateId,
     skateCode: row.skateCode ?? '',
-    size:      row.skateSize ?? '',
-    type:      row.skateType ?? null,
+    size: row.skateSize ?? '',
+    type: row.skateType ?? null,
   }
   const customer: RentalCustomerInfo = {
-    id:               row.customerId,
-    name:             row.customerName ?? '',
-    phone:            row.customerPhone ?? '',
+    id: row.customerId,
+    name: row.customerName ?? '',
+    phone: row.customerPhone ?? '',
     nationalIdMasked: maskNationalId(row.customerNationalId),
   }
   const cashier: RentalCashierInfo = {
-    id:   row.cashierId,
+    id: row.cashierId,
     name: row.cashierName ?? '',
   }
 
@@ -228,23 +228,23 @@ function rawToDTO(row: RawRentalRow): RentalDTO {
   }
 
   return {
-    id:              row.id,
-    rentalCode:      row.rentalCode,
+    id: row.id,
+    rentalCode: row.rentalCode,
     skate,
     customer,
     cashier,
-    shiftId:         row.shiftId,
+    shiftId: row.shiftId,
     durationMinutes: row.durationMinutes,
-    pricePerHour:    parseFloat(String(row.pricePerHour)),
-    rentalAmount:    parseFloat(String(row.rentalAmount)),
-    startedAt:       isoDateNotNull(row.startedAt),
-    expectedEndAt:   isoDateNotNull(row.expectedEndAt),
-    returnedAt:      isoDate(row.returnedAt),
-    status:          row.status,
-    notes:           row.notes,
+    pricePerHour: parseFloat(String(row.pricePerHour)),
+    rentalAmount: parseFloat(String(row.rentalAmount)),
+    startedAt: isoDateNotNull(row.startedAt),
+    expectedEndAt: isoDateNotNull(row.expectedEndAt),
+    returnedAt: isoDate(row.returnedAt),
+    status: row.status,
+    notes: row.notes,
     lateFeeDetails,
-    createdAt:       isoDateNotNull(row.createdAt),
-    updatedAt:       isoDateNotNull(row.updatedAt),
+    createdAt: isoDateNotNull(row.createdAt),
+    updatedAt: isoDateNotNull(row.updatedAt),
   }
 }
 
@@ -255,37 +255,37 @@ function rawToDTO(row: RawRentalRow): RentalDTO {
 async function fetchRentalsJoined(whereClause?: ReturnType<typeof and>): Promise<RawRentalRow[]> {
   const rows = await db
     .select({
-      id:              rentals.id,
-      rentalCode:      rentals.rentalCode,
-      skateId:         rentals.skateId,
-      customerId:      rentals.customerId,
-      cashierId:       rentals.cashierId,
-      shiftId:         rentals.shiftId,
+      id: rentals.id,
+      rentalCode: rentals.rentalCode,
+      skateId: rentals.skateId,
+      customerId: rentals.customerId,
+      cashierId: rentals.cashierId,
+      shiftId: rentals.shiftId,
       durationMinutes: rentals.durationMinutes,
-      pricePerHour:    rentals.pricePerHour,
-      rentalAmount:    rentals.rentalAmount,
-      startedAt:       rentals.startedAt,
-      expectedEndAt:   rentals.expectedEndAt,
-      returnedAt:      rentals.returnedAt,
-      status:          rentals.status,
-      notes:           rentals.notes,
-      createdAt:       rentals.createdAt,
-      updatedAt:       rentals.updatedAt,
+      pricePerHour: rentals.pricePerHour,
+      rentalAmount: rentals.rentalAmount,
+      startedAt: rentals.startedAt,
+      expectedEndAt: rentals.expectedEndAt,
+      returnedAt: rentals.returnedAt,
+      status: rentals.status,
+      notes: rentals.notes,
+      createdAt: rentals.createdAt,
+      updatedAt: rentals.updatedAt,
       // Joined
-      skateCode:           skates.skateCode,
-      skateSize:           skates.size,
-      skateType:           skates.type,
-      customerName:        customers.name,
-      customerPhone:       customers.phone,
-      customerNationalId:  customers.nationalId,
-      cashierName:         users.name,
-      lateMinutes:         lateFeeRecords.lateMinutes,
-      calculatedFee:       lateFeeRecords.calculatedFee,
+      skateCode: skates.skateCode,
+      skateSize: skates.size,
+      skateType: skates.type,
+      customerName: customers.name,
+      customerPhone: customers.phone,
+      customerNationalId: customers.nationalId,
+      cashierName: users.name,
+      lateMinutes: lateFeeRecords.lateMinutes,
+      calculatedFee: lateFeeRecords.calculatedFee,
     })
     .from(rentals)
-    .leftJoin(skates,    eq(rentals.skateId,    skates.id))
+    .leftJoin(skates, eq(rentals.skateId, skates.id))
     .leftJoin(customers, eq(rentals.customerId, customers.id))
-    .leftJoin(users,     eq(rentals.cashierId,  users.id))
+    .leftJoin(users, eq(rentals.cashierId, users.id))
     .leftJoin(lateFeeRecords, eq(rentals.id, lateFeeRecords.rentalId))
     .where(whereClause)
     .orderBy(desc(rentals.startedAt))
@@ -311,7 +311,7 @@ async function fetchRentalsJoined(whereClause?: ReturnType<typeof and>): Promise
  * This endpoint is Rental-module-specific and read-only.
  */
 export async function getRentalConfig(): Promise<{
-  pricePerHour:    number
+  pricePerHour: number
   durationOptions: number[]
   lateFeePerMinute: number
 }> {
@@ -409,7 +409,7 @@ export async function startRental(
 ): Promise<RentalDTO> {
   // --- Input validation ---
   if (!data.skateId || !Number.isInteger(data.skateId) || data.skateId <= 0) {
-    throw new ValidationError('معرف الزلاجة مطلوب')
+    throw new ValidationError('معرف الاسكيت مطلوب')
   }
   if (!data.customerId || !Number.isInteger(data.customerId) || data.customerId <= 0) {
     throw new ValidationError('معرف العميل مطلوب')
@@ -438,7 +438,7 @@ export async function startRental(
 
   // --- Pre-flight: skate exists (application-layer check for better UX) ---
   const [skateRow] = await db.select().from(skates).where(eq(skates.id, data.skateId)).limit(1)
-  if (!skateRow) throw new NotFoundError('الزلاجة غير موجودة')
+  if (!skateRow) throw new NotFoundError('الاسكيت غير موجودة')
 
   // --- Pre-flight: customer exists and is active ---
   const [customerRow] = await db.select().from(customers).where(eq(customers.id, data.customerId)).limit(1)
@@ -475,7 +475,7 @@ export async function startRental(
     const lockedSkate = skateRows[0]
     if (!lockedSkate || lockedSkate.status !== 'available') {
       await connection.rollback()
-      throw new BusinessRuleError('الزلاجة غير متاحة للاستئجار', 'SKATE_NOT_AVAILABLE')
+      throw new BusinessRuleError('الاسكيت غير متاحة للاستئجار', 'SKATE_NOT_AVAILABLE')
     }
 
     // Check for active reservations that overlap with the intended rental duration
@@ -494,7 +494,7 @@ export async function startRental(
     if (overlapRows.length > 0) {
       if (!data.reservationId || overlapRows[0].id !== data.reservationId) {
         await connection.rollback()
-        throw new BusinessRuleError('الزلاجة محجوزة حاليا ولا يمكن استئجارها', 'SKATE_RESERVED')
+        throw new BusinessRuleError('الاسكيت محجوزة حاليا ولا يمكن استئجارها', 'SKATE_RESERVED')
       }
     }
 
@@ -516,7 +516,7 @@ export async function startRental(
         await connection.rollback()
         throw new BusinessRuleError('بيانات الحجز لا تتطابق مع طلب الإيجار', 'RESERVATION_MISMATCH')
       }
-      
+
       await connection.execute(
         "UPDATE reservations SET status = 'fulfilled', updated_at = NOW() WHERE id = ?",
         [data.reservationId]
@@ -638,11 +638,11 @@ export async function startRental(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, old_value, new_value, created_at)
        VALUES (?, ?, ?, ?, ?, ?, NOW())`,
       [
-        cashierId, 
-        'START_RENTAL', 
-        'RENTAL', 
-        newRentalId, 
-        JSON.stringify({ status: 'available' }), 
+        cashierId,
+        'START_RENTAL',
+        'RENTAL',
+        newRentalId,
+        JSON.stringify({ status: 'available' }),
         JSON.stringify({ status: 'rented', durationMinutes: data.durationMinutes, rentalAmount })
       ]
     )
@@ -682,20 +682,20 @@ export async function getActiveRentals(): Promise<ActiveRentalDTO[]> {
  * List rentals with pagination and filters.
  */
 export async function listRentals(query: ListRentalsQuery): Promise<PaginatedRentals> {
-  const page    = Math.max(1, parseInt(query.page    ?? '1',  10))
+  const page = Math.max(1, parseInt(query.page ?? '1', 10))
   const perPage = Math.min(100, Math.max(1, parseInt(query.perPage ?? '20', 10)))
-  const offset  = (page - 1) * perPage
+  const offset = (page - 1) * perPage
 
   const conditions: ReturnType<typeof eq>[] = []
 
   if (query.status && ['active', 'returned', 'cancelled'].includes(query.status)) {
     conditions.push(eq(rentals.status, query.status as RentalStatus))
   }
-  if (query.skateId)    conditions.push(eq(rentals.skateId,    parseInt(query.skateId, 10)))
+  if (query.skateId) conditions.push(eq(rentals.skateId, parseInt(query.skateId, 10)))
   if (query.customerId) conditions.push(eq(rentals.customerId, parseInt(query.customerId, 10)))
-  if (query.cashierId)  conditions.push(eq(rentals.cashierId,  parseInt(query.cashierId, 10)))
-  if (query.from)       conditions.push(gte(rentals.startedAt, new Date(query.from)))
-  if (query.to)         conditions.push(lte(rentals.startedAt, new Date(query.to)))
+  if (query.cashierId) conditions.push(eq(rentals.cashierId, parseInt(query.cashierId, 10)))
+  if (query.from) conditions.push(gte(rentals.startedAt, new Date(query.from)))
+  if (query.to) conditions.push(lte(rentals.startedAt, new Date(query.to)))
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
@@ -706,34 +706,34 @@ export async function listRentals(query: ListRentalsQuery): Promise<PaginatedRen
 
   const rows = await db
     .select({
-      id:              rentals.id,
-      rentalCode:      rentals.rentalCode,
-      skateId:         rentals.skateId,
-      customerId:      rentals.customerId,
-      cashierId:       rentals.cashierId,
-      shiftId:         rentals.shiftId,
+      id: rentals.id,
+      rentalCode: rentals.rentalCode,
+      skateId: rentals.skateId,
+      customerId: rentals.customerId,
+      cashierId: rentals.cashierId,
+      shiftId: rentals.shiftId,
       durationMinutes: rentals.durationMinutes,
-      pricePerHour:    rentals.pricePerHour,
-      rentalAmount:    rentals.rentalAmount,
-      startedAt:       rentals.startedAt,
-      expectedEndAt:   rentals.expectedEndAt,
-      returnedAt:      rentals.returnedAt,
-      status:          rentals.status,
-      notes:           rentals.notes,
-      createdAt:       rentals.createdAt,
-      updatedAt:       rentals.updatedAt,
-      skateCode:           skates.skateCode,
-      skateSize:           skates.size,
-      skateType:           skates.type,
-      customerName:        customers.name,
-      customerPhone:       customers.phone,
-      customerNationalId:  customers.nationalId,
-      cashierName:         users.name,
+      pricePerHour: rentals.pricePerHour,
+      rentalAmount: rentals.rentalAmount,
+      startedAt: rentals.startedAt,
+      expectedEndAt: rentals.expectedEndAt,
+      returnedAt: rentals.returnedAt,
+      status: rentals.status,
+      notes: rentals.notes,
+      createdAt: rentals.createdAt,
+      updatedAt: rentals.updatedAt,
+      skateCode: skates.skateCode,
+      skateSize: skates.size,
+      skateType: skates.type,
+      customerName: customers.name,
+      customerPhone: customers.phone,
+      customerNationalId: customers.nationalId,
+      cashierName: users.name,
     })
     .from(rentals)
-    .leftJoin(skates,    eq(rentals.skateId,    skates.id))
+    .leftJoin(skates, eq(rentals.skateId, skates.id))
     .leftJoin(customers, eq(rentals.customerId, customers.id))
-    .leftJoin(users,     eq(rentals.cashierId,  users.id))
+    .leftJoin(users, eq(rentals.cashierId, users.id))
     .where(whereClause)
     .orderBy(desc(rentals.startedAt))
     .limit(perPage)
@@ -744,7 +744,7 @@ export async function listRentals(query: ListRentalsQuery): Promise<PaginatedRen
     pagination: {
       page,
       perPage,
-      total:      Number(total),
+      total: Number(total),
       totalPages: Math.ceil(Number(total) / perPage),
     },
   }
@@ -771,9 +771,9 @@ export async function getCustomerRentals(
   const [customerRow] = await db.select().from(customers).where(eq(customers.id, customerId)).limit(1)
   if (!customerRow) throw new NotFoundError(`العميل رقم ${customerId} غير موجود`)
 
-  const page    = Math.max(1, parseInt(query.page    ?? '1',  10))
+  const page = Math.max(1, parseInt(query.page ?? '1', 10))
   const perPage = Math.min(100, Math.max(1, parseInt(query.perPage ?? '20', 10)))
-  const offset  = (page - 1) * perPage
+  const offset = (page - 1) * perPage
 
   const [{ total }] = await db
     .select({ total: count() })
@@ -782,18 +782,18 @@ export async function getCustomerRentals(
 
   const rows = await db
     .select({
-      id:              rentals.id,
-      rentalCode:      rentals.rentalCode,
-      skateId:         rentals.skateId,
+      id: rentals.id,
+      rentalCode: rentals.rentalCode,
+      skateId: rentals.skateId,
       durationMinutes: rentals.durationMinutes,
-      rentalAmount:    rentals.rentalAmount,
-      startedAt:       rentals.startedAt,
-      expectedEndAt:   rentals.expectedEndAt,
-      returnedAt:      rentals.returnedAt,
-      status:          rentals.status,
-      skateCode:  skates.skateCode,
-      skateSize:  skates.size,
-      skateType:  skates.type,
+      rentalAmount: rentals.rentalAmount,
+      startedAt: rentals.startedAt,
+      expectedEndAt: rentals.expectedEndAt,
+      returnedAt: rentals.returnedAt,
+      status: rentals.status,
+      skateCode: skates.skateCode,
+      skateSize: skates.size,
+      skateType: skates.type,
     })
     .from(rentals)
     .leftJoin(skates, eq(rentals.skateId, skates.id))
@@ -803,20 +803,20 @@ export async function getCustomerRentals(
     .offset(offset)
 
   const data: CustomerRentalHistoryItem[] = rows.map(row => ({
-    id:              row.id,
-    rentalCode:      row.rentalCode,
+    id: row.id,
+    rentalCode: row.rentalCode,
     skate: {
-      id:        row.skateId,
+      id: row.skateId,
       skateCode: (row as any).skateCode ?? '',
-      size:      (row as any).skateSize ?? '',
-      type:      (row as any).skateType ?? null,
+      size: (row as any).skateSize ?? '',
+      type: (row as any).skateType ?? null,
     },
     durationMinutes: row.durationMinutes,
-    rentalAmount:    parseFloat(String(row.rentalAmount)),
-    startedAt:       isoDateNotNull(row.startedAt),
-    expectedEndAt:   isoDateNotNull(row.expectedEndAt),
-    returnedAt:      isoDate(row.returnedAt),
-    status:          row.status,
+    rentalAmount: parseFloat(String(row.rentalAmount)),
+    startedAt: isoDateNotNull(row.startedAt),
+    expectedEndAt: isoDateNotNull(row.expectedEndAt),
+    returnedAt: isoDate(row.returnedAt),
+    status: row.status,
   }))
 
   return {
@@ -824,7 +824,7 @@ export async function getCustomerRentals(
     pagination: {
       page,
       perPage,
-      total:      Number(total),
+      total: Number(total),
       totalPages: Math.ceil(Number(total) / perPage),
     },
   }
@@ -894,11 +894,11 @@ export async function cancelRental(rentalId: number, cashierId: number): Promise
       [rentalId]
     )
 
-    await auditService.logRaw({ userId: cashierId, action: 'CANCEL_RENTAL', entityType: 'RENTAL', entityId: String( rentalId), newValue: { status: 'cancelled' } }, connection)
+    await auditService.logRaw({ userId: cashierId, action: 'CANCEL_RENTAL', entityType: 'RENTAL', entityId: String(rentalId), newValue: { status: 'cancelled' } }, connection)
 
     if (paymentRows.length > 0) {
       const totalRefund = paymentRows.reduce((sum, p) => sum + p.amount, 0)
-      await auditService.logRaw({ userId: cashierId, action: 'REFUND_RENTAL', entityType: 'RENTAL', entityId: String( rentalId), newValue: { refundedAmount: totalRefund } }, connection)
+      await auditService.logRaw({ userId: cashierId, action: 'REFUND_RENTAL', entityType: 'RENTAL', entityId: String(rentalId), newValue: { refundedAmount: totalRefund } }, connection)
     }
 
     // 5. Release the skate
@@ -969,7 +969,7 @@ export async function returnRental(
     const skate = skateRows[0]
     if (!skate) {
       await connection.rollback()
-      throw new NotFoundError(`الزلاجة غير موجودة`)
+      throw new NotFoundError(`الاسكيت غير موجودة`)
     }
 
     // 3. Calculate late fee
@@ -1097,10 +1097,10 @@ export async function returnRental(
       [rentalId]
     )
 
-    await auditService.logRaw({ userId: cashierId, action: 'RETURN_RENTAL', entityType: 'RENTAL', entityId: String( rentalId), newValue: { status: 'returned' } }, connection)
+    await auditService.logRaw({ userId: cashierId, action: 'RETURN_RENTAL', entityType: 'RENTAL', entityId: String(rentalId), newValue: { status: 'returned' } }, connection)
 
     if (collectedFee > 0 && lateFeeRecordId) {
-      await auditService.logRaw({ userId: cashierId, action: 'COLLECT_LATE_FEE', entityType: 'LATE_FEE', entityId: String( lateFeeRecordId), newValue: { rentalId, collectedFee } }, connection)
+      await auditService.logRaw({ userId: cashierId, action: 'COLLECT_LATE_FEE', entityType: 'LATE_FEE', entityId: String(lateFeeRecordId), newValue: { rentalId, collectedFee } }, connection)
     }
 
     // 9. Update skate status
@@ -1125,7 +1125,7 @@ export async function returnRental(
     }
 
     await connection.commit()
-    
+
     const rentalDto = await getRental(rentalId)
     return { ...rentalDto, lastInspectionId: inspectionId }
   } catch (err) {

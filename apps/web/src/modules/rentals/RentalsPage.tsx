@@ -50,12 +50,12 @@ function formatDateTime(isoStr: string): string {
 export default function RentalsPage() {
   const navigate = useNavigate()
 
-  const [rentals, setRentals]     = useState<RentalDTO[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
-  const [page, setPage]           = useState(1)
+  const [rentals, setRentals] = useState<RentalDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal]         = useState(0)
+  const [total, setTotal] = useState(0)
   const [statusFilter, setStatus] = useState<string>('')
 
   const perPage = 20
@@ -83,12 +83,13 @@ export default function RentalsPage() {
   const columns: TableColumn<any>[] = [
     { key: 'rentalCode', header: 'كود الإيجار', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{r.rentalCode}</span> },
     { key: 'customer', header: 'العميل', render: (_, r: any) => r.customer.name },
-    { key: 'skate', header: 'الزلاجة', render: (_, r: any) => `${r.skate.skateCode} / ${r.skate.size}` },
+    { key: 'skate', header: 'الاسكيت', render: (_, r: any) => `${r.skate.skateCode} / ${r.skate.size}` },
     { key: 'duration', header: 'المدة', render: (_, r: any) => `${r.durationMinutes} د` },
     { key: 'amount', header: 'المبلغ', render: (_, r: any) => formatCurrency(r.rentalAmount) },
     { key: 'startedAt', header: 'البداية', render: (_, r: any) => <span dir="ltr">{formatDateTime(r.startedAt)}</span> },
     { key: 'status', header: 'الحالة', render: (_, r: any) => <Badge status={lifetimeStatusToBadge(r.status)}>{getRentalStatusLabel(r.status)}</Badge> },
-    { key: 'actions', header: '', align: 'left', render: (_, r: any) => (
+    {
+      key: 'actions', header: '', align: 'left', render: (_, r: any) => (
         <IconButton
           icon={Eye}
           label="عرض التفاصيل"

@@ -53,7 +53,7 @@ export async function createDamageReport(
     )
     if (!skateRows[0]) {
       await connection.rollback()
-      throw new NotFoundError('الزلاجة غير موجودة')
+      throw new NotFoundError('الاسكيت غير موجودة')
     }
 
     const [result] = await connection.execute<any>(
@@ -103,17 +103,19 @@ export async function createDamageReport(
     }
 
     // Phase 16: Audit Log
-    await auditService.logRaw({ userId: cashierId, action: 'CREATE_DAMAGE_REPORT', entityType: 'DAMAGE_REPORT', entityId: String(insertId), newValue: {
-          skateId: data.skateId,
-          damageType: data.damageType,
-          severity: data.severity,
-          customerCharge: data.customerCharge,
-          maintenanceRequired: data.maintenanceRequired
-        } }, connection)
+    await auditService.logRaw({
+      userId: cashierId, action: 'CREATE_DAMAGE_REPORT', entityType: 'DAMAGE_REPORT', entityId: String(insertId), newValue: {
+        skateId: data.skateId,
+        damageType: data.damageType,
+        severity: data.severity,
+        customerCharge: data.customerCharge,
+        maintenanceRequired: data.maintenanceRequired
+      }
+    }, connection)
 
     await connection.commit()
   } catch (err) {
-    try { await connection.rollback() } catch {}
+    try { await connection.rollback() } catch { }
     throw err
   } finally {
     connection.release()
@@ -328,7 +330,7 @@ export async function collectCharge(
 
     await connection.commit()
   } catch (err) {
-    try { await connection.rollback() } catch {}
+    try { await connection.rollback() } catch { }
     throw err
   } finally {
     connection.release()
@@ -386,7 +388,7 @@ export async function waiveCharge(
 
     await connection.commit()
   } catch (err) {
-    try { await connection.rollback() } catch {}
+    try { await connection.rollback() } catch { }
     throw err
   } finally {
     connection.release()

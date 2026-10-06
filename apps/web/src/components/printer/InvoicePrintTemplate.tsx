@@ -10,7 +10,7 @@ export type InvoiceData = {
   customerName: string
   total: number
   payments: Array<{ method: string; amount: number }>
-  
+
   // Rental specific
   skateBarcode?: string
   durationMinutes?: number
@@ -72,7 +72,7 @@ export const InvoicePrintTemplate: React.FC<Props> = ({ data }) => {
           .print-table td { padding: 4px 0; }
         `}
       </style>
-      
+
       <div className="print-header">
         <h2>كشك سكيت</h2>
         <div>رقم الفاتورة: {data.invoiceNumber}</div>
@@ -89,13 +89,13 @@ export const InvoicePrintTemplate: React.FC<Props> = ({ data }) => {
           <span>العميل:</span>
           <span>{data.customerName}</span>
         </div>
-        
+
         <hr style={{ borderTop: '1px dashed black', margin: '10px 0' }} />
 
         {data.type === 'RENTAL' && (
           <>
             <div className="print-row">
-              <span>الزلاجة:</span>
+              <span>الاسكيت:</span>
               <span>{data.skateBarcode}</span>
             </div>
             <div className="print-row">
@@ -106,14 +106,14 @@ export const InvoicePrintTemplate: React.FC<Props> = ({ data }) => {
               <span>قيمة الإيجار:</span>
               <span>{data.rentalAmount?.toFixed(2)} ج.م</span>
             </div>
-            
+
             {(data.lateFee ?? 0) > 0 && (
               <div className="print-row">
                 <span>غرامة تأخير ({data.lateDuration} د):</span>
                 <span>{data.lateFee?.toFixed(2)} ج.م</span>
               </div>
             )}
-            
+
             {(data.damageCharge ?? 0) > 0 && (
               <div className="print-row">
                 <span>رسوم أضرار:</span>
@@ -147,7 +147,7 @@ export const InvoicePrintTemplate: React.FC<Props> = ({ data }) => {
         )}
 
         <hr style={{ borderTop: '1px dashed black', margin: '10px 0' }} />
-        
+
         <div className="print-row print-bold">
           <span>الإجمالي:</span>
           <span>{data.total?.toFixed(2)} ج.م</span>

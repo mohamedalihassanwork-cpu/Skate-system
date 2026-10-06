@@ -27,7 +27,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
 
   const [methods, setMethods] = useState<PaymentMethodDTO[]>([])
   const [paymentMethodId, setPaymentMethodId] = useState<string>('')
-  
+
   useEffect(() => {
     if (isOpen) {
       paymentsService.listMethods().then(res => {
@@ -60,7 +60,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
         customerCharge,
         maintenanceRequired
       })
-      
+
       // Attempt to collect charge if set
       if (customerCharge > 0 && paymentMethodId) {
         await damageService.pay(res.data.id, {
@@ -80,12 +80,12 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="تقرير ضرر زلاجة" size="base">
+    <Modal isOpen={isOpen} onClose={onClose} title="تقرير ضرر اسكيت" size="base">
       <div className="damage-report-form">
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
-        
+
         <Alert variant="warning" style={{ marginBottom: 16 }}>
-          <strong>تنبيه:</strong> تم الإبلاغ عن وجود تلف بالزلاجة أثناء الفحص. يجب إكمال هذا التقرير لتسجيل الضرر.
+          <strong>تنبيه:</strong> تم الإبلاغ عن وجود تلف بالاسكيت أثناء الفحص. يجب إكمال هذا التقرير لتسجيل الضرر.
         </Alert>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -111,7 +111,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
               <option value="other">أخرى</option>
             </select>
           </div>
-          
+
           <div>
             <label style={{ display: 'block', fontSize: 'var(--font-size-xs)', marginBottom: 4 }}>مدى الضرر</label>
             <select
@@ -175,7 +175,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
             style={{ width: 18, height: 18 }}
           />
           <label htmlFor="damage-maintenance-required" style={{ fontWeight: 'var(--font-weight-medium)', cursor: 'pointer', color: maintenanceRequired ? 'var(--color-danger-text)' : 'inherit' }}>
-            تتطلب صيانة (إيقاف استخدام الزلاجة)
+            تتطلب صيانة (إيقاف استخدام الاسكيت)
           </label>
         </div>
       </div>

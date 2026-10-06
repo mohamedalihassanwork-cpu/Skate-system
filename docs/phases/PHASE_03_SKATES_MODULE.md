@@ -186,12 +186,12 @@ Files:
 - `SkatesPage.tsx` — Full management screen
 
 **SkatesPage features:**
-- Page header with title ("إدارة الزلاجات") and "إضافة زلاجة" button (behind `PermissionGate skates.create`)
+- Page header with title ("إدارة الاسكيتات") and "إضافة اسكيت" button (behind `PermissionGate skates.create`)
 - Search input (free-text, filters by `skate_code`, `size`)
 - Status filter dropdown (all statuses + "الكل")
 - Skates grid/table with status badges
 - Status badge colors per KOSHK SKATE design reference
-- "إضافة زلاجة" modal — all fields
+- "إضافة اسكيت" modal — all fields
 - Edit modal — all editable fields
 - Soft-disable action (behind `PermissionGate skates.edit`)
 - Loading, empty state, and error state — all in Arabic RTL

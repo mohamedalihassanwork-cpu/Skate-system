@@ -20,7 +20,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [methods, setMethods] = useState<PaymentMethodDTO[]>([])
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState<'details' | 'pay' | 'waive'>('details')
 
@@ -39,12 +39,12 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
       setReport(initialReport)
       setActiveTab('details')
       setError(null)
-      
+
       paymentsService.listMethods().then(res => {
         setMethods(res.data)
         if (res.data.length > 0) setPaymentMethodId(res.data[0].id)
-      }).catch(() => {})
-      
+      }).catch(() => { })
+
       setPaymentAmount(Math.max(0, initialReport.customerCharge - (initialReport.chargeCollected + initialReport.chargeWaived)).toString())
       setWaiveAmount(Math.max(0, initialReport.customerCharge - (initialReport.chargeCollected + initialReport.chargeWaived)).toString())
     }
@@ -171,7 +171,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
-              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>الزلاجة</span>
+              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>الاسكيت</span>
               <div style={{ fontWeight: 'var(--font-weight-medium)' }} dir="ltr" className="text-right">{report.skateCode}</div>
             </div>
             <div>
@@ -186,9 +186,9 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>الحالة</span>
               <div>
                 <Badge status={
-                  report.status === 'paid' ? 'completed' : 
-                  report.status === 'waived' ? 'cancelled' : 
-                  report.status === 'partially_paid' ? 'rented' : 'reserved'
+                  report.status === 'paid' ? 'completed' :
+                    report.status === 'waived' ? 'cancelled' :
+                      report.status === 'partially_paid' ? 'rented' : 'reserved'
                 }>
                   {report.status === 'paid' ? 'مسدد' : report.status === 'waived' ? 'معفى' : report.status === 'partially_paid' ? 'مدفوع جزئياً' : 'معلق'}
                 </Badge>
@@ -198,10 +198,10 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>نوع الضرر</span>
               <div style={{ fontWeight: 'var(--font-weight-medium)' }}>
                 {report.damageType === 'wheel' ? 'عجل' :
-                 report.damageType === 'brake' ? 'فرامل' :
-                 report.damageType === 'strap' ? 'أربطة' :
-                 report.damageType === 'bearing' ? 'رولمان بلي' :
-                 report.damageType === 'body' ? 'هيكل' : 'أخرى'}
+                  report.damageType === 'brake' ? 'فرامل' :
+                    report.damageType === 'strap' ? 'أربطة' :
+                      report.damageType === 'bearing' ? 'رولمان بلي' :
+                        report.damageType === 'body' ? 'هيكل' : 'أخرى'}
               </div>
             </div>
             <div>

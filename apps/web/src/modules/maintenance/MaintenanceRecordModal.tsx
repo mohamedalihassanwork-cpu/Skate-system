@@ -93,7 +93,7 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
 
       if (isNew) {
         if (!skateId) {
-          setError('يرجى اختيار الزلاجة')
+          setError('يرجى اختيار الاسكيت')
           setSaving(false)
           return
         }
@@ -189,7 +189,7 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
                   onClick={handleComplete}
                 >
                   <CheckCircle2 size={18} />
-                  إغلاق الطلب وإتاحة الزلاجة
+                  إغلاق الطلب وإتاحة الاسكيت
                 </Button>
               )}
               {(hasPermission(isNew ? 'maintenance.create' : 'maintenance.edit')) && (
@@ -215,11 +215,11 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
             {isNew && (
               <Select
                 id="skateId"
-                label="الزلاجة"
+                label="الاسكيت"
                 value={skateId}
                 onChange={e => setSkateId(e.target.value)}
                 options={[
-                  { value: '', label: 'اختر الزلاجة...' },
+                  { value: '', label: 'اختر الاسكيت...' },
                   ...skatesList.map(s => ({
                     value: String(s.id),
                     label: `${s.skateCode} — مقاس ${s.size}`

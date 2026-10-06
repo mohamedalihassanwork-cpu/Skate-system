@@ -20,7 +20,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [lateFeePerMinute, setLateFeePerMinute] = useState<number>(0)
   const [methods, setMethods] = useState<PaymentMethodDTO[]>([])
   const [methodsLoading, setMethodsLoading] = useState(false)
@@ -44,7 +44,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
     if (isOpen) {
       setLoading(false)
       setError(null)
-      
+
       // Reset form
       setWheelsCondition('good')
       setBrakeCondition('good')
@@ -67,7 +67,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
         if (!active) return
         const lateFeePerMin = configRes.data.lateFeePerMinute || 0
         setLateFeePerMinute(lateFeePerMin)
-        
+
         let initialLateFee = 0
         if (rental && rental.operationalStatus === 'overdue' && lateFeePerMin > 0) {
           const endMs = new Date(rental.expectedEndAt).getTime()
@@ -121,7 +121,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
   const handleWaivedFeeChange = (valStr: string) => {
     const val = Math.min(expectedLateFee, Math.max(0, parseFloat(valStr) || 0))
     setWaivedFee(val)
-    
+
     const remainingToPay = Math.max(0, expectedLateFee - val)
     if (payments.length === 1 && remainingToPay > 0) {
       setPayments([{ ...payments[0], amount: remainingToPay.toString() }])
@@ -189,8 +189,8 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
 
     try {
       const res = await rentalsService.return(rental.id, payload)
-      showToast({ type: 'success', title: 'تم إنهاء الإيجار وإعادة الزلاجة بنجاح' })
-      
+      showToast({ type: 'success', title: 'تم إنهاء الإيجار وإعادة الاسكيت بنجاح' })
+
       // Auto-print disabled per user request
 
       const hasDamage = [wheelsCondition, brakeCondition, strapCondition, bearingsCondition, bodyCondition].some(c => c === 'minor_damage' || c === 'damaged' || c === 'broken')
@@ -206,7 +206,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="تسجيل إعادة الزلاجة" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="تسجيل إعادة الاسكيت" size="lg">
       <div className="return-rental-form" ref={modalBodyRef} style={{ maxHeight: '70vh', overflowY: 'auto', padding: '2px' }}>
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
 
@@ -217,7 +217,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
               <div style={{ fontWeight: 'var(--font-weight-medium)' }}>{rental.customer.name}</div>
             </div>
             <div>
-              <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>الزلاجة</label>
+              <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>الاسكيت</label>
               <div style={{ fontWeight: 'var(--font-weight-medium)' }}>{rental.skate.skateCode} - مقاس {rental.skate.size}</div>
             </div>
           </div>
@@ -235,7 +235,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
             رسوم التأخير
             {expectedLateFee > 0 && <Badge status="overdue">متأخر</Badge>}
           </h3>
-          
+
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span>الرسوم المحسوبة:</span>
             <span style={{ fontWeight: 'var(--font-weight-bold)', color: expectedLateFee > 0 ? 'var(--color-danger-text)' : 'var(--color-success-text)' }}>
@@ -274,7 +274,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
                       <Plus size={14} style={{ marginInlineEnd: 4 }} /> تقسيم الدفع
                     </Button>
                   </div>
-                  
+
                   {methodsLoading ? (
                     <LoadingSpinner size="sm" />
                   ) : methods.length === 0 ? (
@@ -332,7 +332,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
 
         <div className="inspection-section" style={{ border: '1px solid var(--color-border)', padding: 16, borderRadius: 'var(--radius-md)' }}>
           <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', marginBottom: 12 }}>الفحص الفني</h3>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <ConditionSelect label="العجلات" value={wheelsCondition} onChange={setWheelsCondition} />
             <ConditionSelect label="الفرامل" value={brakeCondition} onChange={setBrakeCondition} />
@@ -350,7 +350,7 @@ export function ReturnRentalModal({ isOpen, onClose, rental, onSuccess }: Return
               style={{ width: 18, height: 18 }}
             />
             <label htmlFor="maintenance-required" style={{ fontWeight: 'var(--font-weight-medium)', cursor: 'pointer', color: maintenanceRequired ? 'var(--color-danger-text)' : 'inherit' }}>
-              تتطلب صيانة (سيتم تحويل حالة الزلاجة إلى "صيانة")
+              تتطلب صيانة (سيتم تحويل حالة الاسكيت إلى "صيانة")
             </label>
           </div>
 

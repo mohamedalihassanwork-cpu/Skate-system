@@ -18,10 +18,10 @@ import { lateFeeRecords } from '../../db/schema/inspections.js'
  */
 export function buildDateBounds(localStartDate: string, localEndDate: string) {
   const startBound = new Date(`${localStartDate}T00:00:00Z`)
-  
+
   const endBound = new Date(`${localEndDate}T00:00:00Z`)
   endBound.setDate(endBound.getDate() + 1)
-  
+
   return { startBound, endBound }
 }
 
@@ -41,7 +41,7 @@ export async function getOverviewReport(filters: DateRangeInput): Promise<Overvi
         inArray(treasuryMovements.referenceType, ['rental_payment', 'late_fee_payment', 'damage_charge_payment', 'sale_payment'])
       )
     )
-    
+
   const refundsRes = await db
     .select({ total: sum(treasuryMovements.amount) })
     .from(treasuryMovements)
@@ -52,7 +52,7 @@ export async function getOverviewReport(filters: DateRangeInput): Promise<Overvi
         inArray(treasuryMovements.referenceType, ['rental_refund', 'sale_refund'])
       )
     )
-    
+
   const revenue = Number(revenueRes[0]?.total || 0) - Number(refundsRes[0]?.total || 0)
 
   // 2. Expenses (from treasury_movements)
@@ -142,7 +142,7 @@ export async function getOperatingFinancialReport(filters: DateRangeInput): Prom
       lt(treasuryMovements.createdAt, endBound),
       eq(treasuryMovements.referenceType, 'rental_payment')
     ))
-    
+
   const rentalPaymentsRes = await db
     .select({ total: sum(treasuryMovements.amount) })
     .from(treasuryMovements)
@@ -151,7 +151,7 @@ export async function getOperatingFinancialReport(filters: DateRangeInput): Prom
       lt(treasuryMovements.createdAt, endBound),
       eq(treasuryMovements.referenceType, 'late_fee_payment')
     ))
-    
+
   const damageChargesRes = await db
     .select({ total: sum(treasuryMovements.amount) })
     .from(treasuryMovements)
@@ -160,7 +160,7 @@ export async function getOperatingFinancialReport(filters: DateRangeInput): Prom
       lt(treasuryMovements.createdAt, endBound),
       eq(treasuryMovements.referenceType, 'damage_charge_payment')
     ))
-    
+
   const salesRevenueRes = await db
     .select({ total: sum(treasuryMovements.amount) })
     .from(treasuryMovements)
@@ -199,7 +199,7 @@ export async function getOperatingFinancialReport(filters: DateRangeInput): Prom
       eq(treasuryMovements.type, 'out'),
       inArray(treasuryMovements.referenceType, ['expense', 'maintenance_payment'])
     ))
-  
+
   const totalExpenses = Number(expenseRes[0]?.total || 0)
   // 3. Category breakdown (still uses expenses table for manual categorizations, plus maintenance)
   const catRes = await db
@@ -235,7 +235,7 @@ export async function getOperatingFinancialReport(filters: DateRangeInput): Prom
     totalExpenses,
     operatingResult: totalRevenue - totalExpenses,
     revenueByCategory: [
-      { type: 'إيجار الزلاجات', total: rentalRev },
+      { type: 'إيجار الاسكيتات', total: rentalRev },
       { type: 'غرامات التأخير', total: lateRev },
       { type: 'تعويضات الأضرار', total: damageRev },
       { type: 'المبيعات', total: salesRev },
@@ -253,11 +253,11 @@ export async function getOperatingFinancialReport(filters: DateRangeInput): Prom
 
 export async function getRevenueReport(filters: DateRangeInput): Promise<any> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
-  
+
   const revenueRes = await db
-    .select({ 
+    .select({
       date: sql<string>`DATE(CONVERT_TZ(${treasuryMovements.createdAt}, '+00:00', '+03:00'))`,
-      total: sum(treasuryMovements.amount) 
+      total: sum(treasuryMovements.amount)
     })
     .from(treasuryMovements)
     .where(and(
@@ -285,9 +285,9 @@ export async function getRevenueReport(filters: DateRangeInput): Promise<any> {
       lt(treasuryMovements.createdAt, endBound),
       inArray(treasuryMovements.referenceType, ['rental_refund', 'sale_refund'])
     ))
-    
+
   const totalRevenue = Number(totalRev[0]?.total || 0) - Number(refundsRes[0]?.total || 0)
-    
+
   return {
     totalRevenue,
     chartData: revenueRes.map(r => ({
@@ -299,11 +299,11 @@ export async function getRevenueReport(filters: DateRangeInput): Promise<any> {
 
 export async function getExpenseReport(filters: DateRangeInput): Promise<any> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
-  
+
   const expRes = await db
-    .select({ 
+    .select({
       date: sql<string>`DATE(CONVERT_TZ(${treasuryMovements.createdAt}, '+00:00', '+03:00'))`,
-      total: sum(treasuryMovements.amount) 
+      total: sum(treasuryMovements.amount)
     })
     .from(treasuryMovements)
     .where(and(
@@ -336,7 +336,7 @@ export async function getExpenseReport(filters: DateRangeInput): Promise<any> {
       eq(treasuryMovements.type, 'out'),
       inArray(treasuryMovements.referenceType, ['expense', 'maintenance_payment'])
     ))
-    
+
   return {
     totalExpenses: Number(totalExp[0]?.total || 0),
     chartData: expRes.map(r => ({
@@ -353,7 +353,7 @@ export async function getExpenseReport(filters: DateRangeInput): Promise<any> {
 export async function getRentalReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   const baseQuery = db
     .select({
       id: rentals.id,
@@ -410,7 +410,7 @@ export async function getRentalReport(filters: DateRangeInput): Promise<Paginate
 export async function getLateReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   const baseQuery = db
     .select({
       id: rentals.id,
@@ -464,7 +464,7 @@ export async function getLateReport(filters: DateRangeInput): Promise<PaginatedR
 export async function getDamageReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   const baseQuery = db
     .select({
       id: damageReports.id,
@@ -516,7 +516,7 @@ export async function getDamageReport(filters: DateRangeInput): Promise<Paginate
 export async function getMaintenanceReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   const baseQuery = db
     .select({
       id: maintenanceRecords.id,
@@ -567,7 +567,7 @@ export async function getMaintenanceReport(filters: DateRangeInput): Promise<Pag
 export async function getCustomerReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   // Aggregate stats per customer for the given date range.
   // This requires grouping on customers. Since Drizzle's group by can be tricky with complex aggregates,
   // we'll just query rentals and damages grouped by customer using SQL.
@@ -596,7 +596,7 @@ export async function getCustomerReport(filters: DateRangeInput): Promise<Pagina
       HAVING COUNT(r.id) > 0 OR damages > 0
     ) sub
   `
-  
+
   const [data] = await db.execute(query) as any
   const [totalRes] = await db.execute(countQuery) as any
   const total = Number(totalRes[0]?.cnt || 0)
@@ -622,7 +622,7 @@ export async function getCustomerReport(filters: DateRangeInput): Promise<Pagina
 export async function getCashierReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   // Aggregate stats per cashier account (user) rather than purely by shift,
   // since some operations might lack a shift_id but will always have a cashier_id.
   const query = sql`
@@ -677,7 +677,7 @@ export async function getCashierReport(filters: DateRangeInput): Promise<Paginat
 export async function getSkatePerformanceReport(filters: DateRangeInput): Promise<PaginatedResult<any>> {
   const { startBound, endBound } = buildDateBounds(filters.startDate, filters.endDate)
   const offset = (filters.page - 1) * filters.limit
-  
+
   const query = sql`
     SELECT 
       s.id, s.skate_code as code, s.type, s.status,
@@ -694,7 +694,7 @@ export async function getSkatePerformanceReport(filters: DateRangeInput): Promis
   `
 
   const countQuery = sql`SELECT COUNT(id) as cnt FROM skates`
-  
+
   const [data] = await db.execute(query) as any
   const [totalRes] = await db.execute(countQuery) as any
   const total = Number(totalRes[0]?.cnt || 0)

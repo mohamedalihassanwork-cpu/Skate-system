@@ -87,7 +87,7 @@ fulfillment when a rental is started against a reservation, and cancellation.
 
 Within `startRental()` in `rentals.service.ts`:
 - If skate has active confirmed reservation AND no `reservationId` provided → HTTP 422
-  with error `SKATE_IS_RESERVED` (INFERRED from test message: "الزلاجة محجوزة حاليا ولا يمكن استئجارها")
+  with error `SKATE_IS_RESERVED` (INFERRED from test message: "الاسكيت محجوزة حاليا ولا يمكن استئجارها")
 - If `reservationId` provided and matches the reservation → reservation → `fulfilled`
 
 ### 4.4 Update Reservation

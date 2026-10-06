@@ -44,9 +44,9 @@ function formatDateTime(isoStr: string): string {
 }
 
 function computeOperational(expectedEndAt: string): { opStatus: RentalOperationalStatus; remainingMinutes: number } {
-  const endMs   = new Date(expectedEndAt).getTime()
-  const nowMs   = Date.now()
-  const diffMs  = endMs - nowMs
+  const endMs = new Date(expectedEndAt).getTime()
+  const nowMs = Date.now()
+  const diffMs = endMs - nowMs
   const diffMin = diffMs / 60000
 
   if (diffMin <= 0) return { opStatus: 'overdue', remainingMinutes: 0 }
@@ -91,7 +91,7 @@ export default function RentalDetailPage() {
 
   const [rental, setRental] = useState<RentalDTO | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Modals state
   const [returnModalOpen, setReturnModalOpen] = useState(false)
@@ -177,7 +177,7 @@ export default function RentalDetailPage() {
               variant="primary"
               onClick={() => setReturnModalOpen(true)}
             >
-              إرجاع الزلاجة
+              إرجاع الاسكيت
             </Button>
           </PermissionGate>
         )}
@@ -199,7 +199,7 @@ export default function RentalDetailPage() {
       {rental.status === 'returned' && (
         <div className="invoice-section">
           <h2 className="invoice-title"><Receipt size={18} /> إيصال / فاتورة إرجاع</h2>
-          
+
           <div className="invoice-body">
             {/* Base Amount */}
             <div className="invoice-row">
@@ -267,9 +267,9 @@ export default function RentalDetailPage() {
 
         {/* Skate */}
         <section className="detail-section">
-          <h2 className="detail-section-title">بيانات الزلاجة</h2>
+          <h2 className="detail-section-title">بيانات الاسكيت</h2>
           <dl className="detail-list">
-            <InfoRow label="كود الزلاجة" value={rental.skate.skateCode} />
+            <InfoRow label="كود الاسكيت" value={rental.skate.skateCode} />
             <InfoRow label="المقاس" value={rental.skate.size} />
             {rental.skate.type && <InfoRow label="النوع" value={rental.skate.type} />}
           </dl>

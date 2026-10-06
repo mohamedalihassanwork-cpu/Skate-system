@@ -65,7 +65,7 @@ interface ActiveRentalCardProps {
 
 function ActiveRentalCard({ rental, onViewDetail, onReturn }: ActiveRentalCardProps) {
   const badgeStatus = operationalStatusToBadge(rental.operationalStatus)
-  const opLabel     = getOperationalStatusLabel(rental.operationalStatus)
+  const opLabel = getOperationalStatusLabel(rental.operationalStatus)
 
   return (
     <div className={`rental-card rental-card--${rental.operationalStatus}`} id={`rental-card-${rental.id}`}>
@@ -81,7 +81,7 @@ function ActiveRentalCard({ rental, onViewDetail, onReturn }: ActiveRentalCardPr
             <span className="rental-info-value">{rental.customer.name}</span>
           </div>
           <div className="rental-info-item">
-            <span className="rental-info-label">الزلاجة</span>
+            <span className="rental-info-label">الاسكيت</span>
             <span className="rental-info-value">{rental.skate.skateCode} — {rental.skate.size}</span>
           </div>
           <div className="rental-info-item">
@@ -124,7 +124,7 @@ function ActiveRentalCard({ rental, onViewDetail, onReturn }: ActiveRentalCardPr
               size="sm"
               onClick={() => onReturn(rental)}
             >
-              إرجاع الزلاجة
+              إرجاع الاسكيت
             </Button>
           </PermissionGate>
           <IconButton
@@ -147,10 +147,10 @@ function ActiveRentalCard({ rental, onViewDetail, onReturn }: ActiveRentalCardPr
 export default function ActiveRentalsPage() {
   const navigate = useNavigate()
 
-  const [rentals, setRentals]         = useState<ActiveRentalDTO[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [error, setError]             = useState<string | null>(null)
-  
+  const [rentals, setRentals] = useState<ActiveRentalDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   // Return Modal State
@@ -196,9 +196,9 @@ export default function ActiveRentalsPage() {
     return () => clearInterval(interval)
   }, [load])
 
-  const overdue     = rentals.filter(r => r.operationalStatus === 'overdue')
-  const endingSoon  = rentals.filter(r => r.operationalStatus === 'ending_soon')
-  const normal      = rentals.filter(r => r.operationalStatus === 'normal')
+  const overdue = rentals.filter(r => r.operationalStatus === 'overdue')
+  const endingSoon = rentals.filter(r => r.operationalStatus === 'ending_soon')
+  const normal = rentals.filter(r => r.operationalStatus === 'normal')
 
   if (loading) return <PageLoader />
 

@@ -45,13 +45,13 @@ const request = supertest(app)
 // Constants
 // ---------------------------------------------------------------------------
 
-const ADMIN_EMAIL    = process.env.SEED_ADMIN_EMAIL    ?? 'admin@koshkskate.com'
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@koshkskate.com'
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Koshk@12345'
 
 // Unique code used across tests — prefix T99 to avoid collision with SK-NNN auto sequence
-const TEST_SKATE_CODE   = 'T99-TEST-001'
+const TEST_SKATE_CODE = 'T99-TEST-001'
 const TEST_SKATE_CODE_2 = 'T99-TEST-002'
-const CASHIER_EMAIL     = 'test.cashier.skates@koshkskate.com'
+const CASHIER_EMAIL = 'test.cashier.skates@koshkskate.com'
 
 // ---------------------------------------------------------------------------
 // State shared between tests
@@ -97,7 +97,7 @@ beforeAll(async () => {
     })
   }
 
-  adminToken  = await loginAdmin()
+  adminToken = await loginAdmin()
   cashierToken = await loginCashier()
 
   // Clean up any leftover test skates from a previous run
@@ -131,14 +131,14 @@ describe('TC-SK-01: Create skate with custom skate_code', () => {
       .post('/api/v1/skates')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
-        skateCode:    TEST_SKATE_CODE,
-        size:         '42',
-        type:         'تزلج فني',
-        status:       'available',
-        condition:    'good',
+        skateCode: TEST_SKATE_CODE,
+        size: '42',
+        type: 'تزلج فني',
+        status: 'available',
+        condition: 'good',
         purchaseDate: '2026-01-15',
         purchaseCost: 350.00,
-        notes:        'زلاجة تجريبية',
+        notes: 'اسكيت تجريبية',
       })
 
     expect(res.status).toBe(201)
@@ -167,7 +167,7 @@ describe('TC-SK-02: Create skate without skate_code — auto-generation', () => 
       .post('/api/v1/skates')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
-        size:      '38',
+        size: '38',
         condition: 'fair',
       })
 
@@ -199,7 +199,7 @@ describe('TC-SK-03: Duplicate skate_code', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         skateCode: TEST_SKATE_CODE,   // same as TC-SK-01
-        size:      '42',
+        size: '42',
       })
 
     expect(res.status).toBe(409)
@@ -287,7 +287,7 @@ describe('TC-SK-08: Update skate', () => {
       .put(`/api/v1/skates/${createdSkateId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
-        size:  '43',
+        size: '43',
         notes: 'تم التحديث في الاختبار',
       })
 

@@ -4,26 +4,26 @@ import { maintenanceService, type MaintenanceRecord } from './maintenance.servic
 import MaintenanceRecordModal from './MaintenanceRecordModal'
 import MaintenancePaymentModal from './MaintenancePaymentModal'
 import { useAuth } from '../../contexts/AuthContext'
-import { 
-  Button, 
-  PageLoader, 
-  Alert, 
-  Badge, 
-  Select, 
-  DataTable, 
-  type TableColumn 
+import {
+  Button,
+  PageLoader,
+  Alert,
+  Badge,
+  Select,
+  DataTable,
+  type TableColumn
 } from '../../components/ui'
 
 export default function MaintenancePage() {
   const { hasPermission } = useAuth()
-  
+
   const [records, setRecords] = useState<MaintenanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('')
-  
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedRecordId, setSelectedRecordId] = useState<number | undefined>()
@@ -32,7 +32,7 @@ export default function MaintenancePage() {
     try {
       setLoading(true)
       setError(null)
-      const res = await maintenanceService.getMaintenanceRecords({ 
+      const res = await maintenanceService.getMaintenanceRecords({
         status: statusFilter || undefined,
         limit: 100 // fetch up to 100 for now to simplify pagination handling like SkatesPage
       })
@@ -96,7 +96,7 @@ export default function MaintenancePage() {
 
   const columns: TableColumn<any>[] = [
     { key: 'id', header: 'رقم السجل', render: (_, r: any) => `#${r.id}` },
-    { key: 'skate', header: 'كود الزلاجة', render: (_, r: any) => <span className="font-medium text-gold-500">{r.skateCode}</span> },
+    { key: 'skate', header: 'كود الاسكيت', render: (_, r: any) => <span className="font-medium text-gold-500">{r.skateCode}</span> },
     { key: 'status', header: 'حالة الصيانة', render: (_, r: any) => renderStatus(r.status) },
     { key: 'paymentStatus', header: 'حالة الدفع', render: (_, r: any) => renderPaymentStatus(r.paymentStatus) },
     { key: 'date', header: 'تاريخ الفتح', render: (_, r: any) => new Date(r.createdAt).toLocaleDateString('ar-EG') },
@@ -123,7 +123,7 @@ export default function MaintenancePage() {
       <div className="page-header shrink-0">
         <div className="page-header-text">
           <h1 className="page-header-title">سجل الصيانة</h1>
-          <p className="page-header-subtitle">إدارة ومتابعة عمليات صيانة الزلاجات</p>
+          <p className="page-header-subtitle">إدارة ومتابعة عمليات صيانة الاسكيتات</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <Button variant="secondary" onClick={loadData} aria-label="تحديث البيانات">
@@ -140,10 +140,10 @@ export default function MaintenancePage() {
       </div>
 
       <div className="filters-row">
-        <Select 
+        <Select
           id="statusFilter"
           label=""
-          value={statusFilter} 
+          value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
           options={[
             { value: '', label: 'جميع الحالات' },

@@ -16,7 +16,7 @@ export default function DamagesPage() {
   const [reports, setReports] = useState<DamageReportDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [selectedReport, setSelectedReport] = useState<DamageReportDTO | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -52,7 +52,7 @@ export default function DamagesPage() {
 
   const columns: TableColumn<any>[] = [
     { key: 'id', header: 'رقم التقرير', render: (_, r: any) => `#${r.id}` },
-    { key: 'skate', header: 'الزلاجة', render: (_, r: any) => <span dir="ltr">{r.skateCode || `ID: ${r.skateId}`}</span> },
+    { key: 'skate', header: 'الاسكيت', render: (_, r: any) => <span dir="ltr">{r.skateCode || `ID: ${r.skateId}`}</span> },
     { key: 'customer', header: 'العميل', render: (_, r: any) => r.customerName || `ID: ${r.customerId}` },
     { key: 'rental', header: 'رقم الإيجار', render: (_, r: any) => `#${r.rentalId}` },
     { key: 'charge', header: 'الغرامة المقررة', render: (_, r: any) => formatCurrency(r.customerCharge) },
@@ -79,7 +79,7 @@ export default function DamagesPage() {
       <div className="page-header shrink-0">
         <div className="page-header-text">
           <h1 className="page-header-title">تقارير الضرر</h1>
-          <p className="page-header-subtitle">إدارة أضرار الزلاجات والرسوم المحصلة</p>
+          <p className="page-header-subtitle">إدارة أضرار الاسكيتات والرسوم المحصلة</p>
         </div>
         <Button variant="secondary" onClick={() => load()}>
           <RefreshCw size={16} aria-hidden="true" />

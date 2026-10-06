@@ -68,21 +68,21 @@ import '../../styles/pages/dashboard.css'
 // Constants
 // ---------------------------------------------------------------------------
 const STATUS_DOT_COLORS: Record<string, string> = {
-  available:   'var(--color-success-text)',
-  rented:      'var(--color-info-text)',
+  available: 'var(--color-success-text)',
+  rented: 'var(--color-info-text)',
   maintenance: 'var(--color-warning-text)',
-  damaged:     'var(--color-danger-text)',
-  reserved:    'var(--color-gold-500)',
-  lost:        'var(--color-neutral-text)',
+  damaged: 'var(--color-danger-text)',
+  reserved: 'var(--color-gold-500)',
+  lost: 'var(--color-neutral-text)',
 }
 
 const STATUS_LABELS_AR: Record<string, string> = {
-  available:   'متاح',
-  rented:      'مؤجر',
+  available: 'متاح',
+  rented: 'مؤجر',
   maintenance: 'صيانة',
-  damaged:     'تالف',
-  reserved:    'محجوز',
-  lost:        'مفقود',
+  damaged: 'تالف',
+  reserved: 'محجوز',
+  lost: 'مفقود',
 }
 
 const ORDERED_STATUSES = ['available', 'rented', 'maintenance', 'damaged', 'reserved', 'lost']
@@ -280,8 +280,8 @@ export default function DashboardPage() {
   if (maintenanceSkates > 0) {
     alerts.push({
       icon: Wrench,
-      title: `${maintenanceSkates} كوتش في الصيانة`,
-      detail: 'تحقق من حالة الصيانة وأعد الكوتشات للخدمة',
+      title: `${maintenanceSkates} اسكيت في الصيانة`,
+      detail: 'تحقق من حالة الصيانة وأعد الاسكيتات للخدمة',
       bg: 'var(--color-warning-bg)',
       iconColor: 'var(--color-warning-text)',
     })
@@ -289,8 +289,8 @@ export default function DashboardPage() {
   if (availableSkates === 0 && totalSkates > 0) {
     alerts.push({
       icon: AlertTriangle,
-      title: 'لا توجد كوتشات متاحة',
-      detail: 'جميع الكوتشات مشغولة أو في الصيانة',
+      title: 'لا توجد اسكيتات متاحة',
+      detail: 'جميع الاسكيتات مشغولة أو في الصيانة',
       bg: 'var(--color-danger-bg)',
       iconColor: 'var(--color-danger-text)',
     })
@@ -383,7 +383,7 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
                 <PermissionGate permission="rentals.create">
                   <Button variant="secondary" onClick={() => navigate('/rentals/new')}>
-                    <Ticket size={16} /> زلاجة جديدة للإيجار
+                    <Ticket size={16} /> اسكيت جديدة للإيجار
                   </Button>
                 </PermissionGate>
                 <PermissionGate permission="sales.create">
@@ -393,12 +393,12 @@ export default function DashboardPage() {
                 </PermissionGate>
                 <PermissionGate permission="rentals.return">
                   <Button variant="secondary" onClick={() => navigate('/rentals/active')}>
-                    <RotateCcw size={16} /> إرجاع زلاجة
+                    <RotateCcw size={16} /> إرجاع اسكيت
                   </Button>
                 </PermissionGate>
                 <PermissionGate permission="maintenance.view">
                   <Button variant="secondary" onClick={() => navigate('/maintenance')}>
-                    <Wrench size={16} /> إضافة زلاجة للصيانة
+                    <Wrench size={16} /> إضافة اسكيت للصيانة
                   </Button>
                 </PermissionGate>
                 <PermissionGate permission="customers.view">
@@ -414,14 +414,14 @@ export default function DashboardPage() {
               2. PRIMARY KPI ROW — 4 cards
               ════════════════════════════════════════════════════════════════ */}
           <div className="dash-kpi-grid">
-            {/* الكوتشات المتاحة */}
+            {/* الاسكيتات المتاحة */}
             <Card padding="compact" className="dash-kpi-card">
               <div className="dash-kpi-icon" style={{ background: 'var(--color-success-bg)', color: 'var(--color-success-text)' }}>
                 <Package size={22} />
               </div>
               <div className="dash-kpi-body">
                 <p className="dash-kpi-value">{availableSkates}</p>
-                <p className="dash-kpi-label">الكوتشات المتاحة</p>
+                <p className="dash-kpi-label">الاسكيتات المتاحة</p>
                 {usableskates > 0 && (
                   <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', margin: 0, marginTop: 2 }}>
                     نسبة الاستخدام: {utilization}%
@@ -498,7 +498,7 @@ export default function DashboardPage() {
                 <table className="dash-table">
                   <thead>
                     <tr>
-                      <th>كود الكوتش</th>
+                      <th>كود الاسكيت</th>
                       <th>العميل</th>
                       <th>وقت البدء</th>
                       <th>وقت الانتهاء المتوقع</th>
@@ -591,7 +591,7 @@ export default function DashboardPage() {
             <div className="dash-summary-grid">
               {/* Inventory Column */}
               <div className="dash-summary-column">
-                <p className="dash-summary-column-title">حالة الكوتشات</p>
+                <p className="dash-summary-column-title">حالة الاسكيتات</p>
                 <div className="dash-summary-row">
                   <span>إجمالي</span>
                   <span className="dash-summary-row-value">{totalSkates}</span>
@@ -698,7 +698,7 @@ export default function DashboardPage() {
             <Card>
               <div className="dash-section-header">
                 <Package size={18} className="dash-section-icon" />
-                <h2 className="dash-section-title">حالة الكوتشات</h2>
+                <h2 className="dash-section-title">حالة الاسكيتات</h2>
               </div>
               {inventoryRows.length > 0 ? (
                 <div className="dash-status-list">
@@ -719,7 +719,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : (
-                <EmptyState icon={Package} title="لا توجد كوتشات مسجلة في النظام" />
+                <EmptyState icon={Package} title="لا توجد اسكيتات مسجلة في النظام" />
               )}
             </Card>
           </div>

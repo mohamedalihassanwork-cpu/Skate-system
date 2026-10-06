@@ -64,27 +64,27 @@ export default function CustomerProfilePage() {
   const { showToast } = useToast()
 
   const [customer, setCustomer] = useState<CustomerDTO | null>(null)
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Edit modal
-  const [showEdit,   setShowEdit]   = useState(false)
-  const [editForm,   setEditForm]   = useState<UpdateCustomerBody>({})
+  const [showEdit, setShowEdit] = useState(false)
+  const [editForm, setEditForm] = useState<UpdateCustomerBody>({})
   const [editSaving, setEditSaving] = useState(false)
-  const [editError,  setEditError]  = useState<string | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
 
   // Deactivate confirm
   const [showDeactivate, setShowDeactivate] = useState(false)
-  const [deactivating,   setDeactivating]   = useState(false)
+  const [deactivating, setDeactivating] = useState(false)
 
   // Activate confirm
   const [showActivate, setShowActivate] = useState(false)
-  const [activating,   setActivating]   = useState(false)
+  const [activating, setActivating] = useState(false)
 
   // Phase 05: Rental history state (DEC-055)
-  const [rentals, setRentals]         = useState<CustomerRentalHistoryItem[]>([])
+  const [rentals, setRentals] = useState<CustomerRentalHistoryItem[]>([])
   const [rentalsLoading, setRentalsLoading] = useState(false)
-  const [rentalsTotal, setRentalsTotal]     = useState(0)
+  const [rentalsTotal, setRentalsTotal] = useState(0)
 
   // ---------------------------------------------------------------------------
   // Load
@@ -133,10 +133,10 @@ export default function CustomerProfilePage() {
   function openEdit() {
     if (!customer) return
     setEditForm({
-      name:      customer.name,
-      phone:     customer.phone,
+      name: customer.name,
+      phone: customer.phone,
       nationalId: customer.nationalId ?? '',
-      notes:     customer.notes ?? '',
+      notes: customer.notes ?? '',
     })
     setEditError(null)
     setShowEdit(true)
@@ -156,8 +156,8 @@ export default function CustomerProfilePage() {
     setEditSaving(true)
     try {
       const res = await customersService.update(customer.id, {
-        name:      editForm.name?.trim(),
-        phone:     editForm.phone?.trim(),
+        name: editForm.name?.trim(),
+        phone: editForm.phone?.trim(),
         nationalId: typeof editForm.nationalId === 'string'
           ? (editForm.nationalId.trim() || null)
           : editForm.nationalId,
@@ -326,7 +326,7 @@ export default function CustomerProfilePage() {
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>كود الإيجار</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>الزلاجة</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>الاسكيت</th>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>المدة</th>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>المبلغ</th>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>الحالة</th>

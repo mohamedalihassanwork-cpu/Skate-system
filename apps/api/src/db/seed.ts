@@ -31,72 +31,72 @@ const BCRYPT_ROUNDS = 12
 
 const ALL_PERMISSIONS: Array<{ key: string; labelAr: string; module: string }> = [
   // Rentals
-  { key: 'rentals.view',     labelAr: 'عرض الإيجارات',           module: 'rentals' },
-  { key: 'rentals.create',   labelAr: 'إنشاء إيجار',             module: 'rentals' },
-  { key: 'rentals.return',   labelAr: 'تسجيل إعادة الزلاجة',    module: 'rentals' },
+  { key: 'rentals.view', labelAr: 'عرض الإيجارات', module: 'rentals' },
+  { key: 'rentals.create', labelAr: 'إنشاء إيجار', module: 'rentals' },
+  { key: 'rentals.return', labelAr: 'تسجيل إعادة الاسكيت', module: 'rentals' },
   // Waivers
-  { key: 'waivers.approve',  labelAr: 'الموافقة على التنازل عن رسوم التأخير', module: 'rentals' },
+  { key: 'waivers.approve', labelAr: 'الموافقة على التنازل عن رسوم التأخير', module: 'rentals' },
   // Damage
-  { key: 'damage.view',      labelAr: 'عرض تقارير الأضرار',       module: 'damage' },
-  { key: 'damage.create',    labelAr: 'إضافة تقرير ضرر',          module: 'damage' },
-  { key: 'damage.waive',     labelAr: 'التنازل عن رسوم الضرر',   module: 'damage' },
-  { key: 'damage.collect_charge', labelAr: 'تحصيل رسوم الضرر',    module: 'damage' },
+  { key: 'damage.view', labelAr: 'عرض تقارير الأضرار', module: 'damage' },
+  { key: 'damage.create', labelAr: 'إضافة تقرير ضرر', module: 'damage' },
+  { key: 'damage.waive', labelAr: 'التنازل عن رسوم الضرر', module: 'damage' },
+  { key: 'damage.collect_charge', labelAr: 'تحصيل رسوم الضرر', module: 'damage' },
   // Maintenance
-  { key: 'maintenance.view',     labelAr: 'عرض سجلات الصيانة',    module: 'maintenance' },
-  { key: 'maintenance.create',   labelAr: 'إضافة طلب صيانة',      module: 'maintenance' },
-  { key: 'maintenance.edit',     labelAr: 'تعديل سجل الصيانة',    module: 'maintenance' },
-  { key: 'maintenance.complete', labelAr: 'إغلاق طلب الصيانة',    module: 'maintenance' },
-  { key: 'maintenance.pay',      labelAr: 'دفع تكلفة الصيانة',    module: 'maintenance' },
+  { key: 'maintenance.view', labelAr: 'عرض سجلات الصيانة', module: 'maintenance' },
+  { key: 'maintenance.create', labelAr: 'إضافة طلب صيانة', module: 'maintenance' },
+  { key: 'maintenance.edit', labelAr: 'تعديل سجل الصيانة', module: 'maintenance' },
+  { key: 'maintenance.complete', labelAr: 'إغلاق طلب الصيانة', module: 'maintenance' },
+  { key: 'maintenance.pay', labelAr: 'دفع تكلفة الصيانة', module: 'maintenance' },
   // Customers
-  { key: 'customers.view',       labelAr: 'عرض العملاء',              module: 'customers' },
-  { key: 'customers.create',     labelAr: 'إضافة عميل',               module: 'customers' },
-  { key: 'customers.edit',       labelAr: 'تعديل بيانات العميل',      module: 'customers' },
-  { key: 'customers.deactivate', labelAr: 'تعطيل / تفعيل العميل',     module: 'customers' },
+  { key: 'customers.view', labelAr: 'عرض العملاء', module: 'customers' },
+  { key: 'customers.create', labelAr: 'إضافة عميل', module: 'customers' },
+  { key: 'customers.edit', labelAr: 'تعديل بيانات العميل', module: 'customers' },
+  { key: 'customers.deactivate', labelAr: 'تعطيل / تفعيل العميل', module: 'customers' },
   // Skates
-  { key: 'skates.view',      labelAr: 'عرض الزلاجات',             module: 'skates' },
-  { key: 'skates.create',    labelAr: 'إضافة زلاجة',              module: 'skates' },
-  { key: 'skates.edit',      labelAr: 'تعديل بيانات الزلاجة',     module: 'skates' },
+  { key: 'skates.view', labelAr: 'عرض الاسكيتات', module: 'skates' },
+  { key: 'skates.create', labelAr: 'إضافة اسكيت', module: 'skates' },
+  { key: 'skates.edit', labelAr: 'تعديل بيانات الاسكيت', module: 'skates' },
   // Expenses
-  { key: 'expenses.view',    labelAr: 'عرض المصروفات',            module: 'expenses' },
-  { key: 'expenses.create',  labelAr: 'إضافة مصروف',              module: 'expenses' },
+  { key: 'expenses.view', labelAr: 'عرض المصروفات', module: 'expenses' },
+  { key: 'expenses.create', labelAr: 'إضافة مصروف', module: 'expenses' },
   // Payments
-  { key: 'payments.view',    labelAr: 'عرض المدفوعات',            module: 'payments' },
-  { key: 'payments.create',  labelAr: 'إنشاء دفعة',               module: 'payments' },
+  { key: 'payments.view', labelAr: 'عرض المدفوعات', module: 'payments' },
+  { key: 'payments.create', labelAr: 'إنشاء دفعة', module: 'payments' },
   // Treasury
-  { key: 'treasury.view',    labelAr: 'عرض الخزينة',              module: 'treasury' },
-  { key: 'treasury.manage',  labelAr: 'إدارة الخزينة',            module: 'treasury' },
+  { key: 'treasury.view', labelAr: 'عرض الخزينة', module: 'treasury' },
+  { key: 'treasury.manage', labelAr: 'إدارة الخزينة', module: 'treasury' },
   // Reports
-  { key: 'reports.view',     labelAr: 'عرض التقارير',             module: 'reports' },
+  { key: 'reports.view', labelAr: 'عرض التقارير', module: 'reports' },
   // Users
-  { key: 'users.view',            labelAr: 'عرض المستخدمين',              module: 'users' },
-  { key: 'users.create',          labelAr: 'إضافة مستخدم',                module: 'users' },
-  { key: 'users.edit',            labelAr: 'تعديل مستخدم',                module: 'users' },
-  { key: 'users.delete',          labelAr: 'تعطيل مستخدم',                module: 'users' },
-  { key: 'users.change_password', labelAr: 'تغيير كلمة مرور المستخدم',   module: 'users' },
+  { key: 'users.view', labelAr: 'عرض المستخدمين', module: 'users' },
+  { key: 'users.create', labelAr: 'إضافة مستخدم', module: 'users' },
+  { key: 'users.edit', labelAr: 'تعديل مستخدم', module: 'users' },
+  { key: 'users.delete', labelAr: 'تعطيل مستخدم', module: 'users' },
+  { key: 'users.change_password', labelAr: 'تغيير كلمة مرور المستخدم', module: 'users' },
   // Roles
-  { key: 'roles.view',       labelAr: 'عرض الأدوار',              module: 'roles' },
-  { key: 'roles.create',     labelAr: 'إنشاء دور',                module: 'roles' },
-  { key: 'roles.edit',       labelAr: 'تعديل دور',                module: 'roles' },
+  { key: 'roles.view', labelAr: 'عرض الأدوار', module: 'roles' },
+  { key: 'roles.create', labelAr: 'إنشاء دور', module: 'roles' },
+  { key: 'roles.edit', labelAr: 'تعديل دور', module: 'roles' },
   // Shifts
-  { key: 'shifts.view',      labelAr: 'عرض الشفتات',              module: 'shifts' },
-  { key: 'shifts.manage',    labelAr: 'إدارة الشفتات',            module: 'shifts' },
+  { key: 'shifts.view', labelAr: 'عرض الشفتات', module: 'shifts' },
+  { key: 'shifts.manage', labelAr: 'إدارة الشفتات', module: 'shifts' },
   // Audit
-  { key: 'audit.view',       labelAr: 'عرض سجل المراجعة',        module: 'audit' },
+  { key: 'audit.view', labelAr: 'عرض سجل المراجعة', module: 'audit' },
   // Settings
-  { key: 'settings.view',    labelAr: 'عرض الإعدادات',            module: 'settings' },
-  { key: 'settings.manage',  labelAr: 'إدارة الإعدادات',          module: 'settings' },
+  { key: 'settings.view', labelAr: 'عرض الإعدادات', module: 'settings' },
+  { key: 'settings.manage', labelAr: 'إدارة الإعدادات', module: 'settings' },
   // Reservations
-  { key: 'reservations.view',   labelAr: 'عرض الحجوزات',          module: 'reservations' },
-  { key: 'reservations.create', labelAr: 'إضافة حجز',             module: 'reservations' },
-  { key: 'reservations.edit',   labelAr: 'تعديل حجز',             module: 'reservations' },
-  { key: 'reservations.cancel', labelAr: 'إلغاء حجز',             module: 'reservations' },
+  { key: 'reservations.view', labelAr: 'عرض الحجوزات', module: 'reservations' },
+  { key: 'reservations.create', labelAr: 'إضافة حجز', module: 'reservations' },
+  { key: 'reservations.edit', labelAr: 'تعديل حجز', module: 'reservations' },
+  { key: 'reservations.cancel', labelAr: 'إلغاء حجز', module: 'reservations' },
   // Sales
-  { key: 'sales.view',       labelAr: 'عرض المبيعات',             module: 'sales' },
-  { key: 'sales.create',     labelAr: 'إنشاء فاتورة بيع',         module: 'sales' },
-  { key: 'sales.cancel',     labelAr: 'إلغاء فاتورة بيع',         module: 'sales' },
+  { key: 'sales.view', labelAr: 'عرض المبيعات', module: 'sales' },
+  { key: 'sales.create', labelAr: 'إنشاء فاتورة بيع', module: 'sales' },
+  { key: 'sales.cancel', labelAr: 'إلغاء فاتورة بيع', module: 'sales' },
   // Products
-  { key: 'products.view',    labelAr: 'عرض المنتجات',             module: 'products' },
-  { key: 'products.manage',  labelAr: 'إدارة المنتجات',           module: 'products' },
+  { key: 'products.view', labelAr: 'عرض المنتجات', module: 'products' },
+  { key: 'products.manage', labelAr: 'إدارة المنتجات', module: 'products' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -295,34 +295,34 @@ async function seed() {
 
   const RENTAL_SETTINGS: Array<{ key: string; value: string; labelAr: string }> = [
     {
-      key:     'rental_hourly_rate',
+      key: 'rental_hourly_rate',
       // DEC-068: Initial configured hourly rate = 120 EGP/hr
       // Read from settings at runtime — NEVER hardcoded in application source.
-      value:   '120',
+      value: '120',
       labelAr: 'سعر الإيجار بالساعة',
     },
     {
-      key:     'rental_duration_options',
+      key: 'rental_duration_options',
       // DEC-069: Standard durations in minutes — JSON-encoded array
-      value:   '[15, 30, 45, 60, 90]',
+      value: '[15, 30, 45, 60, 90]',
       labelAr: 'خيارات مدة الإيجار بالدقائق',
     },
     {
-      key:     'late_fee_per_minute',
+      key: 'late_fee_per_minute',
       // Phase 07: Late fee per minute
-      value:   '2',
+      value: '2',
       labelAr: 'رسوم التأخير لكل دقيقة',
     },
     {
-      key:     'print_invoices_enabled',
+      key: 'print_invoices_enabled',
       // Phase 14: Printing Invoices
-      value:   'true',
+      value: 'true',
       labelAr: 'طباعة الفواتير تلقائيا',
     },
     {
-      key:     'notification_sound_enabled',
+      key: 'notification_sound_enabled',
       // Phase 15: Notifications
-      value:   'true',
+      value: 'true',
       labelAr: 'صوت التنبيهات',
     },
   ]
@@ -336,8 +336,8 @@ async function seed() {
 
     if (!existing.length) {
       await db.insert(settings).values({
-        key:     setting.key,
-        value:   setting.value,
+        key: setting.key,
+        value: setting.value,
         labelAr: setting.labelAr,
       })
       console.log(`     Setting seeded: ${setting.key} = ${setting.value}`)
@@ -365,7 +365,7 @@ async function seed() {
         nameAr: acc.nameAr
       })
       console.log(`     Treasury Account seeded: ${acc.name}`)
-      
+
       // Automatically create a 1:1 mapped Payment Method with the same name
       await db.insert(paymentMethods).values({
         name: acc.name,

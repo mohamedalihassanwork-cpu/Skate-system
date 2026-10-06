@@ -61,12 +61,12 @@ import { formatCurrency } from '../../utils/currency'
 function StatusBadge({ status }: { status: SkateStatus }) {
   // Map skate statuses to badge semantic variants
   const statusToBadge: Record<SkateStatus, BadgeStatus> = {
-    available:   'available',
-    rented:      'rented',
-    reserved:    'reserved',
+    available: 'available',
+    rented: 'rented',
+    reserved: 'reserved',
     maintenance: 'maintenance',
-    damaged:     'damaged',
-    lost:        'lost',
+    damaged: 'damaged',
+    lost: 'lost',
   }
   return (
     <Badge status={statusToBadge[status]}>
@@ -114,24 +114,24 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
       await skatesService.create({
         ...form,
         skateCode: form.skateCode?.trim() || undefined,
-        type:      form.type?.trim() || undefined,
-        notes:     form.notes?.trim() || undefined,
+        type: form.type?.trim() || undefined,
+        notes: form.notes?.trim() || undefined,
       })
       onCreated()
       onClose()
     } catch (e: unknown) {
-      setError((e as { message?: string })?.message ?? 'حدث خطأ أثناء إضافة الزلاجة')
+      setError((e as { message?: string })?.message ?? 'حدث خطأ أثناء إضافة الاسكيت')
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="إضافة زلاجة جديدة" size="base"
+    <Modal isOpen onClose={onClose} title="إضافة اسكيت جديدة" size="base"
       footer={
         <>
           <Button type="submit" form="create-skate-form" variant="primary" loading={saving} id="create-skate-submit-btn">
-            إضافة الزلاجة
+            إضافة الاسكيت
           </Button>
           <Button type="button" variant="secondary" onClick={onClose} id="create-skate-cancel-btn">
             إلغاء
@@ -140,86 +140,86 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
       }
     >
       <form id="create-skate-form" onSubmit={handleSubmit} noValidate>
-          {/* M-001/M-009: replaced local Field + inputStyle + raw <input> with shared <Input> */}
+        {/* M-001/M-009: replaced local Field + inputStyle + raw <input> with shared <Input> */}
+        <Input
+          id="create-skate-code"
+          label="رمز الاسكيت (اختياري — يُولَّد تلقائياً إذا تُرك فارغاً)"
+          type="text"
+          placeholder="مثال: SK-025 (اتركه فارغاً للتوليد التلقائي)"
+          value={form.skateCode ?? ''}
+          onChange={e => set('skateCode', e.target.value)}
+        />
+
+        <Input
+          id="create-skate-size"
+          label="المقاس *"
+          type="text"
+          placeholder="مثال: 42"
+          value={form.size}
+          onChange={e => set('size', e.target.value)}
+          required
+        />
+
+        {/* DEC-033: free-text input — no dropdown */}
+        <Input
+          id="create-skate-type"
+          label="النوع"
+          type="text"
+          placeholder="نوع الاسكيت (اختياري)"
+          value={form.type ?? ''}
+          onChange={e => set('type', e.target.value)}
+        />
+
+        <div className="form-grid-2col">
+          {/* M-001/M-009: raw <select> → shared <Select> component */}
+          <Select
+            id="create-skate-status"
+            label="الحالة"
+            options={ADMIN_STATUS_OPTIONS}
+            value={form.status}
+            onChange={e => set('status', e.target.value as SkateStatus)}
+          />
+
+          <Select
+            id="create-skate-condition"
+            label="الحالة الفنية"
+            options={CONDITION_OPTIONS}
+            value={form.condition}
+            onChange={e => set('condition', e.target.value as SkateCondition)}
+          />
+        </div>
+
+        <div className="form-grid-2col">
           <Input
-            id="create-skate-code"
-            label="رمز الزلاجة (اختياري — يُولَّد تلقائياً إذا تُرك فارغاً)"
-            type="text"
-            placeholder="مثال: SK-025 (اتركه فارغاً للتوليد التلقائي)"
-            value={form.skateCode ?? ''}
-            onChange={e => set('skateCode', e.target.value)}
+            id="create-skate-purchase-date"
+            label="تاريخ الشراء"
+            type="date"
+            value={form.purchaseDate ?? ''}
+            onChange={e => set('purchaseDate', e.target.value || undefined)}
           />
 
           <Input
-            id="create-skate-size"
-            label="المقاس *"
-            type="text"
-            placeholder="مثال: 42"
-            value={form.size}
-            onChange={e => set('size', e.target.value)}
-            required
+            id="create-skate-purchase-cost"
+            label="تكلفة الشراء (EGP)"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            value={form.purchaseCost ?? ''}
+            onChange={e => set('purchaseCost', e.target.value ? parseFloat(e.target.value) : undefined)}
           />
+        </div>
 
-          {/* DEC-033: free-text input — no dropdown */}
-          <Input
-            id="create-skate-type"
-            label="النوع"
-            type="text"
-            placeholder="نوع الزلاجة (اختياري)"
-            value={form.type ?? ''}
-            onChange={e => set('type', e.target.value)}
-          />
+        {/* M-001/M-009: raw <textarea> → shared <Textarea> component */}
+        <Textarea
+          id="create-skate-notes"
+          label="ملاحظات"
+          placeholder="ملاحظات إضافية (اختياري)"
+          value={form.notes ?? ''}
+          onChange={e => set('notes', e.target.value)}
+        />
 
-          <div className="form-grid-2col">
-            {/* M-001/M-009: raw <select> → shared <Select> component */}
-            <Select
-              id="create-skate-status"
-              label="الحالة"
-              options={ADMIN_STATUS_OPTIONS}
-              value={form.status}
-              onChange={e => set('status', e.target.value as SkateStatus)}
-            />
-
-            <Select
-              id="create-skate-condition"
-              label="الحالة الفنية"
-              options={CONDITION_OPTIONS}
-              value={form.condition}
-              onChange={e => set('condition', e.target.value as SkateCondition)}
-            />
-          </div>
-
-          <div className="form-grid-2col">
-            <Input
-              id="create-skate-purchase-date"
-              label="تاريخ الشراء"
-              type="date"
-              value={form.purchaseDate ?? ''}
-              onChange={e => set('purchaseDate', e.target.value || undefined)}
-            />
-
-            <Input
-              id="create-skate-purchase-cost"
-              label="تكلفة الشراء (EGP)"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={form.purchaseCost ?? ''}
-              onChange={e => set('purchaseCost', e.target.value ? parseFloat(e.target.value) : undefined)}
-            />
-          </div>
-
-          {/* M-001/M-009: raw <textarea> → shared <Textarea> component */}
-          <Textarea
-            id="create-skate-notes"
-            label="ملاحظات"
-            placeholder="ملاحظات إضافية (اختياري)"
-            value={form.notes ?? ''}
-            onChange={e => set('notes', e.target.value)}
-          />
-
-          {error && <Alert variant="danger" style={{ marginBottom: 'var(--space-4)' } as React.CSSProperties}>{error}</Alert>}
+        {error && <Alert variant="danger" style={{ marginBottom: 'var(--space-4)' } as React.CSSProperties}>{error}</Alert>}
       </form>
     </Modal>
   )
@@ -231,16 +231,16 @@ function CreateSkateModal({ onClose, onCreated }: { onClose: () => void; onCreat
 
 function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClose: () => void; onUpdated: () => void }) {
   const [form, setForm] = useState<UpdateSkateRequest>({
-    size:         skate.size,
-    type:         skate.type ?? '',
-    status:       skate.status,
-    condition:    skate.condition,
+    size: skate.size,
+    type: skate.type ?? '',
+    status: skate.status,
+    condition: skate.condition,
     purchaseDate: skate.purchaseDate ?? '',
     purchaseCost: skate.purchaseCost ? parseFloat(skate.purchaseCost) : undefined,
-    notes:        skate.notes ?? '',
-    qrCode:       skate.qrCode ?? '',
-    barcode:      skate.barcode ?? '',
-    isActive:     skate.isActive,
+    notes: skate.notes ?? '',
+    qrCode: skate.qrCode ?? '',
+    barcode: skate.barcode ?? '',
+    isActive: skate.isActive,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -257,16 +257,16 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
     try {
       await skatesService.update(skate.id, {
         ...form,
-        type:         form.type?.toString().trim() || null,
-        notes:        form.notes?.toString().trim() || null,
-        qrCode:       form.qrCode?.toString().trim() || null,
-        barcode:      form.barcode?.toString().trim() || null,
+        type: form.type?.toString().trim() || null,
+        notes: form.notes?.toString().trim() || null,
+        qrCode: form.qrCode?.toString().trim() || null,
+        barcode: form.barcode?.toString().trim() || null,
         purchaseDate: form.purchaseDate?.toString().trim() || null,
       })
       onUpdated()
       onClose()
     } catch (e: unknown) {
-      setError((e as { message?: string })?.message ?? 'حدث خطأ أثناء تحديث الزلاجة')
+      setError((e as { message?: string })?.message ?? 'حدث خطأ أثناء تحديث الاسكيت')
     } finally {
       setSaving(false)
     }
@@ -278,7 +278,7 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
     : ADMIN_SETTABLE_STATUSES
 
   return (
-    <Modal isOpen onClose={onClose} title="تعديل الزلاجة" size="base"
+    <Modal isOpen onClose={onClose} title="تعديل الاسكيت" size="base"
       footer={
         <>
           {/* D-004: removed gold inline style — standard variant="primary" uses navy-800 */}
@@ -293,112 +293,112 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
     >
       <p style={{ marginTop: 0, marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>{skate.skateCode}</p>
       <form id="edit-skate-form" onSubmit={handleSubmit} noValidate>
-          {/* M-001/M-009: replaced local Field + inputStyle + raw <input> with shared <Input> */}
-          <Input
-            id="edit-skate-size"
-            label="المقاس *"
-            type="text"
-            value={form.size ?? ''}
-            onChange={e => set('size', e.target.value)}
-            required
-          />
+        {/* M-001/M-009: replaced local Field + inputStyle + raw <input> with shared <Input> */}
+        <Input
+          id="edit-skate-size"
+          label="المقاس *"
+          type="text"
+          value={form.size ?? ''}
+          onChange={e => set('size', e.target.value)}
+          required
+        />
 
-          {/* DEC-033: free-text input */}
-          <Input
-            id="edit-skate-type"
-            label="النوع"
-            type="text"
-            placeholder="نوع الزلاجة"
-            value={form.type ?? ''}
-            onChange={e => set('type', e.target.value)}
-          />
+        {/* DEC-033: free-text input */}
+        <Input
+          id="edit-skate-type"
+          label="النوع"
+          type="text"
+          placeholder="نوع الاسكيت"
+          value={form.type ?? ''}
+          onChange={e => set('type', e.target.value)}
+        />
 
-          <div className="form-grid-2col">
-            {/*
+        <div className="form-grid-2col">
+          {/*
              * DEC-031: status may include rented/reserved (read-only) for display.
              * The shared Select component does not support disabled options, so we use
              * the raw <select> with field-control CSS class to keep design-system styling
              * while still rendering disabled option entries (M-001 exception).
              */}
-            <div className="field-wrapper">
-              <label htmlFor="edit-skate-status" className="field-label">الحالة</label>
-              <select
-                id="edit-skate-status"
-                className="field-control"
-                value={form.status}
-                onChange={e => set('status', e.target.value as SkateStatus)}
-              >
-                {statusOptions.map(s => (
-                  <option key={s} value={s} disabled={s === 'rented' || s === 'reserved'}>
-                    {STATUS_LABELS[s]}{(s === 'rented' || s === 'reserved') ? ' (آلي فقط)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <Select
-              id="edit-skate-condition"
-              label="الحالة الفنية"
-              options={CONDITION_OPTIONS}
-              value={form.condition}
-              onChange={e => set('condition', e.target.value as SkateCondition)}
-            />
+          <div className="field-wrapper">
+            <label htmlFor="edit-skate-status" className="field-label">الحالة</label>
+            <select
+              id="edit-skate-status"
+              className="field-control"
+              value={form.status}
+              onChange={e => set('status', e.target.value as SkateStatus)}
+            >
+              {statusOptions.map(s => (
+                <option key={s} value={s} disabled={s === 'rented' || s === 'reserved'}>
+                  {STATUS_LABELS[s]}{(s === 'rented' || s === 'reserved') ? ' (آلي فقط)' : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="form-grid-2col">
-            <Input
-              id="edit-skate-purchase-date"
-              label="تاريخ الشراء"
-              type="date"
-              value={form.purchaseDate ?? ''}
-              onChange={e => set('purchaseDate', e.target.value || null)}
-            />
-            <Input
-              id="edit-skate-purchase-cost"
-              label="تكلفة الشراء (EGP)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.purchaseCost ?? ''}
-              onChange={e => set('purchaseCost', e.target.value ? parseFloat(e.target.value) : null)}
-            />
-          </div>
-
-          {/* DEC-032: QR code and barcode are user-editable strings */}
-          <div className="form-grid-2col">
-            <Input
-              id="edit-skate-qr"
-              label="قيمة رمز QR"
-              type="text"
-              value={form.qrCode ?? ''}
-              onChange={e => set('qrCode', e.target.value || null)}
-            />
-            <Input
-              id="edit-skate-barcode"
-              label="قيمة الباركود"
-              type="text"
-              value={form.barcode ?? ''}
-              onChange={e => set('barcode', e.target.value || null)}
-            />
-          </div>
-
-          {/* M-001/M-009: raw <textarea> → shared <Textarea> component */}
-          <Textarea
-            id="edit-skate-notes"
-            label="ملاحظات"
-            value={form.notes ?? ''}
-            onChange={e => set('notes', e.target.value)}
+          <Select
+            id="edit-skate-condition"
+            label="الحالة الفنية"
+            options={CONDITION_OPTIONS}
+            value={form.condition}
+            onChange={e => set('condition', e.target.value as SkateCondition)}
           />
+        </div>
 
-          {/* SYS-010: replaced raw <input type="checkbox"> + inline <label> with shared <CheckboxField> */}
-          <CheckboxField
-            id="edit-skate-active"
-            label="زلاجة نشطة"
-            checked={form.isActive ?? true}
-            onChange={checked => set('isActive', checked)}
+        <div className="form-grid-2col">
+          <Input
+            id="edit-skate-purchase-date"
+            label="تاريخ الشراء"
+            type="date"
+            value={form.purchaseDate ?? ''}
+            onChange={e => set('purchaseDate', e.target.value || null)}
           />
+          <Input
+            id="edit-skate-purchase-cost"
+            label="تكلفة الشراء (EGP)"
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.purchaseCost ?? ''}
+            onChange={e => set('purchaseCost', e.target.value ? parseFloat(e.target.value) : null)}
+          />
+        </div>
 
-          {error && <Alert variant="danger" style={{ marginBottom: 'var(--space-4)' } as React.CSSProperties}>{error}</Alert>}
+        {/* DEC-032: QR code and barcode are user-editable strings */}
+        <div className="form-grid-2col">
+          <Input
+            id="edit-skate-qr"
+            label="قيمة رمز QR"
+            type="text"
+            value={form.qrCode ?? ''}
+            onChange={e => set('qrCode', e.target.value || null)}
+          />
+          <Input
+            id="edit-skate-barcode"
+            label="قيمة الباركود"
+            type="text"
+            value={form.barcode ?? ''}
+            onChange={e => set('barcode', e.target.value || null)}
+          />
+        </div>
+
+        {/* M-001/M-009: raw <textarea> → shared <Textarea> component */}
+        <Textarea
+          id="edit-skate-notes"
+          label="ملاحظات"
+          value={form.notes ?? ''}
+          onChange={e => set('notes', e.target.value)}
+        />
+
+        {/* SYS-010: replaced raw <input type="checkbox"> + inline <label> with shared <CheckboxField> */}
+        <CheckboxField
+          id="edit-skate-active"
+          label="اسكيت نشطة"
+          checked={form.isActive ?? true}
+          onChange={checked => set('isActive', checked)}
+        />
+
+        {error && <Alert variant="danger" style={{ marginBottom: 'var(--space-4)' } as React.CSSProperties}>{error}</Alert>}
       </form>
     </Modal>
   )
@@ -409,14 +409,14 @@ function EditSkateModal({ skate, onClose, onUpdated }: { skate: SkateDTO; onClos
 // ---------------------------------------------------------------------------
 
 export default function SkatesPage() {
-  const [skatesList, setSkatesList]   = useState<SkateDTO[]>([])
-  const [total, setTotal]             = useState(0)
-  const [loading, setLoading]         = useState(true)
-  const [error, setError]             = useState<string | null>(null)
-  const [search, setSearch]           = useState('')
+  const [skatesList, setSkatesList] = useState<SkateDTO[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<SkateStatus | 'all'>('all')
-  const [showCreate, setShowCreate]   = useState(false)
-  const [editSkate, setEditSkate]     = useState<SkateDTO | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [editSkate, setEditSkate] = useState<SkateDTO | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -437,7 +437,7 @@ export default function SkatesPage() {
       setSkatesList(data)
       setTotal(res.pagination?.total ?? data.length)
     } catch {
-      setError('تعذر تحميل قائمة الزلاجات')
+      setError('تعذر تحميل قائمة الاسكيتات')
     } finally {
       setLoading(false)
     }
@@ -446,13 +446,13 @@ export default function SkatesPage() {
   useEffect(() => { load() }, [load])
 
   const statusFilterOptions: Array<{ value: string; label: string }> = [
-    { value: 'all',         label: 'جميع الحالات' },
-    { value: 'available',   label: STATUS_LABELS.available },
+    { value: 'all', label: 'جميع الحالات' },
+    { value: 'available', label: STATUS_LABELS.available },
     { value: 'maintenance', label: STATUS_LABELS.maintenance },
-    { value: 'damaged',     label: STATUS_LABELS.damaged },
-    { value: 'lost',        label: STATUS_LABELS.lost },
-    { value: 'rented',      label: STATUS_LABELS.rented },
-    { value: 'reserved',    label: STATUS_LABELS.reserved },
+    { value: 'damaged', label: STATUS_LABELS.damaged },
+    { value: 'lost', label: STATUS_LABELS.lost },
+    { value: 'rented', label: STATUS_LABELS.rented },
+    { value: 'reserved', label: STATUS_LABELS.reserved },
   ]
 
   return (
@@ -460,9 +460,9 @@ export default function SkatesPage() {
       {/* Page header */}
       <div className="page-header">
         <div className="page-header-text">
-          <h1 className="page-header-title">إدارة الزلاجات</h1>
+          <h1 className="page-header-title">إدارة الاسكيتات</h1>
           <p className="page-header-subtitle">
-            {loading ? '...' : `${total} زلاجة إجمالاً`}
+            {loading ? '...' : `${total} اسكيت إجمالاً`}
           </p>
         </div>
         <PermissionGate permission="skates.create">
@@ -472,7 +472,7 @@ export default function SkatesPage() {
             onClick={() => setShowCreate(true)}
           >
             <Plus size={16} aria-hidden="true" />
-            إضافة زلاجة
+            إضافة اسكيت
           </Button>
         </PermissionGate>
       </div>
@@ -516,7 +516,7 @@ export default function SkatesPage() {
       </div>
 
       {/* Loading state */}
-      {loading && <PageLoader label="جارٍ تحميل الزلاجات" />}
+      {loading && <PageLoader label="جارٍ تحميل الاسكيتات" />}
 
       {/* Error state */}
       {!loading && error && (

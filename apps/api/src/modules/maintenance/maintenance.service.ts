@@ -3,8 +3,8 @@ import { db } from '../../db/connection'
 import { maintenanceRecords, maintenanceParts, skates, users, treasuryMovements, paymentMethods, cashierShifts } from '../../db/schema/index.js'
 import { NotFoundError, BusinessRuleError } from '../../utils/errors.js'
 import { auditService } from '../audit/audit.service.js'
-import type { 
-  CreateMaintenanceRecordPayload, 
+import type {
+  CreateMaintenanceRecordPayload,
   UpdateMaintenanceRecordPayload,
   CompleteMaintenanceRecordPayload,
   AddMaintenancePartPayload
@@ -136,7 +136,7 @@ export class MaintenanceService {
         .for('update')
 
       if (!skate) {
-        throw new NotFoundError('الزلاجة غير موجودة')
+        throw new NotFoundError('الاسكيت غير موجودة')
       }
 
       // ── F-006 IDEMPOTENCY GUARD (concurrency-safe) ────────────────────────
@@ -314,7 +314,7 @@ export class MaintenanceService {
       }
 
       const dataToUpdate: any = { updatedAt: new Date() }
-      
+
       if (updates.problemDescription !== undefined) {
         dataToUpdate.problemDescription = updates.problemDescription
       }
@@ -367,7 +367,7 @@ export class MaintenanceService {
         .for('update')
 
       if (!skate) {
-        throw new NotFoundError('الزلاجة غير موجودة')
+        throw new NotFoundError('الاسكيت غير موجودة')
       }
 
       const repairDesc = payload.repairDescription || record.repairDescription
@@ -447,7 +447,7 @@ export class MaintenanceService {
         .select()
         .from(paymentMethods)
         .where(eq(paymentMethods.id, paymentMethodId))
-      
+
       if (!method || !method.isActive) {
         throw new BusinessRuleError('وسيلة الدفع غير صالحة', 'INVALID_PAYMENT_METHOD')
       }

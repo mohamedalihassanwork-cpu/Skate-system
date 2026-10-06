@@ -31,7 +31,7 @@ const REPORT_TABS = [
   { id: 'expenses', label: 'المصروفات', icon: CreditCard },
   { id: 'customers', label: 'العملاء', icon: User },
   { id: 'cashiers', label: 'الكاشير', icon: User },
-  { id: 'skates', label: 'أداء الزلاجات', icon: Package },
+  { id: 'skates', label: 'أداء الاسكيتات', icon: Package },
 ]
 
 export default function ReportsPage() {
@@ -45,7 +45,7 @@ export default function ReportsPage() {
       alert('لا يمكن تصدير نظرة عامة أو النتيجة التشغيلية بصيغة جدول، برجاء اختيار تقرير مفصل.')
       return
     }
-    
+
     setIsExporting(true)
     try {
       const data = await fetchAllReportData(activeTab, startDate, endDate)
@@ -53,12 +53,12 @@ export default function ReportsPage() {
         alert('لا توجد بيانات للتصدير')
         return
       }
-      
+
       const filename = `report_${activeTab}_${startDate}_${endDate}`
       if (fmt === 'csv') exportToCSV(data, filename)
       else if (fmt === 'excel') exportToExcel(data, filename)
       else if (fmt === 'pdf') exportToPDF(data, filename, REPORT_TABS.find(t => t.id === activeTab)?.label || 'تقرير')
-      
+
     } catch (e: any) {
       alert('حدث خطأ أثناء التصدير: ' + e.message)
     } finally {
@@ -77,7 +77,7 @@ export default function ReportsPage() {
           <p className="page-header-subtitle">عرض وتحليل الأداء والنتائج التشغيلية</p>
         </div>
       </div>
-      
+
       <div style={{ display: 'flex', gap: 'var(--space-6)', flex: 1, minHeight: 0 }}>
         {/* Report Navigation Sidebar */}
         <div style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
@@ -107,8 +107,8 @@ export default function ReportsPage() {
                     color: isActive ? 'var(--color-white)' : 'var(--color-text-secondary)',
                     boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
                   } as any}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'var(--color-page-bg)'; e.currentTarget.style.color = 'var(--color-navy-800)' }}}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'var(--color-page-bg)'; e.currentTarget.style.color = 'var(--color-navy-800)' } }}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
                 >
                   <tab.icon size={18} style={{ color: isActive ? 'var(--color-gold-400)' : 'var(--color-text-muted)', flexShrink: 0 }} />
                   {tab.label}
@@ -157,7 +157,7 @@ export default function ReportsPage() {
                 {activeTabInfo?.label}
               </h2>
             </div>
-            
+
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
               <div style={{
                 display: 'flex',
@@ -170,25 +170,25 @@ export default function ReportsPage() {
                 boxShadow: 'var(--shadow-xs)',
               }}>
                 <div style={{ width: '144px' }}>
-                  <Input 
+                  <Input
                     id="start-date"
-                    type="date" 
+                    type="date"
                     label="من تاريخ"
-                    value={startDate} 
+                    value={startDate}
                     onChange={(e: any) => setStartDate(e.target.value)}
                   />
                 </div>
                 <div style={{ width: '144px' }}>
-                  <Input 
+                  <Input
                     id="end-date"
-                    type="date" 
+                    type="date"
                     label="إلى تاريخ"
-                    value={endDate} 
+                    value={endDate}
                     onChange={(e: any) => setEndDate(e.target.value)}
                   />
                 </div>
               </div>
-              
+
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                 <Button variant="secondary" size="sm" onClick={() => handleExport('excel')} disabled={isExporting}>
                   <FileDown size={16} />

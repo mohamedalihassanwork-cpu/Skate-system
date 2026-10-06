@@ -6,7 +6,7 @@
  * can distinguish operational errors from unexpected bugs.
  *
  * Usage:
- *   throw new NotFoundError('الزلاجة غير موجودة')
+ *   throw new NotFoundError('الاسكيت غير موجودة')
  *   throw new ForbiddenError('لا تملك صلاحية إجراء هذه العملية')
  */
 

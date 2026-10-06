@@ -20,9 +20,9 @@ interface Props {
 export default function MaintenancePaymentModal({ recordId, onClose, onSave }: Props) {
   const [record, setRecord] = useState<MaintenanceRecord | null>(null)
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
-  
+
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | ''>('')
-  
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,7 +96,7 @@ export default function MaintenancePaymentModal({ recordId, onClose, onSave }: P
           <>
             <div className="bg-[var(--surface-sunken)] p-[var(--space-4)] rounded-[var(--radius-md)] mb-[var(--space-4)]">
               <div className="flex justify-between items-center mb-[var(--space-2)]">
-                <span className="text-[var(--text-subtle)]">كود الزلاجة:</span>
+                <span className="text-[var(--text-subtle)]">كود الاسكيت:</span>
                 <span className="font-medium">{record.skateCode}</span>
               </div>
               <div className="flex justify-between items-center mb-[var(--space-2)]">
@@ -125,8 +125,8 @@ export default function MaintenancePaymentModal({ recordId, onClose, onSave }: P
             />
 
             <div className="flex flex-col gap-[var(--space-2)] mt-[var(--space-4)]">
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 onClick={handleSystemPayment}
                 disabled={saving || !selectedPaymentMethodId}
                 loading={saving}
@@ -134,8 +134,8 @@ export default function MaintenancePaymentModal({ recordId, onClose, onSave }: P
               >
                 دفع من النظام
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleExternalPayment}
                 disabled={saving}
                 loading={saving}

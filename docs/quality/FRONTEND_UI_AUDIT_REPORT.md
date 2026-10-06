@@ -1,7 +1,7 @@
 # Koshk Skate ERP — Frontend UI Consistency Audit & Refactor Report
 
 ## Objective
-Perform a complete frontend UI consistency audit and refactor across the entire KOSHK SKATE ERP using the "إدارة الزلاجات" (Skates Management) page as the reference visual standard.
+Perform a complete frontend UI consistency audit and refactor across the entire KOSHK SKATE ERP using the "إدارة الاسكيتات" (Skates Management) page as the reference visual standard.
 
 ## Scope & Constraints
 - **Goal:** Ensure every page belongs to the SAME DESIGN SYSTEM (same visual language, spacing, typography, controls, colors, badges, cards, headers, states, RTL behavior, and interaction patterns).

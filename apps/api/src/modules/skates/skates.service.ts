@@ -45,24 +45,24 @@ import type { SkateStatus, SkateCondition } from '../../db/schema/skates.js'
  */
 function toDTO(row: typeof skates.$inferSelect): SkateDTO {
   return {
-    id:           row.id,
-    skateCode:    row.skateCode,
-    qrCode:       row.qrCode ?? null,
-    barcode:      row.barcode ?? null,
-    size:         row.size,
-    type:         row.type ?? null,
-    status:       row.status,
-    condition:    row.condition,
+    id: row.id,
+    skateCode: row.skateCode,
+    qrCode: row.qrCode ?? null,
+    barcode: row.barcode ?? null,
+    size: row.size,
+    type: row.type ?? null,
+    status: row.status,
+    condition: row.condition,
     purchaseDate: row.purchaseDate
       ? (row.purchaseDate instanceof Date
-          ? row.purchaseDate.toISOString().split('T')[0]
-          : String(row.purchaseDate))
+        ? row.purchaseDate.toISOString().split('T')[0]
+        : String(row.purchaseDate))
       : null,
     purchaseCost: row.purchaseCost ?? null,
-    notes:        row.notes ?? null,
-    isActive:     row.isActive,
-    createdAt:    row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
-    updatedAt:    row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+    notes: row.notes ?? null,
+    isActive: row.isActive,
+    createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+    updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
   }
 }
 
@@ -102,9 +102,9 @@ async function generateSkateCode(): Promise<string> {
 // ---------------------------------------------------------------------------
 
 export async function listSkates(query: ListSkatesQuery): Promise<PaginatedSkates> {
-  const page    = Math.max(1, parseInt(query.page    ?? '1',  10))
+  const page = Math.max(1, parseInt(query.page ?? '1', 10))
   const perPage = Math.min(100, Math.max(1, parseInt(query.perPage ?? '20', 10)))
-  const offset  = (page - 1) * perPage
+  const offset = (page - 1) * perPage
 
   // Build WHERE conditions
   const conditions = []
@@ -161,7 +161,7 @@ export async function listSkates(query: ListSkatesQuery): Promise<PaginatedSkate
 
 export async function getSkate(id: number): Promise<SkateDTO> {
   const rows = await db.select().from(skates).where(eq(skates.id, id)).limit(1)
-  if (!rows.length) throw new NotFoundError('الزلاجة غير موجودة')
+  if (!rows.length) throw new NotFoundError('الاسكيت غير موجودة')
   return toDTO(rows[0])
 }
 
@@ -192,7 +192,7 @@ export async function createSkate(body: CreateSkateRequest): Promise<SkateDTO> {
     skateCode = body.skateCode.trim().toUpperCase()
     // Check uniqueness
     const existing = await db.select().from(skates).where(eq(skates.skateCode, skateCode)).limit(1)
-    if (existing.length) throw new ConflictError('رمز الزلاجة مستخدم بالفعل')
+    if (existing.length) throw new ConflictError('رمز الاسكيت مستخدم بالفعل')
   } else {
     // Auto-generate — may retry once on the extremely unlikely race condition
     skateCode = await generateSkateCode()
@@ -204,16 +204,16 @@ export async function createSkate(body: CreateSkateRequest): Promise<SkateDTO> {
   }
 
   // DEC-032: qr_code = skate_code, barcode = skate_code at creation
-  const qrCode  = skateCode
+  const qrCode = skateCode
   const barcode = skateCode
 
-  const status:    SkateStatus    = body.status    ?? 'available'
+  const status: SkateStatus = body.status ?? 'available'
   const condition: SkateCondition = body.condition ?? 'good'
 
   // DEC-031: Admin cannot create a skate with status = rented or reserved
   if (WORKFLOW_ONLY_STATUSES.includes(status)) {
     throw new BusinessRuleError(
-      `لا يمكن إنشاء زلاجة بحالة "${status}" — هذه الحالة تُحدَّد بواسطة سير العمل فقط`,
+      `لا يمكن إنشاء اسكيت بحالة "${status}" — هذه الحالة تُحدَّد بواسطة سير العمل فقط`,
       'SKATE_STATUS_NOT_ALLOWED',
     )
   }
@@ -222,14 +222,14 @@ export async function createSkate(body: CreateSkateRequest): Promise<SkateDTO> {
     skateCode,
     qrCode,
     barcode,
-    size:         body.size.trim(),
-    type:         body.type?.trim() || null,
+    size: body.size.trim(),
+    type: body.type?.trim() || null,
     status,
     condition,
     purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : null,
     purchaseCost: body.purchaseCost !== undefined ? String(body.purchaseCost) : null,
-    notes:        body.notes?.trim() || null,
-    isActive:     true,
+    notes: body.notes?.trim() || null,
+    isActive: true,
   })
 
   return getSkate((result as any).insertId)
@@ -241,7 +241,7 @@ export async function createSkate(body: CreateSkateRequest): Promise<SkateDTO> {
 
 export async function updateSkate(id: number, body: UpdateSkateRequest): Promise<SkateDTO> {
   const rows = await db.select().from(skates).where(eq(skates.id, id)).limit(1)
-  if (!rows.length) throw new NotFoundError('الزلاجة غير موجودة')
+  if (!rows.length) throw new NotFoundError('الاسكيت غير موجودة')
 
   const updates: Partial<typeof skates.$inferInsert> = {}
 
@@ -280,7 +280,7 @@ export async function updateSkate(id: number, body: UpdateSkateRequest): Promise
 
       if (pendingMaint) {
         throw new BusinessRuleError(
-          'لا يمكن تحويل الزلاجة إلى حالة "متاح" لوجود سجل صيانة غير مكتمل',
+          'لا يمكن تحويل الاسكيت إلى حالة "متاح" لوجود سجل صيانة غير مكتمل',
           'PENDING_MAINTENANCE'
         )
       }
@@ -334,9 +334,9 @@ export async function getSkateHistory(id: number): Promise<SkateHistoryDTO> {
   const skate = await getSkate(id)
   return {
     skate,
-    rentals:            [], // Phase 05
-    inspections:        [], // Phase 07
-    damageReports:      [], // Phase 08
+    rentals: [], // Phase 05
+    inspections: [], // Phase 07
+    damageReports: [], // Phase 08
     maintenanceRecords: [], // Phase 09
   }
 }

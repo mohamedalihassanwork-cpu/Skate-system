@@ -66,7 +66,7 @@ Frontend hiding of UI elements is NOT sufficient. Backend must enforce.
   "success": false,
   "error": {
     "code": "SKATE_NOT_AVAILABLE",
-    "message": "الزلاجة غير متاحة للاستئجار",
+    "message": "الاسكيت غير متاحة للاستئجار",
     "details": {}
   }
 }

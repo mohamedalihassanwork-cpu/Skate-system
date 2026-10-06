@@ -12,22 +12,22 @@ interface Props {
 
 export default function ReservationModal({ onClose, onSaved, existingReservation }: Props) {
   const { showToast } = useToast()
-  
+
   const [customerId, setCustomerId] = useState(existingReservation?.customer.id.toString() || '')
   const [skateId, setSkateId] = useState(existingReservation?.skate.id.toString() || '')
-  
+
   const toLocal = (d: string | undefined) => {
     if (!d) return ''
     const dt = new Date(d)
     const tzoffset = dt.getTimezoneOffset() * 60000
     return new Date(dt.getTime() - tzoffset).toISOString().slice(0, 16)
   }
-  
+
   const [reservedFrom, setReservedFrom] = useState(toLocal(existingReservation?.reservedFrom))
   const [reservedUntil, setReservedUntil] = useState(toLocal(existingReservation?.reservedUntil))
   const [notes, setNotes] = useState(existingReservation?.notes || '')
-  
-  const [skates, setSkates] = useState<{value: string, label: string}[]>([])
+
+  const [skates, setSkates] = useState<{ value: string, label: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,7 +39,7 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
           label: `${s.skateCode} (مقاس ${s.size})`
         })))
       })
-      .catch(() => showToast({ type: 'error', title: 'فشل تحميل الزلاجات' }))
+      .catch(() => showToast({ type: 'error', title: 'فشل تحميل الاسكيتات' }))
   }, [showToast])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +50,7 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
       setError('يرجى تعبئة الحقول المطلوبة')
       return
     }
-    
+
     if (!existingReservation && !customerId) {
       setError('يرجى تحديد العميل')
       return
@@ -96,12 +96,12 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
   return (
     <Modal
       isOpen={true}
-      title={existingReservation ? 'تعديل الحجز' : 'حجز زلاجة'}
+      title={existingReservation ? 'تعديل الحجز' : 'حجز اسكيت'}
       onClose={onClose}
     >
       <form onSubmit={handleSubmit}>
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
-        
+
         {!existingReservation && (
           <Input
             id="res-customer"
@@ -112,16 +112,16 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
             required
           />
         )}
-        
+
         <Select
           id="res-skate"
-          label="الزلاجة"
+          label="الاسكيت"
           value={skateId}
           onChange={(e: any) => setSkateId(e.target.value)}
           options={skates}
           required
         />
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <Input
             id="res-from"
@@ -140,7 +140,7 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
             required
           />
         </div>
-        
+
         <Input
           id="res-notes"
           label="ملاحظات"
@@ -148,7 +148,7 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
           value={notes}
           onChange={(e: any) => setNotes(e.target.value)}
         />
-        
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 24 }}>
           <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
             إلغاء

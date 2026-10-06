@@ -436,9 +436,9 @@ Register in `rentals.routes.ts` in this order to prevent path conflicts:
 
 | HTTP | Code | Arabic Message |
 |---|---|---|
-| 404 | `SKATE_NOT_FOUND` | الزلاجة غير موجودة |
+| 404 | `SKATE_NOT_FOUND` | الاسكيت غير موجودة |
 | 404 | `CUSTOMER_NOT_FOUND` | العميل غير موجود |
-| 422 | `SKATE_NOT_AVAILABLE` | الزلاجة غير متاحة للاستئجار |
+| 422 | `SKATE_NOT_AVAILABLE` | الاسكيت غير متاحة للاستئجار |
 | 422 | `CUSTOMER_INACTIVE` | لا يمكن إنشاء إيجار لعميل معطل |
 | 422 | `INVALID_DURATION` | مدة الإيجار غير صالحة |
 | 422 | `PRICING_CONFIG_MISSING` | إعدادات التسعير غير متوفرة |
@@ -622,7 +622,7 @@ Display complete summary per Spec §13:
 | Customer name | العميل |
 | Customer phone | الهاتف |
 | Customer national ID (masked) | الرقم القومي |
-| Skate code + size | الزلاجة |
+| Skate code + size | الاسكيت |
 | Duration | المدة |
 | Hourly rate | السعر بالساعة |
 | Rental amount | مبلغ الإيجار |
@@ -641,7 +641,7 @@ Display complete summary per Spec §13:
 |---|---|---|
 | Rental ID | رقم الإيجار | `rentalCode` |
 | Customer | العميل | `customer.name` |
-| Skate | الزلاجة | `skate.skateCode + size` |
+| Skate | الاسكيت | `skate.skateCode + size` |
 | Start Time | وقت البداية | `startedAt` |
 | Expected End | نهاية متوقعة | `expectedEndAt` |
 | Remaining | الوقت المتبقي | `remainingMinutes` min |

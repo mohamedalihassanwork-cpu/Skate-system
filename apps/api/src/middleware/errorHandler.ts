@@ -11,7 +11,7 @@
  *   "success": false,
  *   "error": {
  *     "code": "NOT_FOUND",
- *     "message": "الزلاجة غير موجودة",
+ *     "message": "الاسكيت غير موجودة",
  *     "fields": { ... }  // only for ValidationError
  *   }
  * }
@@ -41,7 +41,7 @@ export function errorHandler(
 
     // Include field-level validation details
     if (err instanceof ValidationError && err.fields) {
-      ;(body.error as Record<string, unknown>).fields = err.fields
+      ; (body.error as Record<string, unknown>).fields = err.fields
     }
 
     res.status(err.statusCode).json(body)

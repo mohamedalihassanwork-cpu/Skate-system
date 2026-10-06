@@ -119,9 +119,9 @@ These permission keys were seeded in Phase 02 and are available:
 
 | Key | Label | Module |
 |---|---|---|
-| `skates.view` | عرض الزلاجات | skates |
-| `skates.create` | إضافة زلاجة | skates |
-| `skates.edit` | تعديل بيانات الزلاجة | skates |
+| `skates.view` | عرض الاسكيتات | skates |
+| `skates.create` | إضافة اسكيت | skates |
+| `skates.edit` | تعديل بيانات الاسكيت | skates |
 
 ---
 

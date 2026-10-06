@@ -56,10 +56,10 @@ interface SkatePickerProps {
 }
 
 function SkatePicker({ onSelect }: SkatePickerProps) {
-  const [skates, setSkates]   = useState<SkateDTO[]>([])
+  const [skates, setSkates] = useState<SkateDTO[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-  const [search, setSearch]   = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true); setError(null)
@@ -67,7 +67,7 @@ function SkatePicker({ onSelect }: SkatePickerProps) {
       const res = await skatesService.list({ status: 'available', isActive: '1', perPage: '200' })
       setSkates(res.data ?? [])
     } catch {
-      setError('تعذر تحميل الزلاجات المتاحة')
+      setError('تعذر تحميل الاسكيتات المتاحة')
     } finally {
       setLoading(false)
     }
@@ -87,8 +87,8 @@ function SkatePicker({ onSelect }: SkatePickerProps) {
   return (
     <div className="rental-pos-step">
       <div className="rental-pos-step-header">
-        <h2 className="rental-pos-step-title">اختر الزلاجة</h2>
-        <p className="rental-pos-step-subtitle">الزلاجات المتاحة للإيجار حالياً</p>
+        <h2 className="rental-pos-step-title">اختر الاسكيت</h2>
+        <p className="rental-pos-step-subtitle">الاسكيتات المتاحة للإيجار حالياً</p>
       </div>
       <div className="rental-pos-search">
         <div style={{ position: 'relative' }}>
@@ -151,15 +151,15 @@ interface DurationPickerProps {
 
 function DurationPicker({ skate, onSelect, onBack }: DurationPickerProps) {
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null)
-  const [customValue, setCustomValue]           = useState('')
-  const [useCustom, setUseCustom]               = useState(false)
-  const [preview, setPreview]                   = useState<{ pricePerHour: number; rentalAmount: number } | null>(null)
-  const [previewLoading, setPreviewLoading]     = useState(false)
-  const [previewError, setPreviewError]         = useState<string | null>(null)
+  const [customValue, setCustomValue] = useState('')
+  const [useCustom, setUseCustom] = useState(false)
+  const [preview, setPreview] = useState<{ pricePerHour: number; rentalAmount: number } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
   // F-06 / DEC-070: Duration options are authoritative from server — no hardcoded fallback (BR-26)
-  const [durationOptions, setDurationOptions]   = useState<number[]>([])
-  const [configLoading, setConfigLoading]       = useState(true)
-  const [configError, setConfigError]           = useState<string | null>(null)
+  const [durationOptions, setDurationOptions] = useState<number[]>([])
+  const [configLoading, setConfigLoading] = useState(true)
+  const [configError, setConfigError] = useState<string | null>(null)
 
   // Load configured durations from server on mount (F-06, DEC-070)
   // If configuration is missing, malformed, or unreachable — show error and block continuation.
@@ -222,7 +222,7 @@ function DurationPicker({ skate, onSelect, onBack }: DurationPickerProps) {
     <div className="rental-pos-step">
       <div className="rental-pos-step-header">
         <h2 className="rental-pos-step-title">اختر مدة الإيجار</h2>
-        <p className="rental-pos-step-subtitle">الزلاجة: <strong>{skate.skateCode}</strong> — مقاس {skate.size}</p>
+        <p className="rental-pos-step-subtitle">الاسكيت: <strong>{skate.skateCode}</strong> — مقاس {skate.size}</p>
       </div>
 
       {configLoading ? (
@@ -249,28 +249,28 @@ function DurationPicker({ skate, onSelect, onBack }: DurationPickerProps) {
           </p>
         </div>
       ) : (
-      <div className="duration-grid">
-        {durationOptions.map(d => (
+        <div className="duration-grid">
+          {durationOptions.map(d => (
+            <button
+              key={d}
+              id={`duration-btn-${d}`}
+              type="button"
+              className={`duration-btn ${!useCustom && selectedDuration === d ? 'duration-btn--active' : ''}`}
+              onClick={() => { setUseCustom(false); setSelectedDuration(d) }}
+            >
+              <span className="duration-btn-num">{d}</span>
+              <span className="duration-btn-unit">دقيقة</span>
+            </button>
+          ))}
           <button
-            key={d}
-            id={`duration-btn-${d}`}
+            id="duration-btn-custom"
             type="button"
-            className={`duration-btn ${!useCustom && selectedDuration === d ? 'duration-btn--active' : ''}`}
-            onClick={() => { setUseCustom(false); setSelectedDuration(d) }}
+            className={`duration-btn ${useCustom ? 'duration-btn--active' : ''}`}
+            onClick={() => setUseCustom(true)}
           >
-            <span className="duration-btn-num">{d}</span>
-            <span className="duration-btn-unit">دقيقة</span>
+            <span className="duration-btn-num">مخصص</span>
           </button>
-        ))}
-        <button
-          id="duration-btn-custom"
-          type="button"
-          className={`duration-btn ${useCustom ? 'duration-btn--active' : ''}`}
-          onClick={() => setUseCustom(true)}
-        >
-          <span className="duration-btn-num">مخصص</span>
-        </button>
-      </div>
+        </div>
       )}
 
       {useCustom && (
@@ -342,13 +342,13 @@ interface CustomerPickerProps {
 }
 
 function CustomerPicker({ onSelect, onBack }: CustomerPickerProps) {
-  const [search, setSearch]           = useState('')
-  const [customers, setCustomers]     = useState<CustomerListItemDTO[]>([])
-  const [loading, setLoading]         = useState(false)
-  const [error, setError]             = useState<string | null>(null)
-  const [showCreate, setShowCreate]   = useState(false)
-  const [createForm, setCreateForm]   = useState<CreateCustomerBody>({ name: '', phone: '', nationalId: '' })
-  const [creating, setCreating]       = useState(false)
+  const [search, setSearch] = useState('')
+  const [customers, setCustomers] = useState<CustomerListItemDTO[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [createForm, setCreateForm] = useState<CreateCustomerBody>({ name: '', phone: '', nationalId: '' })
+  const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const { showToast } = useToast()
 
@@ -618,8 +618,8 @@ function ReviewStep({
         </div>
 
         <div className="review-section">
-          <h3 className="review-section-title">بيانات الزلاجة</h3>
-          <div className="review-row"><span className="review-label">كود الزلاجة</span><span className="review-value">{skate.skateCode}</span></div>
+          <h3 className="review-section-title">بيانات الاسكيت</h3>
+          <div className="review-row"><span className="review-label">كود الاسكيت</span><span className="review-value">{skate.skateCode}</span></div>
           <div className="review-row"><span className="review-label">المقاس</span><span className="review-value">{skate.size}</span></div>
           {skate.type && <div className="review-row"><span className="review-label">النوع</span><span className="review-value">{skate.type}</span></div>}
         </div>
@@ -664,7 +664,7 @@ function ReviewStep({
               <Plus size={14} style={{ marginInlineEnd: 4 }} /> تقسيم
             </Button>
           </div>
-          
+
           {methodsLoading ? (
             <div style={{ textAlign: 'center', padding: '16px 0' }}><LoadingSpinner /></div>
           ) : methods.length === 0 ? (
@@ -740,7 +740,7 @@ function ReviewStep({
 // ---------------------------------------------------------------------------
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
-  const labels = ['الزلاجة', 'المدة', 'العميل', 'المراجعة']
+  const labels = ['الاسكيت', 'المدة', 'العميل', 'المراجعة']
   return (
     <div className="step-indicator">
       {labels.map((label, i) => (
@@ -765,15 +765,15 @@ export default function RentalPOSPage() {
   const { printInvoice } = usePrint()
 
   const [reservationId, setReservationId] = useState<number | null>(null)
-  const [step, setStep]                   = useState(1)
+  const [step, setStep] = useState(1)
   const [selectedSkate, setSelectedSkate] = useState<SkateDTO | null>(null)
-  const [durationMinutes, setDuration]    = useState(0)
-  const [pricePerHour, setPricePerHour]   = useState(0)
-  const [rentalAmount, setRentalAmount]   = useState(0)
-  const [selectedCustomer, setCustomer]   = useState<CustomerListItemDTO | null>(null)
-  const [notes, setNotes]                 = useState('')
-  const [submitting, setSubmitting]       = useState(false)
-  const [submitError, setSubmitError]     = useState<string | null>(null)
+  const [durationMinutes, setDuration] = useState(0)
+  const [pricePerHour, setPricePerHour] = useState(0)
+  const [rentalAmount, setRentalAmount] = useState(0)
+  const [selectedCustomer, setCustomer] = useState<CustomerListItemDTO | null>(null)
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     const resId = searchParams.get('reservationId')
@@ -796,15 +796,15 @@ export default function RentalPOSPage() {
     setSubmitting(true); setSubmitError(null)
     try {
       const res = await rentalsService.create({
-        skateId:         selectedSkate.id,
-        customerId:      selectedCustomer.id,
+        skateId: selectedSkate.id,
+        customerId: selectedCustomer.id,
         durationMinutes,
-        notes:           notes.trim() || undefined,
-        reservationId:   reservationId || undefined,
+        notes: notes.trim() || undefined,
+        reservationId: reservationId || undefined,
         payments,
       })
       showToast({ type: 'success', title: `تم بدء الإيجار: ${res.data.rentalCode}` })
-      
+
       // Auto-print invoice
       try {
         const invoiceData = await invoicesService.getRentalInvoice(res.data.id)
@@ -829,7 +829,7 @@ export default function RentalPOSPage() {
         <div className="page-header-text">
           <h1 className="page-header-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <Ticket size={24} aria-hidden="true" className="text-muted" />
-            نقطة إيجار الزلاجات
+            نقطة إيجار الاسكيتات
           </h1>
           <p className="page-header-subtitle">إنشاء إيجار جديد</p>
         </div>

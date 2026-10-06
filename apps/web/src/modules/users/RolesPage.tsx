@@ -51,16 +51,16 @@ function groupPermissions(perms: PermissionDTO[]): Record<string, PermissionDTO[
 
 /** Friendly Arabic labels for module keys */
 const MODULE_LABELS: Record<string, string> = {
-  users:       'المستخدمون',
-  roles:       'الأدوار',
-  skates:      'الزلاجات',
-  customers:   'العملاء',
-  rentals:     'الإيجارات',
-  treasury:    'الخزينة',
+  users: 'المستخدمون',
+  roles: 'الأدوار',
+  skates: 'الاسكيتات',
+  customers: 'العملاء',
+  rentals: 'الإيجارات',
+  treasury: 'الخزينة',
   maintenance: 'الصيانة',
-  damage:      'الأضرار',
-  reports:     'التقارير',
-  settings:    'الإعدادات',
+  damage: 'الأضرار',
+  reports: 'التقارير',
+  settings: 'الإعدادات',
 }
 
 // ---------------------------------------------------------------------------
@@ -69,41 +69,41 @@ const MODULE_LABELS: Record<string, string> = {
 
 export default function RolesPage() {
   // ── List state ────────────────────────────────────────────────────────────
-  const [roles, setRoles]               = useState<RoleDTO[]>([])
-  const [allPerms, setAllPerms]         = useState<PermissionDTO[]>([])
-  const [loading, setLoading]           = useState(true)
-  const [pageError, setPageError]       = useState<string | null>(null)
+  const [roles, setRoles] = useState<RoleDTO[]>([])
+  const [allPerms, setAllPerms] = useState<PermissionDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [pageError, setPageError] = useState<string | null>(null)
 
   // ── Modal visibility ──────────────────────────────────────────────────────
-  const [showAdd, setShowAdd]           = useState(false)
-  const [showEdit, setShowEdit]         = useState(false)
-  const [showPerms, setShowPerms]       = useState(false)
-  const [showDelete, setShowDelete]     = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [showPerms, setShowPerms] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
 
   // ── Selected role (for edit / perms / delete) ─────────────────────────────
-  const [selected, setSelected]         = useState<RoleDTO | null>(null)
+  const [selected, setSelected] = useState<RoleDTO | null>(null)
 
   // ── Add Role form ─────────────────────────────────────────────────────────
-  const [addName, setAddName]           = useState('')
-  const [addNameAr, setAddNameAr]       = useState('')
-  const [addPermIds, setAddPermIds]     = useState<number[]>([])
-  const [addError, setAddError]         = useState<string | null>(null)
-  const [addSaving, setAddSaving]       = useState(false)
+  const [addName, setAddName] = useState('')
+  const [addNameAr, setAddNameAr] = useState('')
+  const [addPermIds, setAddPermIds] = useState<number[]>([])
+  const [addError, setAddError] = useState<string | null>(null)
+  const [addSaving, setAddSaving] = useState(false)
 
   // ── Edit Role form ────────────────────────────────────────────────────────
-  const [editName, setEditName]         = useState('')
-  const [editNameAr, setEditNameAr]     = useState('')
-  const [editError, setEditError]       = useState<string | null>(null)
-  const [editSaving, setEditSaving]     = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editNameAr, setEditNameAr] = useState('')
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editSaving, setEditSaving] = useState(false)
 
   // ── Permission edit ───────────────────────────────────────────────────────
-  const [permIds, setPermIds]           = useState<number[]>([])
-  const [permError, setPermError]       = useState<string | null>(null)
-  const [permSaving, setPermSaving]     = useState(false)
+  const [permIds, setPermIds] = useState<number[]>([])
+  const [permError, setPermError] = useState<string | null>(null)
+  const [permSaving, setPermSaving] = useState(false)
 
   // ── Delete ────────────────────────────────────────────────────────────────
-  const [deleteError, setDeleteError]   = useState<string | null>(null)
-  const [deleting, setDeleting]         = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const { showToast } = useToast()
 

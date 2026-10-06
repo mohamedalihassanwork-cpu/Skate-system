@@ -22,13 +22,13 @@ import ReservationModal from './ReservationModal'
 
 function ReservationStatusBadge({ status }: { status: ReservationStatus }) {
   const statusToBadge: Record<ReservationStatus, BadgeStatus> = {
-    pending:   'system',
+    pending: 'system',
     confirmed: 'reserved',
     fulfilled: 'completed',
     cancelled: 'cancelled',
   }
   const statusLabels: Record<ReservationStatus, string> = {
-    pending:   'معلق',
+    pending: 'معلق',
     confirmed: 'مؤكد',
     fulfilled: 'منفذ',
     cancelled: 'ملغي',
@@ -39,13 +39,13 @@ function ReservationStatusBadge({ status }: { status: ReservationStatus }) {
 export function ReservationsPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  
+
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [statusFilter, setStatusFilter] = useState<string>('active')
-  
+
   const [modalOpen, setModalOpen] = useState(false)
   const [editingReservation, setEditingReservation] = useState<Reservation | undefined>()
 
@@ -91,48 +91,50 @@ export function ReservationsPage() {
 
   const columns: TableColumn<any>[] = [
     { key: 'id', header: 'رقم', render: (_, r: any) => `#${r.id}` },
-    { key: 'skate', header: 'الزلاجة', render: (_, r: any) => `${r.skate.skateCode} (مقاس ${r.skate.size})` },
+    { key: 'skate', header: 'الاسكيت', render: (_, r: any) => `${r.skate.skateCode} (مقاس ${r.skate.size})` },
     { key: 'customer', header: 'العميل', render: (_, r: any) => `${r.customer.name} - ${r.customer.phone}` },
     { key: 'from', header: 'من', render: (_, r: any) => <span dir="ltr">{new Date(r.reservedFrom).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</span> },
     { key: 'to', header: 'إلى', render: (_, r: any) => <span dir="ltr">{new Date(r.reservedUntil).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</span> },
     { key: 'status', header: 'الحالة', render: (_, r: any) => <ReservationStatusBadge status={r.status} /> },
-    { key: 'actions', header: 'الإجراءات', width: '140px', align: 'left', render: (_, res: any) => {
-      const isActive = res.status === 'pending' || res.status === 'confirmed'
-      return isActive ? (
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <PermissionGate permission="rentals.create">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => navigate(`/rentals/new?reservationId=${res.id}`)}
-              title="تنفيذ الإيجار"
-            >
-              <Ticket size={14} aria-hidden="true" />
-            </Button>
-          </PermissionGate>
-          <PermissionGate permission="reservations.edit">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => handleOpenEdit(res)}
-              title="تعديل"
-            >
-              <Pencil size={14} aria-hidden="true" />
-            </Button>
-          </PermissionGate>
-          <PermissionGate permission="reservations.cancel">
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => handleCancel(res.id)}
-              title="إلغاء"
-            >
-              <XCircle size={14} aria-hidden="true" />
-            </Button>
-          </PermissionGate>
-        </div>
-      ) : null
-    }}
+    {
+      key: 'actions', header: 'الإجراءات', width: '140px', align: 'left', render: (_, res: any) => {
+        const isActive = res.status === 'pending' || res.status === 'confirmed'
+        return isActive ? (
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <PermissionGate permission="rentals.create">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate(`/rentals/new?reservationId=${res.id}`)}
+                title="تنفيذ الإيجار"
+              >
+                <Ticket size={14} aria-hidden="true" />
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="reservations.edit">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleOpenEdit(res)}
+                title="تعديل"
+              >
+                <Pencil size={14} aria-hidden="true" />
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="reservations.cancel">
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => handleCancel(res.id)}
+                title="إلغاء"
+              >
+                <XCircle size={14} aria-hidden="true" />
+              </Button>
+            </PermissionGate>
+          </div>
+        ) : null
+      }
+    }
   ]
 
   if (loading && reservations.length === 0) return <PageLoader label="جارٍ تحميل الحجوزات" />
@@ -147,7 +149,7 @@ export function ReservationsPage() {
           </h1>
           <p className="page-header-subtitle">إدارة الحجوزات</p>
         </div>
-        
+
         <PermissionGate permission="reservations.create">
           <Button variant="primary" onClick={handleOpenCreate}>
             <Plus size={16} aria-hidden="true" /> حجز جديد

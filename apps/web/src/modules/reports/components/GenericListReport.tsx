@@ -74,7 +74,7 @@ export default function GenericListReport({ type, startDate, endDate }: Props) {
       totalRevenue: 'إجمالي الإيرادات', totalSpent: 'إجمالي الإنفاق',
       startTime: 'وقت البدء', endTime: 'وقت الانتهاء', startedAt: 'وقت البدء',
       actualReturnTime: 'وقت الإرجاع الفعلي', reportedAt: 'وقت الإبلاغ',
-      customerName: 'اسم العميل', skateCode: 'كود الزلاجة', cashierName: 'الكاشير',
+      customerName: 'اسم العميل', skateCode: 'كود الاسكيت', cashierName: 'الكاشير',
       duration: 'المدة (دقيقة)', status: 'الحالة', type: 'النوع', category: 'الفئة',
       lateFee: 'غرامة التأخير', chargeAmount: 'قيمة التحصيل', repairCost: 'تكلفة الإصلاح',
       damageType: 'نوع الضرر', problemType: 'نوع المشكلة', description: 'الوصف',
@@ -116,7 +116,7 @@ export default function GenericListReport({ type, startDate, endDate }: Props) {
     key: col,
     header: formatHeader(col),
     render: (_, row: any) => (
-      <span style={{ 
+      <span style={{
         fontFamily: (col.toLowerCase().includes('amount') || col.toLowerCase().includes('cost') || col === 'totalDifference') ? 'monospace' : 'var(--font-family-base)',
         fontWeight: (col.toLowerCase().includes('amount') || col.toLowerCase().includes('cost') || col === 'totalDifference') ? 'var(--font-weight-bold)' as any : 'var(--font-weight-regular)' as any,
         color: (col.toLowerCase().includes('amount') || col.toLowerCase().includes('cost') || col === 'totalDifference') ? 'var(--color-navy-800)' : 'inherit'
@@ -133,7 +133,7 @@ export default function GenericListReport({ type, startDate, endDate }: Props) {
         data={data.data}
         emptyMessage="لا توجد بيانات."
       />
-      
+
       {data.meta.totalPages > 1 && (
         <Pagination
           currentPage={data.meta.page}

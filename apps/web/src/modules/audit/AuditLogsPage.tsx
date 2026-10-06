@@ -12,7 +12,7 @@ export default function AuditLogsPage() {
   const [users, setUsers] = useState<UserDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  
+
   // Pagination
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -84,7 +84,7 @@ export default function AuditLogsPage() {
   const translateEntityType = (type: string) => {
     const map: Record<string, string> = {
       RENTAL: 'إيجار',
-      SKATE: 'زلاجة',
+      SKATE: 'اسكيت',
       CUSTOMER: 'عميل',
       USER: 'مستخدم',
       ROLE: 'صلاحية',
@@ -122,7 +122,7 @@ export default function AuditLogsPage() {
                 ))}
               </select>
             </div>
-            
+
             <div className="space-y-1.5 flex-1 w-full">
               <label className="text-sm font-medium text-slate-700">نوع الكيان</label>
               <select
@@ -132,7 +132,7 @@ export default function AuditLogsPage() {
               >
                 <option value="">الكل</option>
                 <option value="RENTAL">إيجار</option>
-                <option value="SKATE">زلاجة</option>
+                <option value="SKATE">اسكيت</option>
                 <option value="CUSTOMER">عميل</option>
                 <option value="PAYMENT">دفعة</option>
                 <option value="DAMAGE">تلف</option>
@@ -167,7 +167,7 @@ export default function AuditLogsPage() {
             )}
           </div>
         </div>
-        
+
         <div className="p-0">
           {error && (
             <div className="p-4 m-4 bg-red-50 text-red-600 border border-red-200 rounded-lg">
@@ -210,12 +210,11 @@ export default function AuditLogsPage() {
                         {log.userName || <span className="text-slate-400">النظام</span>}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          log.action === 'CREATE' ? 'bg-green-100 text-green-800' :
-                          log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
-                          log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
-                          'bg-slate-100 text-slate-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${log.action === 'CREATE' ? 'bg-green-100 text-green-800' :
+                            log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
+                              log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
+                                'bg-slate-100 text-slate-800'
+                          }`}>
                           {translateAction(log.action)}
                         </span>
                       </td>
@@ -242,8 +241,8 @@ export default function AuditLogsPage() {
                 صفحة <span className="font-medium text-slate-900">{page}</span> من <span className="font-medium text-slate-900">{totalPages}</span>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   size="sm"
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1 || loading}
@@ -251,8 +250,8 @@ export default function AuditLogsPage() {
                   <ChevronRight className="w-4 h-4 ml-1" />
                   السابق
                 </Button>
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   size="sm"
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages || loading}
