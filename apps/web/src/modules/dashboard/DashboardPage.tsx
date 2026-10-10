@@ -60,7 +60,8 @@ import { formatCurrency } from '../../utils/currency'
 import { useToast } from '../../components/ui'
 import { ReturnRentalModal } from '../rentals/ReturnRentalModal'
 import { CreateDamageReportModal } from '../rentals/CreateDamageReportModal'
-import { rentalsService, type ActiveRentalDTO } from '../rentals/rentals.service'
+import { FinalizeRentalModal } from '../rentals/FinalizeRentalModal'
+import { rentalsService, type RentalItemDTO, type RentalDTO } from '../rentals/rentals.service'
 import { PermissionGate } from '../../components/PermissionGate'
 import '../../styles/pages/dashboard.css'
 
@@ -139,11 +140,14 @@ export default function DashboardPage() {
   // Local clock for countdown — ticks every second, does NOT trigger re-fetch
   const [nowMs, setNowMs] = useState(Date.now())
 
-  // Modal state (return + damage)
+  // Modal state (return + damage + finalize)
   const [returnModalOpen, setReturnModalOpen] = useState(false)
-  const [selectedRentalForReturn, setSelectedRentalForReturn] = useState<ActiveRentalDTO | null>(null)
+  const [selectedItemForReturn, setSelectedItemForReturn] = useState<RentalItemDTO | null>(null)
   const [damageModalOpen, setDamageModalOpen] = useState(false)
   const [damageInspectionId, setDamageInspectionId] = useState<number | null>(null)
+  const [damageRentalForModal, setDamageRentalForModal] = useState<RentalDTO | null>(null)
+  const [finalizeModalOpen, setFinalizeModalOpen] = useState(false)
+  const [rentalToFinalize, setRentalToFinalize] = useState<RentalDTO | null>(null)
 
   // Ref to track whether we already have data (for background refresh logic)
   const hasDataRef = useRef(false)
@@ -172,41 +176,58 @@ export default function DashboardPage() {
     }
   }, [dateRange])
 
-  // Return click handler — uses existing rentalsService.get
+  // Return click handler — fetches rental, extracts the active item, opens ReturnRentalModal
+  // If multiple items are active, navigates to /rentals/active where the user can select.
   const handleReturnClick = useCallback(async (rentalId: number) => {
     try {
       const res = await rentalsService.get(rentalId)
       const rentalDto = res.data
+      const activeItems = rentalDto.items.filter(i => i.status === 'active')
 
-      const nMs = Date.now()
-      const endMs = new Date(rentalDto.expectedEndAt).getTime()
-      const diffMs = endMs - nMs
-      const diffMins = Math.ceil(diffMs / 60000)
+      if (activeItems.length === 0) {
+        showToast({ type: 'error', title: 'لا توجد اسكيتات نشطة', message: 'لا توجد اسكيتات يمكن إرجاعها في هذا الإيجار' })
+        return
+      }
 
-      let opStatus: 'normal' | 'ending_soon' | 'overdue' = 'normal'
-      if (diffMins < 0) opStatus = 'overdue'
-      else if (diffMins <= 5) opStatus = 'ending_soon'
-
-      const activeRental = {
-        ...rentalDto,
-        operationalStatus: opStatus,
-        remainingMinutes: diffMins,
-      } as ActiveRentalDTO
-
-      setSelectedRentalForReturn(activeRental)
-      setReturnModalOpen(true)
+      if (activeItems.length === 1) {
+        // Single active item — open the return modal directly
+        setSelectedItemForReturn(activeItems[0])
+        setReturnModalOpen(true)
+      } else {
+        // Multiple active items — navigate to active rentals page for per-item selection
+        navigate('/rentals/active')
+      }
     } catch {
       showToast({ type: 'error', title: 'خطأ', message: 'تعذر جلب تفاصيل الإيجار للإرجاع' })
     }
-  }, [showToast])
+  }, [showToast, navigate])
 
-  const handleReturnSuccess = useCallback((hasDamage?: boolean, inspectionId?: number) => {
+  const handleReturnSuccess = useCallback(async (result: {
+    isLastItem: boolean
+    rentalId: number
+    inspectionId: number
+    hasDamage: boolean
+  }) => {
     fetchDashboardData(true)
-    if (hasDamage && inspectionId && selectedRentalForReturn) {
-      setDamageInspectionId(inspectionId)
+    if (result.hasDamage && result.inspectionId) {
+      setDamageInspectionId(result.inspectionId)
+      // Fetch the rental for the damage modal context
+      try {
+        const rentalRes = await rentalsService.get(result.rentalId)
+        setDamageRentalForModal(rentalRes.data)
+      } catch { /* non-blocking */ }
       setDamageModalOpen(true)
     }
-  }, [fetchDashboardData, selectedRentalForReturn])
+    if (result.isLastItem) {
+      try {
+        const rentalRes = await rentalsService.get(result.rentalId)
+        setRentalToFinalize(rentalRes.data)
+        setFinalizeModalOpen(true)
+      } catch {
+        fetchDashboardData(true)
+      }
+    }
+  }, [fetchDashboardData])
 
   // ---------------------------------------------------------------------------
   // Effects: fetch + polling + local clock
@@ -805,18 +826,26 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      {/* Modals — existing return + damage flow */}
+      {/* Modals — return + finalize + damage flow */}
       <ReturnRentalModal
         isOpen={returnModalOpen}
-        onClose={() => setReturnModalOpen(false)}
-        rental={selectedRentalForReturn}
+        onClose={() => { setReturnModalOpen(false); setSelectedItemForReturn(null) }}
+        item={selectedItemForReturn}
         onSuccess={handleReturnSuccess}
       />
-      {selectedRentalForReturn && damageInspectionId && (
+
+      <FinalizeRentalModal
+        isOpen={finalizeModalOpen}
+        onClose={() => setFinalizeModalOpen(false)}
+        rental={rentalToFinalize}
+        onSuccess={() => { setFinalizeModalOpen(false); fetchDashboardData(true) }}
+      />
+
+      {damageRentalForModal && damageInspectionId && (
         <CreateDamageReportModal
           isOpen={damageModalOpen}
           onClose={() => setDamageModalOpen(false)}
-          rental={selectedRentalForReturn}
+          rental={damageRentalForModal as any}
           inspectionId={damageInspectionId}
           onSuccess={() => fetchDashboardData(true)}
         />

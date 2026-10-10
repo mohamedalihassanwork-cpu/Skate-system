@@ -326,24 +326,36 @@ export default function CustomerProfilePage() {
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>كود الإيجار</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>الاسكيت</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>المدة</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>الاسكيتات</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>تاريخ البدء</th>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>المبلغ</th>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>الحالة</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rentals.map(r => (
-                    <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                      <td style={{ padding: '8px', fontWeight: 'var(--font-weight-medium)' }}>{r.rentalCode}</td>
-                      <td style={{ padding: '8px' }}>{r.skate.skateCode} / {r.skate.size}</td>
-                      <td style={{ padding: '8px' }}>{r.durationMinutes} د</td>
-                      <td style={{ padding: '8px' }}>{formatCurrency(r.rentalAmount)}</td>
-                      <td style={{ padding: '8px' }}>
-                        <Badge status={lifetimeStatusToBadge(r.status)}>{getRentalStatusLabel(r.status)}</Badge>
-                      </td>
-                    </tr>
-                  ))}
+                  {rentals.map(r => {
+                    // Multi-skate model: items is an array of RentalItemDTO
+                    const skateCodes = r.items && r.items.length > 0
+                      ? r.items.map(item => `${item.skate.skateCode} / ${item.skate.size}`).join('، ')
+                      : '—'
+                    return (
+                      <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+                        <td style={{ padding: '8px', fontWeight: 'var(--font-weight-medium)' }}>{r.rentalCode}</td>
+                        <td style={{ padding: '8px' }}>{skateCodes}</td>
+                        <td style={{ padding: '8px', direction: 'ltr', textAlign: 'right' }}>
+                          {r.startedAt ? new Date(r.startedAt).toLocaleDateString('ar-EG') : '—'}
+                        </td>
+                        <td style={{ padding: '8px' }}>
+                          {r.totalAmount !== null && r.totalAmount !== undefined
+                            ? formatCurrency(r.totalAmount)
+                            : '—'}
+                        </td>
+                        <td style={{ padding: '8px' }}>
+                          <Badge status={lifetimeStatusToBadge(r.status)}>{getRentalStatusLabel(r.status)}</Badge>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
               {rentalsTotal > 5 && (

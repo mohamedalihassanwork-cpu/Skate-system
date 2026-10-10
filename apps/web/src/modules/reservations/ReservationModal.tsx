@@ -3,6 +3,7 @@ import { Modal, Button, Alert, Input, Select, useToast } from '../../components/
 import { reservationsService, type Reservation } from './reservations.service'
 import api from '../../services/api'
 import type { SkateDTO } from '../skates/skates.service'
+import { toDatetimeLocal } from '../../utils/date'
 
 interface Props {
   onClose: () => void
@@ -16,15 +17,10 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
   const [customerId, setCustomerId] = useState(existingReservation?.customer.id.toString() || '')
   const [skateId, setSkateId] = useState(existingReservation?.skate.id.toString() || '')
 
-  const toLocal = (d: string | undefined) => {
-    if (!d) return ''
-    const dt = new Date(d)
-    const tzoffset = dt.getTimezoneOffset() * 60000
-    return new Date(dt.getTime() - tzoffset).toISOString().slice(0, 16)
-  }
+  // toDatetimeLocal converts a UTC ISO string to datetime-local input format
 
-  const [reservedFrom, setReservedFrom] = useState(toLocal(existingReservation?.reservedFrom))
-  const [reservedUntil, setReservedUntil] = useState(toLocal(existingReservation?.reservedUntil))
+  const [reservedFrom, setReservedFrom] = useState(toDatetimeLocal(existingReservation?.reservedFrom))
+  const [reservedUntil, setReservedUntil] = useState(toDatetimeLocal(existingReservation?.reservedUntil))
   const [notes, setNotes] = useState(existingReservation?.notes || '')
 
   const [skates, setSkates] = useState<{ value: string, label: string }[]>([])
@@ -32,12 +28,29 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.get<{ success: boolean; data: SkateDTO[]; pagination: any }>('/api/v1/skates?status=available,rented,reserved&perPage=1000')
+    // For new reservations: only `available` active skates are eligible.
+    // For editing an existing reservation: also include the currently-selected skate
+    // so the existing value remains selectable even if its status changed.
+    const statusFilter = existingReservation ? 'available,reserved' : 'available'
+    api.get<{ success: boolean; data: SkateDTO[]; pagination: any }>(
+      `/api/v1/skates?status=${statusFilter}&isActive=1&perPage=1000`
+    )
       .then(res => {
-        setSkates(res.data.map(s => ({
+        const list = res.data.map(s => ({
           value: s.id.toString(),
           label: `${s.skateCode} (مقاس ${s.size})`
-        })))
+        }))
+        // If editing and the existing skate is not already in list, add it
+        if (existingReservation) {
+          const existingId = existingReservation.skate.id.toString()
+          if (!list.find(o => o.value === existingId)) {
+            list.unshift({
+              value: existingId,
+              label: `${existingReservation.skate.skateCode} (مقاس ${existingReservation.skate.size})`
+            })
+          }
+        }
+        setSkates(list)
       })
       .catch(() => showToast({ type: 'error', title: 'فشل تحميل الاسكيتات' }))
   }, [showToast])

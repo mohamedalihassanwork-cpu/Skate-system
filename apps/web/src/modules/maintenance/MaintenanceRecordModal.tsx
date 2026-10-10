@@ -42,7 +42,9 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
     }
     if (isNew) {
       import('../skates/skates.service').then(m => {
-        m.skatesService.list({ perPage: '500' })
+        // Only available or damaged skates are eligible for maintenance creation.
+        // Rented, reserved, maintenance, and lost skates cannot be selected here.
+        m.skatesService.list({ status: 'available,damaged', isActive: '1', perPage: '500' })
           .then(res => setSkatesList(res.data))
           .catch(console.error)
       })
