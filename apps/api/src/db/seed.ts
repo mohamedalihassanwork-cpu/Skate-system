@@ -325,6 +325,15 @@ async function seed() {
       value: 'true',
       labelAr: 'صوت التنبيهات',
     },
+    {
+      key: 'rental_grace_minutes',
+      // Phase 06 Redesign: Grace window in minutes for actual-duration billing.
+      // Applies when actual return time is slightly past expected end.
+      // Does NOT create a minimum billing duration — billing is always actual.
+      // 0 = no grace (bill exact actual minutes). Must be >= 0.
+      value: '0',
+      labelAr: 'دقائق السماح للإيجار (نافذة التسامح قبل احتساب التأخير)',
+    },
   ]
 
   for (const setting of RENTAL_SETTINGS) {

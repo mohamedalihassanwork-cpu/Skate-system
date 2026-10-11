@@ -1,6 +1,7 @@
 import { db } from '../../db/connection.js'
 import { sql, and, gte, lt, lte, eq, inArray, isNull, isNotNull, sum, count, desc } from 'drizzle-orm'
 import { rentals } from '../../db/schema/rentals.js'
+import { rentalItems } from '../../db/schema/rental_items.js'
 import { skates } from '../../db/schema/skates.js'
 import { sales, saleItems } from '../../db/schema/sales.js'
 import { products } from '../../db/schema/products.js'
@@ -49,7 +50,7 @@ export async function getDashboardData(userPermissions: string[], dateRange: Das
   // Always available (or if they need specific permissions, we assume everyone sees them as operational data unless restricted)
   // We will return them unconditionally for now since operations need them
   const activeRentalsRes = await db.select({ count: count() }).from(rentals).where(eq(rentals.status, 'active'))
-  const lateRentalsRes = await db.select({ count: count() }).from(rentals).where(and(eq(rentals.status, 'active'), lt(rentals.expectedEndAt, new Date())))
+  const lateRentalsRes = await db.select({ count: count() }).from(rentalItems).where(and(eq(rentalItems.status, 'active'), lt(rentalItems.expectedEndAt, new Date())))
   
   const allSkatesRes = await db.select({ count: count(), status: skates.status }).from(skates).groupBy(skates.status)
   
@@ -73,14 +74,15 @@ export async function getDashboardData(userPermissions: string[], dateRange: Das
     rentalCode: rentals.rentalCode,
     customerName: customers.name,
     skateCode: skates.skateCode,
-    expectedEndAt: rentals.expectedEndAt,
-    startedAt: rentals.startedAt
+    expectedEndAt: rentalItems.expectedEndAt,
+    startedAt: rentalItems.startedAt
   })
-  .from(rentals)
+  .from(rentalItems)
+  .leftJoin(rentals, eq(rentalItems.rentalId, rentals.id))
   .leftJoin(customers, eq(rentals.customerId, customers.id))
-  .leftJoin(skates, eq(rentals.skateId, skates.id))
-  .where(and(eq(rentals.status, 'active'), lte(rentals.expectedEndAt, thresholdDate)))
-  .orderBy(rentals.expectedEndAt)
+  .leftJoin(skates, eq(rentalItems.skateId, skates.id))
+  .where(and(eq(rentalItems.status, 'active'), lte(rentalItems.expectedEndAt, thresholdDate)))
+  .orderBy(rentalItems.expectedEndAt)
   .limit(8)
   
   response.kpis.endingSoonRentals = endingSoonRentals
@@ -180,9 +182,9 @@ export async function getDashboardData(userPermissions: string[], dateRange: Das
     const mostRentedSkatesRes = await db.select({
       skateCode: skates.skateCode,
       count: count()
-    }).from(rentals)
-      .innerJoin(skates, eq(rentals.skateId, skates.id))
-      .where(and(gte(rentals.startedAt, startBound), lt(rentals.startedAt, endBound)))
+    }).from(rentalItems)
+      .innerJoin(skates, eq(rentalItems.skateId, skates.id))
+      .where(and(gte(rentalItems.startedAt, startBound), lt(rentalItems.startedAt, endBound)))
       .groupBy(skates.skateCode)
       .orderBy(desc(count()))
       .limit(10)
@@ -190,12 +192,12 @@ export async function getDashboardData(userPermissions: string[], dateRange: Das
     // Skate performance (revenue by skate)
     const skatePerformanceRes = await db.select({
       skateCode: skates.skateCode,
-      revenue: sum(rentals.rentalAmount)
-    }).from(rentals)
-      .innerJoin(skates, eq(rentals.skateId, skates.id))
-      .where(and(gte(rentals.startedAt, startBound), lt(rentals.startedAt, endBound)))
+      revenue: sum(rentalItems.actualAmount)
+    }).from(rentalItems)
+      .innerJoin(skates, eq(rentalItems.skateId, skates.id))
+      .where(and(gte(rentalItems.startedAt, startBound), lt(rentalItems.startedAt, endBound)))
       .groupBy(skates.skateCode)
-      .orderBy(desc(sum(rentals.rentalAmount)))
+      .orderBy(desc(sum(rentalItems.actualAmount)))
       .limit(10)
 
     response.charts.rentalVolume = rentalVolumeRes.map((r: any) => ({ date: r.date, count: Number(r.count) }))

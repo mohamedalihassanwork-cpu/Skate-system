@@ -39,6 +39,8 @@ export const rentalPayments = mysqlTable('rental_payments', {
   rentalId: int('rental_id')
     .notNull()
     .references(() => rentals.id),
+  // Optional: link payment to a specific rental item (set at finalization)
+  rentalItemId: int('rental_item_id'),
   paymentMethodId: int('payment_method_id')
     .notNull()
     .references(() => paymentMethods.id),

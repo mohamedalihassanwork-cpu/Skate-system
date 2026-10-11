@@ -1,35 +1,35 @@
 /**
  * KOSHK SKATE ERP — Rentals Routes
- * Phase 05 — Rental POS Core
+ * Phase 06 Redesign — Multi-Skate Rentals
  *
  * CRITICAL: Static routes MUST be registered BEFORE /:id to prevent
- * "active" and "calculate-price" being matched as :id values.
+ * "active", "config", "calculate-price" being matched as :id values.
  *
  * Registration order:
- *   1. GET  /active          — must be first
- *   2. GET  /calculate-price — must be before /:id
- *   3. GET  /               — list
- *   4. POST /               — create
- *   5. GET  /:id             — detail — LAST
+ *   1. GET  /active          — active rentals with item-level status
+ *   2. GET  /config          — rental POS config
+ *   3. GET  /calculate-price — price preview
+ *   4. GET  /               — paginated list
+ *   5. POST /               — create rental (multi-skate, no payment)
+ *   6. GET  /:id             — rental detail (with items)
+ *   7. POST /:id/cancel      — cancel rental
+ *   8. POST /:id/finalize    — final invoice + payment after all items returned
+ *   9. POST /:id/return      — legacy single-skate return (compatibility)
  *
- * Phase 07 endpoints NOT implemented here:
- *   POST /:id/return
- *   POST /:id/waive-late-fee
+ * Rental Item routes are in rental-items.routes.ts, mounted at /api/v1/rental-items
  */
 
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import { authenticate } from '../../middleware/auth.js'
 import { requirePermission } from '../../middleware/permission.js'
 import * as rentalSvc from './rentals.service.js'
-import type { ListRentalsQuery, StartRentalRequest } from './rentals.types.js'
-
-import { AuthenticationError, ForbiddenError } from '../../utils/errors.js'
+import type { ListRentalsQuery, StartRentalRequest, FinalizeRentalRequest } from './rentals.types.js'
+import { AuthenticationError } from '../../utils/errors.js'
 
 const router = Router()
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/rentals/active — active rentals with operational status
-// MUST be registered before /:id (DEC-066)
+// GET /api/v1/rentals/active
 // ---------------------------------------------------------------------------
 
 router.get(
@@ -47,9 +47,7 @@ router.get(
 )
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/rentals/config — Rental POS configuration (F-06 — DEC-069)
-// Returns configured hourly rate and standard duration options from settings.
-// MUST be registered before /:id
+// GET /api/v1/rentals/config
 // ---------------------------------------------------------------------------
 
 router.get(
@@ -67,8 +65,7 @@ router.get(
 )
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/rentals/calculate-price — price preview (server-authoritative)
-// MUST be registered before /:id
+// GET /api/v1/rentals/calculate-price
 // ---------------------------------------------------------------------------
 
 router.get(
@@ -87,7 +84,7 @@ router.get(
 )
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/rentals — list rentals (paginated, filterable)
+// GET /api/v1/rentals — list (paginated, filterable)
 // ---------------------------------------------------------------------------
 
 router.get(
@@ -105,7 +102,8 @@ router.get(
 )
 
 // ---------------------------------------------------------------------------
-// POST /api/v1/rentals — start rental (Rental POS primary action)
+// POST /api/v1/rentals — start rental (multi-skate, NO payment at creation)
+// Body: { skateIds: number[], customerId, durationMinutes, notes?, reservationId? }
 // ---------------------------------------------------------------------------
 
 router.post(
@@ -114,12 +112,8 @@ router.post(
   requirePermission('rentals.create'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // cashierId comes from the authenticated user's JWT sub claim (BR-19, DEC-063)
-      // TokenPayload.sub holds the user ID — NOT .id
       const cashierId = (req as any).user?.sub
-      if (!cashierId) {
-        throw new AuthenticationError('يجب تسجيل الدخول أولاً')
-      }
+      if (!cashierId) throw new AuthenticationError('يجب تسجيل الدخول أولاً')
       const data = await rentalSvc.startRental(cashierId, req.body as StartRentalRequest)
       res.status(201).json({ success: true, data })
     } catch (err) {
@@ -129,8 +123,8 @@ router.post(
 )
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/rentals/:id — rental detail (read-only)
-// MUST be registered LAST to avoid capturing static paths
+// GET /api/v1/rentals/:id — rental detail with all items
+// MUST be after all static paths
 // ---------------------------------------------------------------------------
 
 router.get(
@@ -148,7 +142,7 @@ router.get(
 )
 
 // ---------------------------------------------------------------------------
-// POST /api/v1/rentals/:id/cancel — cancel a rental and refund (Phase 06)
+// POST /api/v1/rentals/:id/cancel — cancel active rental
 // ---------------------------------------------------------------------------
 
 router.post(
@@ -158,9 +152,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cashierId = (req as any).user?.sub
-      if (!cashierId) {
-        throw new AuthenticationError('يجب تسجيل الدخول أولاً')
-      }
+      if (!cashierId) throw new AuthenticationError('يجب تسجيل الدخول أولاً')
       const data = await rentalSvc.cancelRental(parseInt(String(req.params['id']), 10), cashierId)
       res.json({ success: true, data })
     } catch (err) {
@@ -170,7 +162,35 @@ router.post(
 )
 
 // ---------------------------------------------------------------------------
-// POST /api/v1/rentals/:id/return — return a rental and process late fee (Phase 07)
+// POST /api/v1/rentals/:id/finalize — collect final payment after all items returned
+// Body: { payments: [{ paymentMethodId, amount }] }
+// Called only after ALL rental items have been returned.
+// ---------------------------------------------------------------------------
+
+router.post(
+  '/:id/finalize',
+  authenticate,
+  requirePermission('rentals.return'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cashierId = (req as any).user?.sub
+      if (!cashierId) throw new AuthenticationError('يجب تسجيل الدخول أولاً')
+      const data = await rentalSvc.finalizeRental(
+        parseInt(String(req.params['id']), 10),
+        cashierId,
+        req.body as FinalizeRentalRequest,
+      )
+      res.json({ success: true, data })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
+// ---------------------------------------------------------------------------
+// POST /api/v1/rentals/:id/return — legacy single-skate compatibility endpoint
+// Delegates to returnRentalItem for the first (and only) active item.
+// Kept for backwards compat with existing tests / UI until migration is complete.
 // ---------------------------------------------------------------------------
 
 router.post(
@@ -180,20 +200,12 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cashierId = (req as any).user?.sub
-      const userPermissions = (req as any).authUser?.permissions || []
-      const canWaive = userPermissions.includes('waivers.approve')
-
-      if (!cashierId) {
-        throw new AuthenticationError('يجب تسجيل الدخول أولاً')
-      }
-      
-      // If the request includes a waiver, the user must have waivers.approve permission
-      const waivedFee = req.body.waivedFee ? parseFloat(String(req.body.waivedFee)) : 0;
-      if (waivedFee > 0 && !canWaive) {
-        throw new ForbiddenError('لا تملك صلاحية الموافقة على التنازل عن الرسوم')
-      }
-
-      const data = await rentalSvc.returnRental(parseInt(String(req.params['id']), 10), cashierId, req.body)
+      if (!cashierId) throw new AuthenticationError('يجب تسجيل الدخول أولاً')
+      const data = await rentalSvc.returnRental(
+        parseInt(String(req.params['id']), 10),
+        cashierId,
+        req.body,
+      )
       res.json({ success: true, data })
     } catch (err) {
       next(err)

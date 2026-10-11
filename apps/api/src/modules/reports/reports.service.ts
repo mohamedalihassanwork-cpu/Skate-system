@@ -13,14 +13,28 @@ import { users } from '../../db/schema/users.js'
 import { lateFeeRecords } from '../../db/schema/inspections.js'
 
 /**
- * Builds the exact timestamp bounds for a given local date string (YYYY-MM-DD).
- * Inclusive of start, exclusive of end (which is start of the next day).
+ * Builds UTC timestamp bounds for a given local date string (YYYY-MM-DD).
+ * The date string represents a calendar day in the server's local timezone.
+ *
+ * Since all DB DATETIME values are stored as UTC (established in Phase 06
+ * timezone fix), and report date filters come in as local date strings (e.g.
+ * "2026-10-06"), we interpret them as Cairo midnight (UTC+3) to correctly
+ * cover the full local calendar day.
+ *
+ * Example: "2026-10-06" → 2026-10-05T21:00:00Z to 2026-10-06T21:00:00Z
+ *   which is 2026-10-06 00:00 Cairo → 2026-10-06 23:59:59 Cairo
  */
 export function buildDateBounds(localStartDate: string, localEndDate: string) {
+  // Cairo is UTC+3: local midnight = UTC previous day 21:00
+  // We parse local date as Cairo midnight by subtracting 3 hours from UTC midnight
+  const CAIRO_OFFSET_MS = 3 * 60 * 60 * 1000 // +03:00 in ms
+
   const startBound = new Date(`${localStartDate}T00:00:00Z`)
+  startBound.setTime(startBound.getTime() - CAIRO_OFFSET_MS)
 
   const endBound = new Date(`${localEndDate}T00:00:00Z`)
   endBound.setDate(endBound.getDate() + 1)
+  endBound.setTime(endBound.getTime() - CAIRO_OFFSET_MS)
 
   return { startBound, endBound }
 }
@@ -394,7 +408,7 @@ export async function getRentalReport(filters: DateRangeInput): Promise<Paginate
       duration: r.duration,
       amount: Number(r.amount),
       startTime: r.startedAt.toISOString(),
-      endTime: r.expectedEndAt.toISOString(),
+      endTime: r.expectedEndAt ? r.expectedEndAt.toISOString() : null,
       status: r.status,
       cashierName: r.cashierName
     })),
@@ -448,7 +462,7 @@ export async function getLateReport(filters: DateRangeInput): Promise<PaginatedR
       customerName: r.customerName,
       skateCode: r.skateCode,
       startTime: r.startedAt.toISOString(),
-      endTime: r.expectedEndAt.toISOString(),
+      endTime: r.expectedEndAt ? r.expectedEndAt.toISOString() : null,
       actualReturnTime: r.returnedAt ? r.returnedAt.toISOString() : null,
       lateFee: Number(r.lateFee)
     })),

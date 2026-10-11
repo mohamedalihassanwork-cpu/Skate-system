@@ -11,15 +11,13 @@ export type InvoiceData = {
   total: number
   payments: Array<{ method: string; amount: number }>
 
-  // Rental specific
-  skateBarcode?: string
-  durationMinutes?: number
-  startTime?: string
-  returnTime?: string | null
-  rentalAmount?: number
-  lateDuration?: number
-  lateFee?: number
-  damageCharge?: number
+  // Rental specific (multi-skate)
+  rentalItems?: Array<{
+    skateBarcode: string
+    durationMinutes: number
+    rentalAmount: number
+    lateFee: number
+  }>
 
   // Sale specific
   items?: Array<{ name: string; quantity: number; unitPrice: number; totalPrice: number }>
@@ -92,35 +90,27 @@ export const InvoicePrintTemplate: React.FC<Props> = ({ data }) => {
 
         <hr style={{ borderTop: '1px dashed black', margin: '10px 0' }} />
 
-        {data.type === 'RENTAL' && (
-          <>
-            <div className="print-row">
-              <span>الاسكيت:</span>
-              <span>{data.skateBarcode}</span>
-            </div>
-            <div className="print-row">
-              <span>المدة:</span>
-              <span>{data.durationMinutes} دقيقة</span>
-            </div>
-            <div className="print-row">
-              <span>قيمة الإيجار:</span>
-              <span>{data.rentalAmount?.toFixed(2)} ج.م</span>
-            </div>
-
-            {(data.lateFee ?? 0) > 0 && (
-              <div className="print-row">
-                <span>غرامة تأخير ({data.lateDuration} د):</span>
-                <span>{data.lateFee?.toFixed(2)} ج.م</span>
-              </div>
-            )}
-
-            {(data.damageCharge ?? 0) > 0 && (
-              <div className="print-row">
-                <span>رسوم أضرار:</span>
-                <span>{data.damageCharge?.toFixed(2)} ج.م</span>
-              </div>
-            )}
-          </>
+        {data.type === 'RENTAL' && data.rentalItems && (
+          <table className="print-table">
+            <thead>
+              <tr>
+                <th>الاسكيت</th>
+                <th>المدة</th>
+                <th>الإيجار</th>
+                <th>التأخير</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.rentalItems.map((item, idx) => (
+                <tr key={idx}>
+                  <td>{item.skateBarcode}</td>
+                  <td>{item.durationMinutes}</td>
+                  <td>{item.rentalAmount.toFixed(2)}</td>
+                  <td>{item.lateFee > 0 ? item.lateFee.toFixed(2) : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
 
         {data.type === 'SALE' && data.items && (

@@ -17,6 +17,8 @@ export const lateFeeRecords = mysqlTable('late_fee_records', {
   rentalId: int('rental_id')
     .notNull()
     .references(() => rentals.id),
+  // Per-item late fee tracking (multi-skate redesign)
+  rentalItemId: int('rental_item_id'),
   lateMinutes: int('late_minutes').notNull(),
   calculatedFee: decimal('calculated_fee', { precision: 10, scale: 2 }).notNull(),
   collectedFee: decimal('collected_fee', { precision: 10, scale: 2 }).notNull().default('0.00'),
@@ -30,6 +32,8 @@ export const lateFeeRecords = mysqlTable('late_fee_records', {
 export const inspections = mysqlTable('inspections', {
   id: int('id').primaryKey().autoincrement(),
   rentalId: int('rental_id').references(() => rentals.id),
+  // Link to the specific rental item being inspected (new multi-skate model)
+  rentalItemId: int('rental_item_id'),
   skateId: int('skate_id')
     .notNull()
     .references(() => skates.id),

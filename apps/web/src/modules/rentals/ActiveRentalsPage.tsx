@@ -1,18 +1,18 @@
 /**
  * KOSHK SKATE ERP — Active Rentals Page
- * Phase 05 — Rental POS Core
+ * Phase 06 Redesign — Multi-Skate Rentals
  *
- * Displays all active rentals with server-computed operational status.
- * DEC-064: Status is persisted as 'active'; display state is computed server-side.
- * DEC-066: ending_soon threshold = 5 minutes.
+ * Displays all active rentals with per-item operational status.
+ * Each Rental card shows its items as individual rows with their own
+ * remaining time and operational status (normal / ending_soon / overdue).
  *
- * Server provides: operationalStatus, remainingMinutes, expectedEndAt
- * Frontend countdown: visual only between refreshes — server timestamps are authoritative.
+ * Partial return: "Return" button per item, not per rental.
+ * When the last item is returned → FinalizeRentalModal opens automatically.
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { RefreshCw, Clock, Eye } from 'lucide-react'
+import { RefreshCw, Clock, Eye, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   Badge,
   Alert,
@@ -23,23 +23,25 @@ import {
 } from '../../components/ui'
 import {
   rentalsService,
+  rentalItemsService,
   type ActiveRentalDTO,
+  type RentalItemDTO,
+  type RentalDTO,
   getOperationalStatusLabel,
   operationalStatusToBadge,
+  getRentalStatusLabel,
+  lifetimeStatusToBadge,
 } from './rentals.service'
-import { formatCurrency } from '../../utils/currency'
+import { ReturnRentalModal } from './ReturnRentalModal'
+import { FinalizeRentalModal } from './FinalizeRentalModal'
+import { CreateDamageReportModal } from './CreateDamageReportModal'
+import { PermissionGate } from '../../components/PermissionGate'
+import { formatTime } from '../../utils/date'
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatTime(isoStr: string): string {
-  return new Date(isoStr).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDate(isoStr: string): string {
-  return new Date(isoStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })
-}
 
 function formatRemaining(mins: number): string {
   if (mins <= 0) return 'منتهي'
@@ -49,9 +51,66 @@ function formatRemaining(mins: number): string {
   return m > 0 ? `${h}س ${m}د` : `${h}س`
 }
 
-import { ReturnRentalModal } from './ReturnRentalModal'
-import { CreateDamageReportModal } from './CreateDamageReportModal'
-import { PermissionGate } from '../../components/PermissionGate'
+// ---------------------------------------------------------------------------
+// Rental Item Row (inside a card)
+// ---------------------------------------------------------------------------
+
+interface ItemRowProps {
+  item: RentalItemDTO
+  onReturn: (item: RentalItemDTO) => void
+}
+
+function RentalItemRow({ item, onReturn }: ItemRowProps) {
+  const opStatus = item.operationalStatus ?? 'normal'
+  const badgeStatus = operationalStatusToBadge(opStatus)
+  const opLabel = getOperationalStatusLabel(opStatus)
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '8px 12px',
+      background: opStatus === 'overdue' ? 'var(--color-danger-bg)' : opStatus === 'ending_soon' ? 'var(--color-warning-bg)' : 'var(--color-surface-raised)',
+      borderRadius: 'var(--radius-md)',
+      border: `1px solid ${opStatus === 'overdue' ? 'var(--color-danger-border, #f5c6cb)' : opStatus === 'ending_soon' ? 'var(--color-warning-border, #ffeaa7)' : 'var(--color-border)'}`,
+      gap: 8,
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-size-sm)' }}>
+          {item.skate.skateCode}
+        </span>
+        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+          مقاس {item.skate.size} — {formatTime(item.expectedEndAt)}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ textAlign: 'center' }}>
+          <Badge status={badgeStatus}>{opLabel}</Badge>
+          {item.remainingMinutes !== undefined && opStatus !== 'overdue' && (
+            <div style={{ fontSize: 'var(--font-size-xs)', color: 'inherit', marginTop: 2 }}>
+              {formatRemaining(item.remainingMinutes)}
+            </div>
+          )}
+          {opStatus === 'overdue' && (
+            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-danger-text)', marginTop: 2 }}>
+              تجاوز الوقت
+            </div>
+          )}
+        </div>
+        <PermissionGate permission="rentals.return">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onReturn(item)}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            إرجاع
+          </Button>
+        </PermissionGate>
+      </div>
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Active Rental Card
@@ -60,81 +119,64 @@ import { PermissionGate } from '../../components/PermissionGate'
 interface ActiveRentalCardProps {
   rental: ActiveRentalDTO
   onViewDetail: (id: number) => void
-  onReturn: (rental: ActiveRentalDTO) => void
+  onReturnItem: (item: RentalItemDTO) => void
 }
 
-function ActiveRentalCard({ rental, onViewDetail, onReturn }: ActiveRentalCardProps) {
-  const badgeStatus = operationalStatusToBadge(rental.operationalStatus)
-  const opLabel = getOperationalStatusLabel(rental.operationalStatus)
+function ActiveRentalCard({ rental, onViewDetail, onReturnItem }: ActiveRentalCardProps) {
+  const [expanded, setExpanded] = useState(true)
+  const activeItems = rental.items.filter(i => i.status === 'active')
+
+  // Card-level badge — worst status among active items
+  const hasOverdue = rental.hasOverdueItems
+  const hasEndingSoon = rental.hasEndingSoonItems
+  const cardStatus = hasOverdue ? 'overdue' : hasEndingSoon ? 'ending_soon' : 'normal'
+  const badgeStatus = operationalStatusToBadge(cardStatus)
 
   return (
-    <div className={`rental-card rental-card--${rental.operationalStatus}`} id={`rental-card-${rental.id}`}>
+    <div className={`rental-card rental-card--${cardStatus}`} id={`rental-card-${rental.id}`}>
       <div className="rental-card-header">
-        <div className="rental-card-code">{rental.rentalCode}</div>
-        <Badge status={badgeStatus}>{opLabel}</Badge>
-      </div>
-
-      <div className="rental-card-body">
-        <div className="rental-card-info-grid">
-          <div className="rental-info-item">
-            <span className="rental-info-label">العميل</span>
-            <span className="rental-info-value">{rental.customer.name}</span>
-          </div>
-          <div className="rental-info-item">
-            <span className="rental-info-label">الاسكيت</span>
-            <span className="rental-info-value">{rental.skate.skateCode} — {rental.skate.size}</span>
-          </div>
-          <div className="rental-info-item">
-            <span className="rental-info-label">البداية</span>
-            <span className="rental-info-value" dir="ltr">{formatTime(rental.startedAt)}</span>
-          </div>
-          <div className="rental-info-item">
-            <span className="rental-info-label">النهاية</span>
-            <span className="rental-info-value" dir="ltr">{formatTime(rental.expectedEndAt)}</span>
-          </div>
-          <div className="rental-info-item">
-            <span className="rental-info-label">المبلغ</span>
-            <span className="rental-info-value">{formatCurrency(rental.rentalAmount)}</span>
-          </div>
-          <div className="rental-info-item">
-            <span className="rental-info-label">الكاشير</span>
-            <span className="rental-info-value">{rental.cashier.name}</span>
-          </div>
-        </div>
-
-        {/* Remaining time — prominent display */}
-        <div className={`rental-remaining rental-remaining--${rental.operationalStatus}`}>
-          <Clock size={16} />
-          <span>
-            {rental.operationalStatus === 'overdue'
-              ? 'متأخر — تجاوز الوقت المحدد'
-              : `الوقت المتبقي: ${formatRemaining(rental.remainingMinutes)}`}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span className="rental-card-code">{rental.rentalCode}</span>
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+            {rental.customer.name}
           </span>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Badge status={badgeStatus}>
+            {hasOverdue ? 'متأخر' : hasEndingSoon ? 'ينتهي قريباً' : 'عادي'}
+          </Badge>
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2px 6px' }}>
+            {activeItems.length} نشط
+          </span>
+          <button type="button" onClick={() => setExpanded(e => !e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 2 }}>
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
       </div>
+
+      {expanded && (
+        <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginBottom: 4 }}>
+            <Clock size={12} style={{ display: 'inline', marginInlineEnd: 4 }} />
+            بدأ {formatTime(rental.startedAt)} — {rental.cashier.name}
+          </div>
+          {activeItems.map(item => (
+            <RentalItemRow key={item.id} item={item} onReturn={onReturnItem} />
+          ))}
+        </div>
+      )}
 
       <div className="rental-card-footer">
         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
-          {formatDate(rental.startedAt)}
+          {rental.items.length} اسكيت إجمالاً
         </span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <PermissionGate permission="rentals.return">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onReturn(rental)}
-            >
-              إرجاع الاسكيت
-            </Button>
-          </PermissionGate>
-          <IconButton
-            icon={Eye}
-            label="عرض التفاصيل"
-            onClick={() => onViewDetail(rental.id)}
-            size="sm"
-            variant="ghost"
-          />
-        </div>
+        <IconButton
+          icon={Eye}
+          label="عرض التفاصيل"
+          onClick={() => onViewDetail(rental.id)}
+          size="sm"
+          variant="ghost"
+        />
       </div>
     </div>
   )
@@ -150,29 +192,20 @@ export default function ActiveRentalsPage() {
   const [rentals, setRentals] = useState<ActiveRentalDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  // Return Modal State
+  // Return Item Modal
   const [returnModalOpen, setReturnModalOpen] = useState(false)
-  const [selectedRentalForReturn, setSelectedRentalForReturn] = useState<ActiveRentalDTO | null>(null)
+  const [selectedItem, setSelectedItem] = useState<RentalItemDTO | null>(null)
 
-  // Damage Report Modal State
+  // Finalize Modal (shown when last item returned)
+  const [finalizeModalOpen, setFinalizeModalOpen] = useState(false)
+  const [rentalToFinalize, setRentalToFinalize] = useState<RentalDTO | null>(null)
+
+  // Damage Modal
   const [damageModalOpen, setDamageModalOpen] = useState(false)
   const [damageInspectionId, setDamageInspectionId] = useState<number | null>(null)
-
-  const handleReturnClick = (rental: ActiveRentalDTO) => {
-    setSelectedRentalForReturn(rental)
-    setReturnModalOpen(true)
-  }
-
-  const handleReturnSuccess = (hasDamage?: boolean, inspectionId?: number) => {
-    load(true)
-    if (hasDamage && inspectionId && selectedRentalForReturn) {
-      setDamageInspectionId(inspectionId)
-      setDamageModalOpen(true)
-    }
-  }
+  const [damageRental, setDamageRental] = useState<ActiveRentalDTO | null>(null)
 
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true)
@@ -196,9 +229,53 @@ export default function ActiveRentalsPage() {
     return () => clearInterval(interval)
   }, [load])
 
-  const overdue = rentals.filter(r => r.operationalStatus === 'overdue')
-  const endingSoon = rentals.filter(r => r.operationalStatus === 'ending_soon')
-  const normal = rentals.filter(r => r.operationalStatus === 'normal')
+  const handleReturnClick = (item: RentalItemDTO) => {
+    setSelectedItem(item)
+    setReturnModalOpen(true)
+  }
+
+  const handleReturnSuccess = async (result: {
+    isLastItem: boolean
+    rentalId: number
+    inspectionId: number
+    hasDamage: boolean
+  }) => {
+    // Always reload the list
+    await load(true)
+
+    // If damage, open damage modal
+    if (result.hasDamage && result.inspectionId) {
+      const rental = rentals.find(r => r.id === result.rentalId)
+      if (rental) {
+        setDamageRental(rental)
+        setDamageInspectionId(result.inspectionId)
+        setDamageModalOpen(true)
+      }
+    }
+
+    // If last item, open finalize modal
+    if (result.isLastItem) {
+      try {
+        const rentalRes = await rentalsService.get(result.rentalId)
+        setRentalToFinalize(rentalRes.data)
+        setFinalizeModalOpen(true)
+      } catch {
+        // Still show a reload — user can finalize from detail page
+        load(true)
+      }
+    }
+  }
+
+  const handleFinalizeSuccess = (rental: RentalDTO) => {
+    setFinalizeModalOpen(false)
+    setRentalToFinalize(null)
+    load(true)
+    navigate(`/rentals/${rental.id}`)
+  }
+
+  const overdue      = rentals.filter(r => r.hasOverdueItems)
+  const endingSoon   = rentals.filter(r => !r.hasOverdueItems && r.hasEndingSoonItems)
+  const normal       = rentals.filter(r => !r.hasOverdueItems && !r.hasEndingSoonItems)
 
   if (loading) return <PageLoader />
 
@@ -216,13 +293,8 @@ export default function ActiveRentalsPage() {
             )}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => load(true)}
-          id="active-rentals-refresh"
-        >
-          <RefreshCw size={16} aria-hidden="true" />
-          تحديث
+        <Button variant="secondary" onClick={() => load(true)} id="active-rentals-refresh">
+          <RefreshCw size={16} aria-hidden="true" /> تحديث
         </Button>
       </div>
 
@@ -241,7 +313,6 @@ export default function ActiveRentalsPage() {
         />
       ) : (
         <>
-          {/* Overdue section */}
           {overdue.length > 0 && (
             <div className="active-rentals-section">
               <h2 className="active-rentals-section-title active-rentals-section-title--overdue">
@@ -249,13 +320,12 @@ export default function ActiveRentalsPage() {
               </h2>
               <div className="rental-cards-grid">
                 {overdue.map(r => (
-                  <ActiveRentalCard key={r.id} rental={r} onViewDetail={id => navigate(`/rentals/${id}`)} onReturn={handleReturnClick} />
+                  <ActiveRentalCard key={r.id} rental={r} onViewDetail={id => navigate(`/rentals/${id}`)} onReturnItem={handleReturnClick} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Ending Soon section */}
           {endingSoon.length > 0 && (
             <div className="active-rentals-section">
               <h2 className="active-rentals-section-title active-rentals-section-title--ending-soon">
@@ -263,21 +333,18 @@ export default function ActiveRentalsPage() {
               </h2>
               <div className="rental-cards-grid">
                 {endingSoon.map(r => (
-                  <ActiveRentalCard key={r.id} rental={r} onViewDetail={id => navigate(`/rentals/${id}`)} onReturn={handleReturnClick} />
+                  <ActiveRentalCard key={r.id} rental={r} onViewDetail={id => navigate(`/rentals/${id}`)} onReturnItem={handleReturnClick} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Normal section */}
           {normal.length > 0 && (
             <div className="active-rentals-section">
-              <h2 className="active-rentals-section-title">
-                عادي ({normal.length})
-              </h2>
+              <h2 className="active-rentals-section-title">عادي ({normal.length})</h2>
               <div className="rental-cards-grid">
                 {normal.map(r => (
-                  <ActiveRentalCard key={r.id} rental={r} onViewDetail={id => navigate(`/rentals/${id}`)} onReturn={handleReturnClick} />
+                  <ActiveRentalCard key={r.id} rental={r} onViewDetail={id => navigate(`/rentals/${id}`)} onReturnItem={handleReturnClick} />
                 ))}
               </div>
             </div>
@@ -287,15 +354,22 @@ export default function ActiveRentalsPage() {
 
       <ReturnRentalModal
         isOpen={returnModalOpen}
-        onClose={() => setReturnModalOpen(false)}
-        rental={selectedRentalForReturn}
+        onClose={() => { setReturnModalOpen(false); setSelectedItem(null) }}
+        item={selectedItem}
         onSuccess={handleReturnSuccess}
+      />
+
+      <FinalizeRentalModal
+        isOpen={finalizeModalOpen}
+        onClose={() => setFinalizeModalOpen(false)}
+        rental={rentalToFinalize}
+        onSuccess={handleFinalizeSuccess}
       />
 
       <CreateDamageReportModal
         isOpen={damageModalOpen}
         onClose={() => setDamageModalOpen(false)}
-        rental={selectedRentalForReturn}
+        rental={damageRental as any}
         inspectionId={damageInspectionId}
         onSuccess={() => load()}
       />
@@ -303,70 +377,20 @@ export default function ActiveRentalsPage() {
       <style>{`
         .active-rentals-section { margin-bottom: var(--space-6); }
         .active-rentals-section-title {
-          font-size: var(--font-size-base);
-          font-weight: var(--font-weight-bold);
-          color: var(--color-text-primary);
-          margin-bottom: var(--space-3);
-          padding-bottom: var(--space-2);
-          border-bottom: 2px solid var(--color-border);
+          font-size: var(--font-size-base); font-weight: var(--font-weight-bold);
+          color: var(--color-text-primary); margin-bottom: var(--space-3);
+          padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-border);
         }
         .active-rentals-section-title--overdue { color: var(--color-danger-text); border-color: var(--color-danger-text); }
         .active-rentals-section-title--ending-soon { color: var(--color-warning-text); border-color: var(--color-warning-text); }
-        .rental-cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: var(--space-4);
-        }
-        .rental-card {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          transition: box-shadow var(--transition-fast);
-        }
+        .rental-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-4); }
+        .rental-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--transition-fast); }
         .rental-card:hover { box-shadow: var(--shadow-md); }
         .rental-card--overdue { border-color: var(--color-danger-text); }
         .rental-card--ending_soon { border-color: var(--color-warning-text); }
-        .rental-card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: var(--space-3) var(--space-4);
-          background: var(--color-surface-raised);
-          border-bottom: 1px solid var(--color-border);
-        }
+        .rental-card-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-4); background: var(--color-surface-raised); border-bottom: 1px solid var(--color-border); }
         .rental-card-code { font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
-        .rental-card-body { padding: var(--space-4); }
-        .rental-card-info-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-bottom: var(--space-3);
-        }
-        .rental-info-item { display: flex; flex-direction: column; gap: 2px; }
-        .rental-info-label { font-size: var(--font-size-xs); color: var(--color-text-muted); }
-        .rental-info-value { font-size: var(--font-size-sm); color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
-        .rental-remaining {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: var(--space-2) var(--space-3);
-          border-radius: var(--radius-md);
-          font-size: var(--font-size-sm);
-          font-weight: var(--font-weight-medium);
-          background: var(--color-info-bg);
-          color: var(--color-info-text);
-        }
-        .rental-remaining--overdue { background: var(--color-danger-bg); color: var(--color-danger-text); }
-        .rental-remaining--ending_soon { background: var(--color-warning-bg); color: var(--color-warning-text); }
-        .rental-card-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: var(--space-2) var(--space-4);
-          background: var(--color-surface-raised);
-          border-top: 1px solid var(--color-border);
-        }
+        .rental-card-footer { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-4); background: var(--color-surface-raised); border-top: 1px solid var(--color-border); }
       `}</style>
     </div>
   )

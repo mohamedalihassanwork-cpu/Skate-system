@@ -24,7 +24,10 @@ export async function getRentalInvoice(rentalId: number) {
   // Fetch relations
   const [cashier] = await db.select().from(users).where(eq(users.id, rental.cashierId)).limit(1)
   const [customer] = rental.customerId ? await db.select().from(customers).where(eq(customers.id, rental.customerId)).limit(1) : [null]
-  const [skate] = await db.select().from(skates).where(eq(skates.id, rental.skateId)).limit(1)
+  const [skate] = rental.skateId
+    ? await db.select().from(skates).where(eq(skates.id, rental.skateId)).limit(1)
+    : [null]
+
 
   // Payments
   const payments = await db

@@ -3,12 +3,13 @@ import { CheckCircle } from 'lucide-react'
 import { Modal, Button, Alert, Input, Select, useToast } from '../../components/ui'
 import { damageService } from '../damage/damage.service'
 import { paymentsService, type PaymentMethodDTO } from '../payments/payments.service'
-import type { ActiveRentalDTO } from './rentals.service'
+import type { RentalDTO } from './rentals.service'
 
 interface CreateDamageReportModalProps {
   isOpen: boolean
   onClose: () => void
-  rental: ActiveRentalDTO | null
+  // Accept both old ActiveRentalDTO and new RentalDTO shapes
+  rental: (RentalDTO & { [key: string]: any }) | null
   inspectionId: number | null
   onSuccess: () => void
 }
@@ -52,8 +53,9 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
       const res = await damageService.create({
         rentalId: rental.id,
         inspectionId,
-        skateId: rental.skate.id,
-        customerId: rental.customer.id,
+        // skateId resolved server-side from inspection in new model
+        skateId: rental.skate?.id ?? rental.items?.[0]?.skate?.id,
+        customerId: rental.customer?.id,
         damageType,
         severity,
         description: description.trim(),

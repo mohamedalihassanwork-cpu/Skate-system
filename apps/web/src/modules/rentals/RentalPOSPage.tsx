@@ -1,24 +1,26 @@
 /**
  * KOSHK SKATE ERP — Rental POS Page
- * Phase 05 — Rental POS Core
+ * Phase 06 Redesign — Multi-Skate Rentals
  *
- * Multi-step rental creation flow (DEC-060, DEC-065):
- *   Step 1: Select Skate (available only)
- *   Step 2: Select Duration + automatic price preview
- *   Step 3: Select / Create Customer
- *   Step 4: Review → Start Rental
+ * Redesigned multi-skate rental creation flow:
+ *   Step 1: Select Customer
+ *   Step 2: Select 1..N Skates (multi-select from available)
+ *   Step 3: Select Duration + price preview
+ *   Step 4: Review → Start Rental (NO payment at creation — §7)
  *
- * No Payment step in Phase 05 (DEC-060). Phase 06 will extend this flow.
- *
- * DEC-065: Client never calculates price — always fetched from server.
- * DEC-067: Displayed amount is server-rounded whole EGP.
- * DEC-068: Hourly rate comes from settings (displayed to cashier).
- * DEC-069: Standard durations [15,30,45,60,90] + custom (>0, no max).
+ * Key design decisions:
+ *   - §6: Select customer first, then skates for their session
+ *   - §7: NO payment at rental creation — payment deferred to finalization
+ *   - DEC-065: Client never calculates price — always fetched from server
+ *   - DEC-067: Displayed amount is server-rounded whole EGP
+ *   - DEC-069: Duration options from server config — no hardcoded fallback
+ *   - §12: Server timestamps are authoritative — no browser Date.now() for billing
+ *   - RTL-first design, Arabic UI, no emoji
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Ticket, ChevronRight, ChevronLeft, Clock, User, Search, Plus, CheckCircle } from 'lucide-react'
+import { Ticket, ChevronRight, ChevronLeft, Clock, User, Search, Plus, CheckCircle, X } from 'lucide-react'
 import {
   Button,
   Badge,
@@ -34,314 +36,16 @@ import { customersService, type CustomerListItemDTO, type CreateCustomerBody } f
 import { skatesService, type SkateDTO } from '../skates/skates.service'
 import { reservationsService } from '../reservations/reservations.service'
 import { formatCurrency } from '../../utils/currency'
-import { paymentsService, type PaymentMethodDTO } from '../payments/payments.service'
-import { invoicesService } from '../invoices/invoices.service'
-import { Trash2 } from 'lucide-react'
-import { usePrint } from '../../contexts/PrintContext'
 
 // ---------------------------------------------------------------------------
-// Step constants
-// ---------------------------------------------------------------------------
-
-// Standard durations are loaded from server (GET /api/v1/rentals/config).
-// BR-26: Duration options must come from configuration — not hardcoded.
-// This constant is intentionally removed in Phase 05 remediation (F-06).
-
-// ---------------------------------------------------------------------------
-// Step 1: Skate Selection
-// ---------------------------------------------------------------------------
-
-interface SkatePickerProps {
-  onSelect: (skate: SkateDTO) => void
-}
-
-function SkatePicker({ onSelect }: SkatePickerProps) {
-  const [skates, setSkates] = useState<SkateDTO[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-
-  const load = useCallback(async () => {
-    setLoading(true); setError(null)
-    try {
-      const res = await skatesService.list({ status: 'available', isActive: '1', perPage: '200' })
-      setSkates(res.data ?? [])
-    } catch {
-      setError('تعذر تحميل الاسكيتات المتاحة')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  const filtered = skates.filter(s =>
-    search.trim() === '' ||
-    s.skateCode.toLowerCase().includes(search.trim().toLowerCase()) ||
-    s.size.includes(search.trim())
-  )
-
-  if (loading) return <PageLoader />
-  if (error) return <Alert variant="danger">{error}</Alert>
-
-  return (
-    <div className="rental-pos-step">
-      <div className="rental-pos-step-header">
-        <h2 className="rental-pos-step-title">اختر الاسكيت</h2>
-        <p className="rental-pos-step-subtitle">الاسكيتات المتاحة للإيجار حالياً</p>
-      </div>
-      <div className="rental-pos-search">
-        <div style={{ position: 'relative' }}>
-          <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
-          <input
-            id="skate-search"
-            type="text"
-            placeholder="ابحث بالكود أو المقاس..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="rental-search-input"
-            style={{ paddingRight: 36 }}
-          />
-        </div>
-      </div>
-      {filtered.length === 0 ? (
-        <div className="rental-empty-state">
-          <Ticket size={48} style={{ color: 'var(--color-text-muted)', margin: '0 auto 12px' }} />
-          <p style={{ color: 'var(--color-text-secondary)' }}>لا توجد زلاجات متاحة</p>
-        </div>
-      ) : (
-        <div className="skate-grid">
-          {filtered.map(skate => (
-            <button
-              key={skate.id}
-              id={`skate-card-${skate.id}`}
-              className="skate-card"
-              onClick={() => onSelect(skate)}
-              type="button"
-            >
-              <div className="skate-card-code">{skate.skateCode}</div>
-              <div className="skate-card-size">مقاس {skate.size}</div>
-              {skate.type && <div className="skate-card-type">{skate.type}</div>}
-              <Badge status="available">متاح</Badge>
-            </button>
-          ))}
-        </div>
-      )}
-      <button
-        id="refresh-skates"
-        type="button"
-        onClick={load}
-        style={{ marginTop: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}
-      >
-        <Clock size={14} /> تحديث
-      </button>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Step 2: Duration + Price Preview
-// ---------------------------------------------------------------------------
-
-interface DurationPickerProps {
-  skate: SkateDTO
-  onSelect: (duration: number, pricePerHour: number, rentalAmount: number) => void
-  onBack: () => void
-}
-
-function DurationPicker({ skate, onSelect, onBack }: DurationPickerProps) {
-  const [selectedDuration, setSelectedDuration] = useState<number | null>(null)
-  const [customValue, setCustomValue] = useState('')
-  const [useCustom, setUseCustom] = useState(false)
-  const [preview, setPreview] = useState<{ pricePerHour: number; rentalAmount: number } | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [previewError, setPreviewError] = useState<string | null>(null)
-  // F-06 / DEC-070: Duration options are authoritative from server — no hardcoded fallback (BR-26)
-  const [durationOptions, setDurationOptions] = useState<number[]>([])
-  const [configLoading, setConfigLoading] = useState(true)
-  const [configError, setConfigError] = useState<string | null>(null)
-
-  // Load configured durations from server on mount (F-06, DEC-070)
-  // If configuration is missing, malformed, or unreachable — show error and block continuation.
-  // The POS must NOT substitute hardcoded durations when configuration is unavailable.
-  const loadConfig = useCallback(() => {
-    setConfigLoading(true)
-    setConfigError(null)
-    rentalsService.getConfig()
-      .then(res => {
-        const opts = res.data?.durationOptions
-        if (Array.isArray(opts) && opts.length > 0) {
-          setDurationOptions(opts)
-        } else {
-          // Server returned a success response but with invalid/empty duration list
-          setConfigError('تعذر تحميل خيارات مدة الإيجار — استجابة الخادم غير صالحة')
-          setDurationOptions([])
-        }
-      })
-      .catch(() => {
-        // Server unreachable or returned a configuration error
-        setConfigError('تعذر الاتصال بالخادم لتحميل إعدادات الإيجار. يرجى المحاولة مجدداً.')
-        setDurationOptions([])
-      })
-      .finally(() => setConfigLoading(false))
-  }, [])
-
-  useEffect(() => { loadConfig() }, [loadConfig])
-
-  const effectiveDuration = useCustom
-    ? (parseInt(customValue, 10) || 0)
-    : (selectedDuration ?? 0)
-
-  const fetchPreview = useCallback(async (mins: number) => {
-    if (!mins || mins <= 0) { setPreview(null); return }
-    setPreviewLoading(true); setPreviewError(null)
-    try {
-      const res = await rentalsService.calculatePrice(mins)
-      setPreview({ pricePerHour: res.data.pricePerHour, rentalAmount: res.data.rentalAmount })
-    } catch {
-      setPreviewError('تعذر حساب السعر')
-      setPreview(null)
-    } finally {
-      setPreviewLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    const d = effectiveDuration
-    if (d > 0) {
-      const t = setTimeout(() => fetchPreview(d), 300)
-      return () => clearTimeout(t)
-    } else {
-      setPreview(null)
-    }
-  }, [effectiveDuration, fetchPreview])
-
-  const canProceed = effectiveDuration > 0 && preview !== null
-
-  return (
-    <div className="rental-pos-step">
-      <div className="rental-pos-step-header">
-        <h2 className="rental-pos-step-title">اختر مدة الإيجار</h2>
-        <p className="rental-pos-step-subtitle">الاسكيت: <strong>{skate.skateCode}</strong> — مقاس {skate.size}</p>
-      </div>
-
-      {configLoading ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0' }}>
-          <LoadingSpinner size="sm" />
-          <span style={{ color: 'var(--color-text-secondary)' }}>جاري تحميل خيارات المدة...</span>
-        </div>
-      ) : configError ? (
-        <div style={{ padding: '16px 0' }} id="duration-config-error-container">
-          <Alert variant="danger">
-            {configError}
-          </Alert>
-          <Button
-            id="duration-config-retry"
-            variant="secondary"
-            size="sm"
-            onClick={loadConfig}
-            style={{ marginTop: 8 }}
-          >
-            إعادة المحاولة
-          </Button>
-          <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: 12 }}>
-            لا يمكن المتابعة باستخدام الأزرار القياسية. يمكنك استخدام حقل المدة المخصصة أدناه إذا كنت تعرف المدة.
-          </p>
-        </div>
-      ) : (
-        <div className="duration-grid">
-          {durationOptions.map(d => (
-            <button
-              key={d}
-              id={`duration-btn-${d}`}
-              type="button"
-              className={`duration-btn ${!useCustom && selectedDuration === d ? 'duration-btn--active' : ''}`}
-              onClick={() => { setUseCustom(false); setSelectedDuration(d) }}
-            >
-              <span className="duration-btn-num">{d}</span>
-              <span className="duration-btn-unit">دقيقة</span>
-            </button>
-          ))}
-          <button
-            id="duration-btn-custom"
-            type="button"
-            className={`duration-btn ${useCustom ? 'duration-btn--active' : ''}`}
-            onClick={() => setUseCustom(true)}
-          >
-            <span className="duration-btn-num">مخصص</span>
-          </button>
-        </div>
-      )}
-
-      {useCustom && (
-        <div style={{ marginTop: 16 }}>
-          <Input
-            id="custom-duration"
-            label="مدة مخصصة (بالدقائق)"
-            type="number"
-            min={1}
-            value={customValue}
-            onChange={e => setCustomValue(e.target.value)}
-            placeholder="أدخل عدد الدقائق"
-          />
-          <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: 4 }}>
-            يجب أن تكون المدة أكبر من صفر — لا يوجد حد أقصى (DEC-069)
-          </p>
-        </div>
-      )}
-
-      <div className="price-preview-box">
-        {previewLoading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <LoadingSpinner size="sm" />
-            <span style={{ color: 'var(--color-text-secondary)' }}>جاري حساب السعر...</span>
-          </div>
-        )}
-        {previewError && <Alert variant="danger" style={{ marginTop: 0 }}>{previewError}</Alert>}
-        {!previewLoading && !previewError && preview && effectiveDuration > 0 && (
-          <>
-            <div className="price-preview-rate">
-              <Clock size={14} /> السعر: {formatCurrency(preview.pricePerHour)} / ساعة
-            </div>
-            <div className="price-preview-amount">
-              المبلغ: <strong>{formatCurrency(preview.rentalAmount)}</strong>
-            </div>
-          </>
-        )}
-        {!previewLoading && !preview && effectiveDuration <= 0 && (
-          <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
-            اختر مدة لعرض السعر
-          </p>
-        )}
-      </div>
-
-      <div className="rental-pos-actions">
-        <Button id="back-to-skate" variant="ghost" onClick={onBack}>
-          <ChevronLeft size={16} /> رجوع
-        </Button>
-        <Button
-          id="proceed-to-customer"
-          variant="primary"
-          disabled={!canProceed}
-          onClick={() => preview && onSelect(effectiveDuration, preview.pricePerHour, preview.rentalAmount)}
-        >
-          التالي — اختر العميل <ChevronRight size={16} />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Step 3: Customer Selection
+// Step 1: Customer Selection
 // ---------------------------------------------------------------------------
 
 interface CustomerPickerProps {
   onSelect: (customer: CustomerListItemDTO) => void
-  onBack: () => void
 }
 
-function CustomerPicker({ onSelect, onBack }: CustomerPickerProps) {
+function CustomerPicker({ onSelect }: CustomerPickerProps) {
   const [search, setSearch] = useState('')
   const [customers, setCustomers] = useState<CustomerListItemDTO[]>([])
   const [loading, setLoading] = useState(false)
@@ -399,7 +103,7 @@ function CustomerPicker({ onSelect, onBack }: CustomerPickerProps) {
           id: res.data.id,
           name: res.data.name,
           phone: res.data.phone,
-          nationalIdMasked: res.data.nationalId ? '***' : '—',
+          nationalIdMasked: '—',
           registrationDate: res.data.registrationDate,
           notes: res.data.notes,
           isActive: res.data.isActive,
@@ -437,11 +141,7 @@ function CustomerPicker({ onSelect, onBack }: CustomerPickerProps) {
         </div>
       </div>
 
-      {loading && (
-        <div style={{ textAlign: 'center', padding: 16 }}>
-          <LoadingSpinner size="sm" />
-        </div>
-      )}
+      {loading && <div style={{ textAlign: 'center', padding: 16 }}><LoadingSpinner size="sm" /></div>}
       {error && <Alert variant="danger">{error}</Alert>}
 
       {!loading && customers.length > 0 && (
@@ -484,45 +184,300 @@ function CustomerPicker({ onSelect, onBack }: CustomerPickerProps) {
                 بيانات العميل الجديد
               </h3>
               {createError && <Alert variant="danger" style={{ marginBottom: 12 }}>{createError}</Alert>}
-              <Input
-                id="new-customer-name"
-                label="الاسم"
-                value={createForm.name}
-                onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
-                required
-              />
-              <Input
-                id="new-customer-phone"
-                label="الهاتف"
-                value={createForm.phone}
-                onChange={e => setCreateForm(f => ({ ...f, phone: e.target.value }))}
-                required
-                style={{ marginTop: 8 }}
-              />
-              <Input
-                id="new-customer-national-id"
-                label="الرقم القومي (اختياري)"
-                value={createForm.nationalId || ''}
-                onChange={e => setCreateForm(f => ({ ...f, nationalId: e.target.value }))}
-                style={{ marginTop: 8 }}
-                dir="ltr"
-              />
+              <Input id="new-customer-name" label="الاسم" value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))} required />
+              <Input id="new-customer-phone" label="الهاتف" value={createForm.phone} onChange={e => setCreateForm(f => ({ ...f, phone: e.target.value }))} required style={{ marginTop: 8 }} />
+              <Input id="new-customer-national-id" label="الرقم القومي (اختياري)" value={createForm.nationalId || ''} onChange={e => setCreateForm(f => ({ ...f, nationalId: e.target.value }))} style={{ marginTop: 8 }} dir="ltr" />
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <Button id="create-customer-submit" variant="primary" loading={creating} onClick={handleCreate}>
-                  إضافة وتحديد
-                </Button>
-                <Button id="cancel-create-customer" variant="ghost" onClick={() => setShowCreate(false)}>
-                  إلغاء
-                </Button>
+                <Button id="create-customer-submit" variant="primary" loading={creating} onClick={handleCreate}>إضافة وتحديد</Button>
+                <Button id="cancel-create-customer" variant="ghost" onClick={() => setShowCreate(false)}>إلغاء</Button>
               </div>
             </div>
           )}
         </PermissionGate>
       </div>
+    </div>
+  )
+}
 
-      <div className="rental-pos-actions" style={{ marginTop: 24 }}>
-        <Button id="back-to-duration" variant="ghost" onClick={onBack}>
+// ---------------------------------------------------------------------------
+// Step 2: Multi-Skate Selection
+// ---------------------------------------------------------------------------
+
+interface SkatePickerProps {
+  selectedIds: number[]
+  onToggle: (skate: SkateDTO) => void
+}
+
+function SkatePicker({ selectedIds, onToggle }: SkatePickerProps) {
+  const [skates, setSkates] = useState<SkateDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+
+  const load = useCallback(async () => {
+    setLoading(true); setError(null)
+    try {
+      const res = await skatesService.list({ status: 'available', isActive: '1', perPage: '200' })
+      setSkates(res.data ?? [])
+    } catch {
+      setError('تعذر تحميل الاسكيتات المتاحة')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const filtered = skates.filter(s =>
+    search.trim() === '' ||
+    s.skateCode.toLowerCase().includes(search.trim().toLowerCase()) ||
+    s.size.includes(search.trim())
+  )
+
+  if (loading) return <PageLoader />
+  if (error) return <Alert variant="danger">{error}</Alert>
+
+  return (
+    <div className="rental-pos-step">
+      <div className="rental-pos-step-header">
+        <h2 className="rental-pos-step-title">اختر الاسكيتات</h2>
+        <p className="rental-pos-step-subtitle">
+          يمكنك تحديد أكثر من اسكيت —
+          <strong style={{ color: 'var(--color-primary)', marginRight: 4 }}>
+            {selectedIds.length > 0 ? `${selectedIds.length} محدد` : 'لم يُحدد شيء'}
+          </strong>
+        </p>
+      </div>
+
+      <div className="rental-pos-search">
+        <div style={{ position: 'relative' }}>
+          <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
+          <input
+            id="skate-search"
+            type="text"
+            placeholder="ابحث بالكود أو المقاس..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="rental-search-input"
+            style={{ paddingRight: 36 }}
+          />
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rental-empty-state">
+          <Ticket size={48} style={{ color: 'var(--color-text-muted)', margin: '0 auto 12px' }} />
+          <p style={{ color: 'var(--color-text-secondary)' }}>لا توجد زلاجات متاحة</p>
+        </div>
+      ) : (
+        <div className="skate-grid">
+          {filtered.map(skate => {
+            const isSelected = selectedIds.includes(skate.id)
+            return (
+              <button
+                key={skate.id}
+                id={`skate-card-${skate.id}`}
+                className={`skate-card ${isSelected ? 'skate-card--selected' : ''}`}
+                onClick={() => onToggle(skate)}
+                type="button"
+              >
+                {isSelected && (
+                  <div className="skate-selected-badge">
+                    <CheckCircle size={16} />
+                  </div>
+                )}
+                <div className="skate-card-code">{skate.skateCode}</div>
+                <div className="skate-card-size">مقاس {skate.size}</div>
+                {skate.type && <div className="skate-card-type">{skate.type}</div>}
+                <Badge status={isSelected ? 'rented' : 'available'}>{isSelected ? 'محدد' : 'متاح'}</Badge>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <button
+        id="refresh-skates"
+        type="button"
+        onClick={load}
+        style={{ marginTop: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}
+      >
+        <Clock size={14} /> تحديث
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Step 3: Duration + Price Preview
+// ---------------------------------------------------------------------------
+
+interface DurationPickerProps {
+  skateCount: number
+  onSelect: (duration: number, pricePerHour: number, rentalAmountPerSkate: number) => void
+  onBack: () => void
+}
+
+function DurationPicker({ skateCount, onSelect, onBack }: DurationPickerProps) {
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null)
+  const [customValue, setCustomValue] = useState('')
+  const [useCustom, setUseCustom] = useState(false)
+  const [preview, setPreview] = useState<{ pricePerHour: number; rentalAmount: number } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [durationOptions, setDurationOptions] = useState<number[]>([])
+  const [configLoading, setConfigLoading] = useState(true)
+  const [configError, setConfigError] = useState<string | null>(null)
+
+  const loadConfig = useCallback(() => {
+    setConfigLoading(true); setConfigError(null)
+    rentalsService.getConfig()
+      .then(res => {
+        const opts = res.data?.durationOptions
+        if (Array.isArray(opts) && opts.length > 0) {
+          setDurationOptions(opts)
+        } else {
+          setConfigError('تعذر تحميل خيارات مدة الإيجار — استجابة الخادم غير صالحة')
+        }
+      })
+      .catch(() => setConfigError('تعذر الاتصال بالخادم لتحميل إعدادات الإيجار. يرجى المحاولة مجدداً.'))
+      .finally(() => setConfigLoading(false))
+  }, [])
+
+  useEffect(() => { loadConfig() }, [loadConfig])
+
+  const effectiveDuration = useCustom ? (parseInt(customValue, 10) || 0) : (selectedDuration ?? 0)
+
+  const fetchPreview = useCallback(async (mins: number) => {
+    if (!mins || mins <= 0) { setPreview(null); return }
+    setPreviewLoading(true); setPreviewError(null)
+    try {
+      const res = await rentalsService.calculatePrice(mins)
+      setPreview({ pricePerHour: res.data.pricePerHour, rentalAmount: res.data.rentalAmount })
+    } catch {
+      setPreviewError('تعذر حساب السعر')
+      setPreview(null)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const d = effectiveDuration
+    if (d > 0) {
+      const t = setTimeout(() => fetchPreview(d), 300)
+      return () => clearTimeout(t)
+    } else {
+      setPreview(null)
+    }
+  }, [effectiveDuration, fetchPreview])
+
+  const canProceed = effectiveDuration > 0 && preview !== null
+
+  return (
+    <div className="rental-pos-step">
+      <div className="rental-pos-step-header">
+        <h2 className="rental-pos-step-title">اختر مدة الإيجار</h2>
+        <p className="rental-pos-step-subtitle">
+          {skateCount} اسكيت محدد — نفس المدة لجميع الاسكيتات
+        </p>
+      </div>
+
+      {configLoading ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+          <LoadingSpinner size="sm" />
+          <span style={{ color: 'var(--color-text-secondary)' }}>جاري تحميل خيارات المدة...</span>
+        </div>
+      ) : configError ? (
+        <div style={{ padding: '16px 0' }} id="duration-config-error-container">
+          <Alert variant="danger">{configError}</Alert>
+          <Button id="duration-config-retry" variant="secondary" size="sm" onClick={loadConfig} style={{ marginTop: 8 }}>
+            إعادة المحاولة
+          </Button>
+        </div>
+      ) : (
+        <div className="duration-grid">
+          {durationOptions.map(d => (
+            <button
+              key={d}
+              id={`duration-btn-${d}`}
+              type="button"
+              className={`duration-btn ${!useCustom && selectedDuration === d ? 'duration-btn--active' : ''}`}
+              onClick={() => { setUseCustom(false); setSelectedDuration(d) }}
+            >
+              <span className="duration-btn-num">{d}</span>
+              <span className="duration-btn-unit">دقيقة</span>
+            </button>
+          ))}
+          <button
+            id="duration-btn-custom"
+            type="button"
+            className={`duration-btn ${useCustom ? 'duration-btn--active' : ''}`}
+            onClick={() => setUseCustom(true)}
+          >
+            <span className="duration-btn-num">مخصص</span>
+          </button>
+        </div>
+      )}
+
+      {useCustom && (
+        <div style={{ marginTop: 16 }}>
+          <Input
+            id="custom-duration"
+            label="مدة مخصصة (بالدقائق)"
+            type="number"
+            min={1}
+            value={customValue}
+            onChange={e => setCustomValue(e.target.value)}
+            placeholder="أدخل عدد الدقائق"
+          />
+        </div>
+      )}
+
+      <div className="price-preview-box">
+        {previewLoading && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <LoadingSpinner size="sm" />
+            <span style={{ color: 'var(--color-text-secondary)' }}>جاري حساب السعر...</span>
+          </div>
+        )}
+        {previewError && <Alert variant="danger" style={{ marginTop: 0 }}>{previewError}</Alert>}
+        {!previewLoading && !previewError && preview && effectiveDuration > 0 && (
+          <>
+            <div className="price-preview-rate">
+              <Clock size={14} /> السعر: {formatCurrency(preview.pricePerHour)} / ساعة
+            </div>
+            <div className="price-preview-amount">
+              المبلغ لكل اسكيت: <strong>{formatCurrency(preview.rentalAmount)}</strong>
+            </div>
+            {skateCount > 1 && (
+              <div className="price-preview-total">
+                الإجمالي المتوقع ({skateCount} اسكيتات): <strong>{formatCurrency(preview.rentalAmount * skateCount)}</strong>
+              </div>
+            )}
+            <div style={{ marginTop: 8, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+              يُسدَّد المبلغ بعد الإعادة بناءً على المدة الفعلية
+            </div>
+          </>
+        )}
+        {!previewLoading && !preview && effectiveDuration <= 0 && (
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
+            اختر مدة لعرض السعر
+          </p>
+        )}
+      </div>
+
+      <div className="rental-pos-actions">
+        <Button id="back-to-skates" variant="ghost" onClick={onBack}>
           <ChevronLeft size={16} /> رجوع
+        </Button>
+        <Button
+          id="proceed-to-review"
+          variant="primary"
+          disabled={!canProceed}
+          onClick={() => preview && onSelect(effectiveDuration, preview.pricePerHour, preview.rentalAmount)}
+        >
+          التالي — مراجعة <ChevronRight size={16} />
         </Button>
       </div>
     </div>
@@ -530,73 +485,28 @@ function CustomerPicker({ onSelect, onBack }: CustomerPickerProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Step 4: Review + Start Rental
+// Step 4: Review + Start Rental (NO payment — §7)
 // ---------------------------------------------------------------------------
 
 interface ReviewStepProps {
-  skate: SkateDTO
   customer: CustomerListItemDTO
+  skates: SkateDTO[]
   durationMinutes: number
   pricePerHour: number
-  rentalAmount: number
+  rentalAmountPerSkate: number
   notes: string
   onNotesChange: (n: string) => void
   onBack: () => void
-  onConfirm: (payments: { paymentMethodId: number; amount: number }[]) => void
+  onConfirm: () => void
   loading: boolean
   error: string | null
 }
 
 function ReviewStep({
-  skate, customer, durationMinutes, pricePerHour, rentalAmount,
+  customer, skates, durationMinutes, pricePerHour, rentalAmountPerSkate,
   notes, onNotesChange, onBack, onConfirm, loading, error,
 }: ReviewStepProps) {
-  const now = new Date()
-  const expectedEnd = new Date(now.getTime() + durationMinutes * 60000)
-
-  const [methods, setMethods] = useState<PaymentMethodDTO[]>([])
-  const [methodsLoading, setMethodsLoading] = useState(true)
-  const [payments, setPayments] = useState<{ methodId: number; amount: string }[]>([])
-
-  useEffect(() => {
-    let active = true
-    paymentsService.listMethods().then(res => {
-      if (!active) return
-      const fetched = res.data || []
-      setMethods(fetched)
-      setMethodsLoading(false)
-      if (fetched.length > 0) {
-        setPayments([{ methodId: fetched[0].id, amount: rentalAmount.toString() }])
-      }
-    }).catch(() => {
-      if (active) setMethodsLoading(false)
-    })
-    return () => { active = false }
-  }, [rentalAmount])
-
-  const totalPayments = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0)
-  const isExact = Math.abs(totalPayments - rentalAmount) < 0.01
-
-  const handleAddPayment = () => {
-    if (methods.length === 0) return
-    setPayments([...payments, { methodId: methods[0].id, amount: '' }])
-  }
-
-  const handleRemovePayment = (idx: number) => {
-    setPayments(payments.filter((_, i) => i !== idx))
-  }
-
-  const handleUpdatePayment = (idx: number, field: 'methodId' | 'amount', value: string | number) => {
-    const next = [...payments]
-    next[idx] = { ...next[idx], [field]: value }
-    setPayments(next)
-  }
-
-  const handleConfirm = () => {
-    if (!isExact) return
-    const formatted = payments.map(p => ({ paymentMethodId: p.methodId, amount: parseFloat(p.amount) || 0 }))
-    onConfirm(formatted)
-  }
+  const totalEstimate = rentalAmountPerSkate * skates.length
 
   return (
     <div className="rental-pos-step">
@@ -612,28 +522,34 @@ function ReviewStep({
           <h3 className="review-section-title">بيانات العميل</h3>
           <div className="review-row"><span className="review-label">الاسم</span><span className="review-value">{customer.name}</span></div>
           <div className="review-row"><span className="review-label">الهاتف</span><span className="review-value" dir="ltr">{customer.phone}</span></div>
-          {customer.nationalIdMasked !== '—' && (
-            <div className="review-row"><span className="review-label">الرقم القومي</span><span className="review-value" dir="ltr">{customer.nationalIdMasked}</span></div>
-          )}
         </div>
 
         <div className="review-section">
-          <h3 className="review-section-title">بيانات الاسكيت</h3>
-          <div className="review-row"><span className="review-label">كود الاسكيت</span><span className="review-value">{skate.skateCode}</span></div>
-          <div className="review-row"><span className="review-label">المقاس</span><span className="review-value">{skate.size}</span></div>
-          {skate.type && <div className="review-row"><span className="review-label">النوع</span><span className="review-value">{skate.type}</span></div>}
+          <h3 className="review-section-title">الاسكيتات المحددة ({skates.length})</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {skates.map(s => (
+              <div key={s.id} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-md)', padding: '4px 12px', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                {s.skateCode} — مقاس {s.size}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="review-section">
           <h3 className="review-section-title">بيانات الإيجار</h3>
-          <div className="review-row"><span className="review-label">المدة</span><span className="review-value">{durationMinutes} دقيقة</span></div>
+          <div className="review-row"><span className="review-label">المدة المتوقعة</span><span className="review-value">{durationMinutes} دقيقة</span></div>
           <div className="review-row"><span className="review-label">السعر بالساعة</span><span className="review-value">{formatCurrency(pricePerHour)}</span></div>
-          <div className="review-row review-row--highlight"><span className="review-label">مبلغ الإيجار</span><span className="review-value review-amount">{formatCurrency(rentalAmount)}</span></div>
-          <div className="review-row"><span className="review-label">وقت البداية</span><span className="review-value" dir="ltr">{now.toLocaleTimeString('ar-EG')}</span></div>
-          <div className="review-row"><span className="review-label">نهاية متوقعة</span><span className="review-value" dir="ltr">{expectedEnd.toLocaleTimeString('ar-EG')}</span></div>
+          <div className="review-row"><span className="review-label">تقدير لكل اسكيت</span><span className="review-value">{formatCurrency(rentalAmountPerSkate)}</span></div>
+          {skates.length > 1 && (
+            <div className="review-row review-row--highlight"><span className="review-label">الإجمالي المتوقع</span><span className="review-value review-amount">{formatCurrency(totalEstimate)}</span></div>
+          )}
         </div>
 
-        <div style={{ marginTop: 16 }}>
+        <div style={{ background: 'var(--color-info-bg, #e8f4fd)', border: '1px solid var(--color-info-border, #90c7f0)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: 16, fontSize: 'var(--font-size-sm)', color: 'var(--color-info-text, #1a6fa8)' }}>
+          المبلغ المعروض تقديري — يُحتسب المبلغ الفعلي بناءً على مدة الاستخدام الحقيقية عند الإعادة.
+        </div>
+
+        <div style={{ marginTop: 8 }}>
           <label htmlFor="rental-notes" style={{ display: 'block', fontSize: 'var(--font-size-sm)', marginBottom: 6, color: 'var(--color-text-secondary)' }}>
             ملاحظات (اختياري)
           </label>
@@ -644,89 +560,20 @@ function ReviewStep({
             placeholder="أي ملاحظات إضافية..."
             rows={2}
             maxLength={1000}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--color-border)',
-              fontSize: 'var(--font-size-sm)',
-              fontFamily: 'var(--font-family)',
-              resize: 'vertical',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', resize: 'vertical', boxSizing: 'border-box' }}
           />
-        </div>
-
-        <div className="review-section" style={{ marginTop: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 className="review-section-title" style={{ margin: 0 }}>الدفع</h3>
-            <Button variant="ghost" onClick={handleAddPayment} style={{ padding: '4px 8px', fontSize: 'var(--font-size-xs)', height: 'auto', minHeight: 'unset' }}>
-              <Plus size={14} style={{ marginInlineEnd: 4 }} /> تقسيم
-            </Button>
-          </div>
-
-          {methodsLoading ? (
-            <div style={{ textAlign: 'center', padding: '16px 0' }}><LoadingSpinner /></div>
-          ) : methods.length === 0 ? (
-            <Alert variant="danger">لا توجد طرق دفع متاحة</Alert>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {payments.map((p, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <select
-                    className="rental-search-input"
-                    value={p.methodId}
-                    onChange={e => handleUpdatePayment(idx, 'methodId', parseInt(e.target.value, 10))}
-                    style={{ flex: 1, appearance: 'auto' }}
-                  >
-                    {methods.map(m => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
-                  <Input
-                    id={`payment-amount-${idx}`}
-                    label=""
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={p.amount}
-                    onChange={e => handleUpdatePayment(idx, 'amount', e.target.value)}
-                    style={{ width: 100 }}
-                  />
-                  {payments.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePayment(idx)}
-                      style={{ background: 'none', border: 'none', color: 'var(--color-danger-text)', cursor: 'pointer', padding: 4 }}
-                      title="حذف"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-subtle)', fontWeight: 'var(--font-weight-bold)' }}>
-                <span style={{ color: isExact ? 'var(--color-success-text)' : 'var(--color-danger-text)' }}>إجمالي المدفوع: {formatCurrency(totalPayments)}</span>
-                <span>المطلوب: {formatCurrency(rentalAmount)}</span>
-              </div>
-              {!isExact && (
-                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-danger-text)' }}>يجب أن يتطابق الإجمالي مع المبلغ المطلوب بالضبط.</span>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
       <div className="rental-pos-actions">
-        <Button id="back-to-customer" variant="ghost" onClick={onBack} disabled={loading}>
+        <Button id="back-to-duration" variant="ghost" onClick={onBack} disabled={loading}>
           <ChevronLeft size={16} /> رجوع
         </Button>
         <Button
           id="start-rental-btn"
           variant="primary"
           loading={loading}
-          onClick={handleConfirm}
-          disabled={!isExact || methodsLoading}
+          onClick={onConfirm}
         >
           <CheckCircle size={16} /> بدء الإيجار
         </Button>
@@ -740,7 +587,7 @@ function ReviewStep({
 // ---------------------------------------------------------------------------
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
-  const labels = ['الاسكيت', 'المدة', 'العميل', 'المراجعة']
+  const labels = ['العميل', 'الاسكيتات', 'المدة', 'المراجعة']
   return (
     <div className="step-indicator">
       {labels.map((label, i) => (
@@ -762,28 +609,30 @@ export default function RentalPOSPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { showToast } = useToast()
-  const { printInvoice } = usePrint()
 
   const [reservationId, setReservationId] = useState<number | null>(null)
   const [step, setStep] = useState(1)
-  const [selectedSkate, setSelectedSkate] = useState<SkateDTO | null>(null)
+
+  // State per step
+  const [selectedCustomer, setCustomer] = useState<CustomerListItemDTO | null>(null)
+  const [selectedSkates, setSelectedSkates] = useState<SkateDTO[]>([])
   const [durationMinutes, setDuration] = useState(0)
   const [pricePerHour, setPricePerHour] = useState(0)
-  const [rentalAmount, setRentalAmount] = useState(0)
-  const [selectedCustomer, setCustomer] = useState<CustomerListItemDTO | null>(null)
+  const [rentalAmountPerSkate, setRentalAmountPerSkate] = useState(0)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // Handle reservation prefill
   useEffect(() => {
     const resId = searchParams.get('reservationId')
     if (resId) {
       setReservationId(Number(resId))
       reservationsService.getReservation(Number(resId))
         .then(res => {
-          setSelectedSkate(res.skate as unknown as SkateDTO)
+          setSelectedSkates([res.skate as unknown as SkateDTO])
           setCustomer(res.customer as unknown as CustomerListItemDTO)
-          setStep(2)
+          setStep(3) // skip to duration when reservation prefills customer + skate
         })
         .catch(() => {
           showToast({ type: 'error', title: 'فشل تحميل بيانات الحجز' })
@@ -791,28 +640,26 @@ export default function RentalPOSPage() {
     }
   }, [searchParams])
 
-  const handleConfirm = async (payments: { paymentMethodId: number; amount: number }[]) => {
-    if (!selectedSkate || !selectedCustomer) return
+  const toggleSkate = (skate: SkateDTO) => {
+    setSelectedSkates(prev => {
+      const exists = prev.find(s => s.id === skate.id)
+      if (exists) return prev.filter(s => s.id !== skate.id)
+      return [...prev, skate]
+    })
+  }
+
+  const handleConfirm = async () => {
+    if (!selectedCustomer || selectedSkates.length === 0) return
     setSubmitting(true); setSubmitError(null)
     try {
       const res = await rentalsService.create({
-        skateId: selectedSkate.id,
+        skateIds: selectedSkates.map(s => s.id),
         customerId: selectedCustomer.id,
         durationMinutes,
         notes: notes.trim() || undefined,
         reservationId: reservationId || undefined,
-        payments,
       })
       showToast({ type: 'success', title: `تم بدء الإيجار: ${res.data.rentalCode}` })
-
-      // Auto-print invoice
-      try {
-        const invoiceData = await invoicesService.getRentalInvoice(res.data.id)
-        printInvoice(invoiceData)
-      } catch (err) {
-        showToast({ type: 'error', title: 'فشلت طباعة الفاتورة' })
-      }
-
       navigate('/rentals/active')
     } catch (err: unknown) {
       const errObj = err as { response?: { data?: { error?: { message?: string } } }; message?: string }
@@ -839,33 +686,65 @@ export default function RentalPOSPage() {
 
       <div className="rental-pos-container">
         {step === 1 && (
-          <SkatePicker
-            onSelect={skate => { setSelectedSkate(skate); setStep(2) }}
+          <CustomerPicker
+            onSelect={customer => { setCustomer(customer); setStep(2) }}
           />
         )}
-        {step === 2 && selectedSkate && (
+
+        {step === 2 && (
+          <div className="rental-pos-step">
+            <SkatePicker
+              selectedIds={selectedSkates.map(s => s.id)}
+              onToggle={toggleSkate}
+            />
+            {/* Selected summary bar */}
+            {selectedSkates.length > 0 && (
+              <div style={{ marginTop: 16, padding: '12px 16px', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-md)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>محدد:</span>
+                {selectedSkates.map(s => (
+                  <span key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: 'var(--font-size-xs)' }}>
+                    {s.skateCode}
+                    <button type="button" onClick={() => toggleSkate(s)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--color-danger-text)', display: 'flex' }}>
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="rental-pos-actions" style={{ marginTop: 16 }}>
+              <Button id="back-to-customer" variant="ghost" onClick={() => { setCustomer(null); setStep(1) }}>
+                <ChevronLeft size={16} /> رجوع
+              </Button>
+              <Button
+                id="proceed-to-duration"
+                variant="primary"
+                disabled={selectedSkates.length === 0}
+                onClick={() => setStep(3)}
+              >
+                التالي — اختر المدة <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
           <DurationPicker
-            skate={selectedSkate}
-            onBack={() => { setSelectedSkate(null); setStep(1) }}
-            onSelect={(dur, rate, amount) => {
-              setDuration(dur); setPricePerHour(rate); setRentalAmount(amount)
-              setStep(3)
+            skateCount={selectedSkates.length}
+            onBack={() => setStep(2)}
+            onSelect={(dur, rate, amountPerSkate) => {
+              setDuration(dur); setPricePerHour(rate); setRentalAmountPerSkate(amountPerSkate)
+              setStep(4)
             }}
           />
         )}
-        {step === 3 && (
-          <CustomerPicker
-            onSelect={customer => { setCustomer(customer); setStep(4) }}
-            onBack={() => setStep(2)}
-          />
-        )}
-        {step === 4 && selectedSkate && selectedCustomer && (
+
+        {step === 4 && selectedCustomer && (
           <ReviewStep
-            skate={selectedSkate}
             customer={selectedCustomer}
+            skates={selectedSkates}
             durationMinutes={durationMinutes}
             pricePerHour={pricePerHour}
-            rentalAmount={rentalAmount}
+            rentalAmountPerSkate={rentalAmountPerSkate}
             notes={notes}
             onNotesChange={setNotes}
             onBack={() => setStep(3)}
@@ -877,7 +756,7 @@ export default function RentalPOSPage() {
       </div>
 
       <style>{`
-        .rental-pos-container { max-width: 640px; margin: 0 auto; }
+        .rental-pos-container { max-width: 680px; margin: 0 auto; }
         .rental-pos-step { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-6); border: 1px solid var(--color-border); }
         .rental-pos-step-header { margin-bottom: var(--space-5); }
         .rental-pos-step-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin: 0 0 4px; }
@@ -886,9 +765,11 @@ export default function RentalPOSPage() {
         .rental-search-input { width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--color-border); font-size: var(--font-size-sm); font-family: var(--font-family); box-sizing: border-box; background: var(--color-input-bg); color: var(--color-text-primary); outline: none; }
         .rental-search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.12); }
         .skate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
-        .skate-card { background: var(--color-surface-raised); border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); cursor: pointer; text-align: center; transition: all var(--transition-fast); display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 110px; }
+        .skate-card { background: var(--color-surface-raised); border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); cursor: pointer; text-align: center; transition: all var(--transition-fast); display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 110px; position: relative; }
         .skate-card:hover { border-color: var(--color-primary); background: var(--color-primary-subtle); }
         .skate-card:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+        .skate-card--selected { border-color: var(--color-primary) !important; background: var(--color-primary-subtle) !important; box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.18); }
+        .skate-selected-badge { position: absolute; top: 6px; left: 6px; color: var(--color-primary); }
         .skate-card-code { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
         .skate-card-size { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
         .skate-card-type { font-size: var(--font-size-xs); color: var(--color-text-muted); }
@@ -899,38 +780,36 @@ export default function RentalPOSPage() {
         .duration-btn:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
         .duration-btn-num { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
         .duration-btn-unit { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-        .price-preview-box { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); margin: var(--space-4) 0; min-height: 60px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+        .price-preview-box { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); margin-top: var(--space-4); min-height: 72px; display: flex; flex-direction: column; gap: 8px; }
         .price-preview-rate { font-size: var(--font-size-sm); color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
-        .price-preview-amount { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
-        .customer-results { display: flex; flex-direction: column; gap: var(--space-2); }
-        .customer-result-item { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); cursor: pointer; text-align: right; transition: all var(--transition-fast); width: 100%; }
+        .price-preview-amount { font-size: var(--font-size-lg); color: var(--color-text-primary); }
+        .price-preview-total { font-size: var(--font-size-base); color: var(--color-primary); font-weight: var(--font-weight-bold); }
+        .customer-results { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 280px; overflow-y: auto; }
+        .customer-result-item { width: 100%; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 16px; cursor: pointer; text-align: right; transition: all var(--transition-fast); }
         .customer-result-item:hover { border-color: var(--color-primary); background: var(--color-primary-subtle); }
-        .customer-result-item:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-        .customer-result-name { font-weight: var(--font-weight-medium); color: var(--color-text-primary); display: flex; align-items: center; gap: 6px; }
-        .customer-result-info { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
-        .create-customer-form { padding: var(--space-4); background: var(--color-surface-raised); border-radius: var(--radius-md); border: 1px solid var(--color-border); }
-        .rental-pos-actions { display: flex; justify-content: space-between; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
-        .rental-empty-state { text-align: center; padding: var(--space-8); }
-        .review-card { display: flex; flex-direction: column; gap: var(--space-4); }
-        .review-section { background: var(--color-surface-raised); border-radius: var(--radius-md); padding: var(--space-4); }
-        .review-section-title { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-text-secondary); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .customer-result-name { font-weight: var(--font-weight-medium); display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .customer-result-info { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+        .rental-empty-state { text-align: center; padding: 32px 16px; }
+        .rental-pos-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--color-border-subtle); }
+        .review-card { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5); display: flex; flex-direction: column; gap: 16px; }
+        .review-section { display: flex; flex-direction: column; gap: 8px; }
+        .review-section-title { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-text-secondary); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
         .review-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); }
         .review-row:last-child { border-bottom: none; }
-        .review-row--highlight { background: var(--color-primary-subtle); margin: 0 -4px; padding: 8px 4px; border-radius: var(--radius-sm); }
         .review-label { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
-        .review-value { font-size: var(--font-size-sm); color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
-        .review-amount { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-primary); }
-        .step-indicator { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: var(--space-6); overflow-x: auto; padding: var(--space-2) 0; }
-        .step-indicator-item { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; max-width: 120px; }
-        .step-indicator-circle { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); background: var(--color-surface); color: var(--color-text-secondary); position: relative; z-index: 1; }
-        .step-indicator-item.active .step-indicator-circle { border-color: var(--color-primary); background: var(--color-primary); color: white; }
-        .step-indicator-item.done .step-indicator-circle { border-color: var(--color-success-text); background: var(--color-success-bg); color: var(--color-success-text); }
-        .step-indicator-label { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 6px; text-align: center; }
+        .review-value { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+        .review-row--highlight .review-label, .review-row--highlight .review-value { font-weight: var(--font-weight-bold); }
+        .review-amount { font-size: var(--font-size-base); color: var(--color-primary); }
+        .create-customer-form { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+        .step-indicator { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: var(--space-6); padding: 0 var(--space-4); overflow-x: auto; }
+        .step-indicator-item { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; flex: 1; min-width: 0; }
+        .step-indicator-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface-raised); border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-text-secondary); flex-shrink: 0; z-index: 1; }
+        .step-indicator-item.active .step-indicator-circle { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+        .step-indicator-item.done .step-indicator-circle { background: var(--color-success-text); border-color: var(--color-success-text); color: white; }
+        .step-indicator-label { font-size: var(--font-size-xs); color: var(--color-text-secondary); text-align: center; white-space: nowrap; }
         .step-indicator-item.active .step-indicator-label { color: var(--color-primary); font-weight: var(--font-weight-medium); }
-        .step-indicator-item.done .step-indicator-label { color: var(--color-text-secondary); }
-        .step-indicator-line { position: absolute; top: 16px; left: -50%; width: 100%; height: 2px; background: var(--color-border); z-index: 0; }
+        .step-indicator-line { position: absolute; top: 16px; inset-inline-start: calc(50% + 16px); width: calc(100% - 32px); height: 2px; background: var(--color-border); z-index: 0; }
         .step-indicator-item.done .step-indicator-line { background: var(--color-success-text); }
-        .step-indicator-item.active .step-indicator-line { background: var(--color-primary); }
       `}</style>
     </div>
   )

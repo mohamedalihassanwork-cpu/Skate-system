@@ -35,6 +35,7 @@ import customersRoutes from './modules/customers/customers.routes.js'
 
 // Phase 05 routes
 import rentalsRoutes from './modules/rentals/rentals.routes.js'
+import rentalItemsRoutes from './modules/rentals/rental-items.routes.js'
 
 // Phase 06 routes
 import paymentsRoutes from './modules/payments/payments.routes.js'
@@ -111,8 +112,8 @@ app.get('/api/v1/health', (_req, res) => {
     success: true,
     status: 'ok',
     service: 'koshk-skate-api',
-    version: '5.0.0',
-    phase: 'Phase 05 — Rental POS Core',
+    version: '6.0.0',
+    phase: 'Phase 06 — Multi-Skate Rentals Redesign',
     timestamp: new Date().toISOString(),
     environment: env.NODE_ENV,
   })
@@ -171,6 +172,7 @@ app.use('/api/v1/customers', customersRoutes)
 // ---------------------------------------------------------------------------
 
 app.use('/api/v1/rentals', rentalsRoutes)
+app.use('/api/v1/rental-items', rentalItemsRoutes)
 
 // ---------------------------------------------------------------------------
 // Phase 06 routes

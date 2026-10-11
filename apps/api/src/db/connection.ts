@@ -36,8 +36,22 @@ export const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
-  timezone: '+03:00', // Match Egypt Time to fix the date offset mapping
-  dateStrings: true,
+  /**
+   * TIMEZONE STRATEGY — AUTHORITATIVE:
+   *
+   * timezone: '+00:00' sets every MySQL session to UTC via SET time_zone='+00:00'.
+   * This ensures:
+   *   - NOW() returns UTC in all INSERT/UPDATE statements
+   *   - DATETIME columns store UTC values
+   *   - Drizzle ORM's mapFromDriverValue (new Date(str + "Z")) is semantically
+   *     correct because stored values are already UTC
+   *   - API serializes Date.toISOString() which is always UTC with Z suffix
+   *   - Frontend new Date("...Z") parses correctly in any timezone
+   *
+   * NOTE: dateStrings:true was removed. It only affected pool.execute() reads,
+   * not Drizzle ORM reads, so it provided no benefit and masked the real issue.
+   */
+  timezone: '+00:00',
 })
 
 // ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@
  * Phase 03: skates
  * Phase 04: customers
  * Phase 05: settings, rentals
+ * Phase 06 Redesign: rental_items, rental_item_extensions
  */
 
 export * from './users'
@@ -19,6 +20,8 @@ export * from './reservations.js'
 export * from './customers'
 export * from './settings'
 export * from './rentals'
+export * from './rental_items'
+export * from './rental_item_extensions'
 export * from './payments'
 export * from './inspections'
 export * from './products'

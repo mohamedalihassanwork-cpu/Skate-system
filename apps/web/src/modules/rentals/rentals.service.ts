@@ -1,20 +1,31 @@
 /**
  * KOSHK SKATE ERP — Rentals Service (Frontend)
- * Phase 05 — Rental POS Core
+ * Phase 06 Redesign — Multi-Skate Rentals
  *
- * API client for all rental endpoints.
- * DEC-060: No payment endpoints — Phase 06.
- * DEC-065: Client never sends rental_amount — server calculates it.
+ * API client for the redesigned rental domain.
+ *
+ * Key changes from Phase 05:
+ *   - startRental: accepts skateIds[] (multiple), NO payments at creation
+ *   - returnRentalItem: item-level return (partial return support)
+ *   - extendRentalItem: per-item extension
+ *   - finalizeRental: final payment after all items returned
+ *   - Billing is based on ACTUAL duration (server-computed at return)
+ *   - Server time is authoritative — no browser Date.now() for billing
  */
 
 import api from '../../services/api'
 
 // ---------------------------------------------------------------------------
-// DTOs mirroring backend types
+// Status types
 // ---------------------------------------------------------------------------
 
-export type RentalStatus = 'active' | 'returned' | 'cancelled'
+export type RentalStatus = 'active' | 'completed' | 'cancelled' | 'returned'
 export type RentalOperationalStatus = 'normal' | 'ending_soon' | 'overdue'
+export type RentalItemStatus = 'active' | 'returned' | 'cancelled'
+
+// ---------------------------------------------------------------------------
+// Embedded info types
+// ---------------------------------------------------------------------------
 
 export interface RentalSkateInfo {
   id:        number
@@ -35,40 +46,106 @@ export interface RentalCashierInfo {
   name: string
 }
 
+// ---------------------------------------------------------------------------
+// RentalItemDTO — one per-skate lifecycle unit
+// ---------------------------------------------------------------------------
+
+export interface RentalItemDTO {
+  id:                      number
+  rentalId:                number
+  skate:                   RentalSkateInfo
+  startedAt:               string
+  expectedDurationMinutes: number
+  expectedEndAt:           string
+  returnedAt:              string | null
+  actualDurationMinutes:   number | null
+  actualAmount:            number | null
+  pricePerHour:            number
+  inspectionId:            number | null
+  status:                  RentalItemStatus
+  // Server-computed for active items
+  operationalStatus?:      RentalOperationalStatus
+  remainingMinutes?:       number
+}
+
+// ---------------------------------------------------------------------------
+// RentalDTO — full Rental with items
+// ---------------------------------------------------------------------------
+
 export interface RentalDTO {
-  id:              number
-  rentalCode:      string
-  skate:           RentalSkateInfo
-  customer:        RentalCustomerInfo
-  cashier:         RentalCashierInfo
-  shiftId:         number | null
-  durationMinutes: number
-  pricePerHour:    number
-  rentalAmount:    number
-  startedAt:       string
-  expectedEndAt:   string
-  returnedAt:      string | null
-  status:          RentalStatus
-  notes:           string | null
-  lateFeeDetails?: {
-    lateMinutes:   number
-    calculatedFee: number
-  }
-  createdAt:       string
-  updatedAt:       string
-  [key: string]:   unknown  // DataTable generic constraint
+  id:            number
+  rentalCode:    string
+  invoiceNumber: string | null
+  customer:      RentalCustomerInfo
+  cashier:       RentalCashierInfo
+  shiftId:       number | null
+  items:         RentalItemDTO[]
+  totalAmount:   number | null
+  startedAt:     string
+  completedAt:   string | null
+  status:        RentalStatus
+  notes:         string | null
+  createdAt:     string
+  updatedAt:     string
+  [key: string]: unknown
 }
 
 export interface ActiveRentalDTO extends RentalDTO {
-  operationalStatus: RentalOperationalStatus
-  remainingMinutes:  number
+  hasOverdueItems:    boolean
+  hasEndingSoonItems: boolean
 }
+
+// ---------------------------------------------------------------------------
+// Request bodies
+// ---------------------------------------------------------------------------
+
+export interface StartRentalBody {
+  skateIds:        number[]   // 1..N, all must be available
+  customerId:      number
+  durationMinutes: number
+  notes?:          string
+  reservationId?:  number
+}
+
+export interface ReturnRentalItemBody {
+  inspection: {
+    wheelsCondition:    'good' | 'minor_damage' | 'damaged' | 'broken'
+    brakeCondition:     'good' | 'minor_damage' | 'damaged' | 'broken'
+    strapCondition:     'good' | 'minor_damage' | 'damaged' | 'broken'
+    bearingsCondition:  'good' | 'minor_damage' | 'damaged' | 'broken'
+    bodyCondition:      'good' | 'minor_damage' | 'damaged' | 'broken'
+    maintenanceRequired: boolean
+    otherNotes?:        string
+  }
+}
+
+export interface ExtendRentalItemBody {
+  extendByMinutes: number
+}
+
+export interface FinalizeRentalBody {
+  payments: { paymentMethodId: number; amount: number }[]
+}
+
+// Legacy: kept for backward compat
+export interface ReturnRentalBody extends ReturnRentalItemBody {}
+
+// ---------------------------------------------------------------------------
+// Response types
+// ---------------------------------------------------------------------------
 
 export interface PaginationMeta {
   page:       number
   perPage:    number
   total:      number
   totalPages: number
+}
+
+export interface ReturnItemResult {
+  item:           RentalItemDTO
+  rental:         RentalDTO
+  lastInspectionId: number
+  isLastItem:     boolean
 }
 
 export interface PricePreviewDTO {
@@ -78,33 +155,18 @@ export interface PricePreviewDTO {
 }
 
 export interface CustomerRentalHistoryItem {
-  id:              number
-  rentalCode:      string
-  skate:           RentalSkateInfo
-  durationMinutes: number
-  rentalAmount:    number
-  startedAt:       string
-  expectedEndAt:   string
-  returnedAt:      string | null
-  status:          RentalStatus
-  [key: string]:   unknown
+  id:            number
+  rentalCode:    string
+  items:         RentalItemDTO[]
+  totalAmount:   number | null
+  startedAt:     string
+  completedAt:   string | null
+  status:        RentalStatus
+  [key: string]: unknown
 }
 
 // ---------------------------------------------------------------------------
-// Request body
-// ---------------------------------------------------------------------------
-
-export interface StartRentalBody {
-  skateId:         number
-  customerId:      number
-  durationMinutes: number
-  notes?:          string
-  reservationId?:  number
-  payments:        { paymentMethodId: number; amount: number }[]
-}
-
-// ---------------------------------------------------------------------------
-// Helper — build query string
+// Helpers
 // ---------------------------------------------------------------------------
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -117,13 +179,14 @@ function buildQuery(params: Record<string, string | number | undefined>): string
 }
 
 // ---------------------------------------------------------------------------
-// Rentals label helpers
+// Status label helpers
 // ---------------------------------------------------------------------------
 
 export function getRentalStatusLabel(status: RentalStatus): string {
   switch (status) {
     case 'active':    return 'نشط'
-    case 'returned':  return 'مُعاد'
+    case 'completed': return 'مكتمل'
+    case 'returned':  return 'مُعاد'   // legacy
     case 'cancelled': return 'ملغي'
   }
 }
@@ -136,46 +199,50 @@ export function getOperationalStatusLabel(status: RentalOperationalStatus): stri
   }
 }
 
-// Map operational status to BadgeStatus (DEC-064, DEC-066)
 export function operationalStatusToBadge(status: RentalOperationalStatus): 'active' | 'overdue' | 'rented' {
   switch (status) {
-    case 'normal':      return 'active'      // success green
-    case 'ending_soon': return 'rented'      // info blue (warning-adjacent, reuse rented for now)
-    case 'overdue':     return 'overdue'     // danger red
+    case 'normal':      return 'active'
+    case 'ending_soon': return 'rented'
+    case 'overdue':     return 'overdue'
   }
 }
 
-// Map lifecycle status to BadgeStatus
 export function lifetimeStatusToBadge(status: RentalStatus): 'active' | 'completed' | 'cancelled' {
   switch (status) {
     case 'active':    return 'active'
-    case 'returned':  return 'completed'
+    case 'completed': return 'completed'
+    case 'returned':  return 'completed'  // legacy
     case 'cancelled': return 'cancelled'
   }
 }
 
+export function getItemStatusLabel(status: RentalItemStatus): string {
+  switch (status) {
+    case 'active':    return 'نشط'
+    case 'returned':  return 'مُعاد'
+    case 'cancelled': return 'ملغي'
+  }
+}
+
 // ---------------------------------------------------------------------------
-// Service
+// Rental service
 // ---------------------------------------------------------------------------
 
 export const rentalsService = {
   /**
-   * POST /api/v1/rentals — start rental (Rental POS)
-   * DEC-065: Do NOT send rental_amount — server calculates it.
+   * POST /api/v1/rentals — start multi-skate rental (NO payment at creation)
    */
   create: (body: StartRentalBody) =>
     api.post<{ success: boolean; data: RentalDTO }>('/api/v1/rentals', body),
 
   /**
-   * GET /api/v1/rentals/active — active rentals with operational status
-   * DEC-064, DEC-066: server computes operationalStatus and remainingMinutes
+   * GET /api/v1/rentals/active — active rentals with per-item operational status
    */
   getActive: () =>
     api.get<{ success: boolean; data: ActiveRentalDTO[] }>('/api/v1/rentals/active'),
 
   /**
    * GET /api/v1/rentals/calculate-price — price preview (server-authoritative)
-   * DEC-065, DEC-067: server calculates and rounds rental_amount
    */
   calculatePrice: (durationMinutes: number) =>
     api.get<{ success: boolean; data: PricePreviewDTO }>(
@@ -183,29 +250,41 @@ export const rentalsService = {
     ),
 
   /**
-   * GET /api/v1/rentals — list all rentals with filters
+   * GET /api/v1/rentals/config — rental POS configuration (rate, durations, grace)
    */
-  list: (params?: { page?: number; perPage?: number; status?: string; skateId?: number; customerId?: number }) =>
+  getConfig: () =>
+    api.get<{ success: boolean; data: { pricePerHour: number; durationOptions: number[]; gracePeriodMinutes: number } }>(
+      '/api/v1/rentals/config',
+    ),
+
+  /**
+   * GET /api/v1/rentals — paginated list with filters
+   */
+  list: (params?: { page?: number; perPage?: number; status?: string; customerId?: number }) =>
     api.get<{ success: boolean; data: RentalDTO[]; pagination: PaginationMeta }>(
       `/api/v1/rentals${buildQuery(params ?? {})}`,
     ),
 
   /**
-   * GET /api/v1/rentals/:id — single rental detail
+   * GET /api/v1/rentals/:id — single rental with all items
    */
   get: (id: number) =>
     api.get<{ success: boolean; data: RentalDTO }>(`/api/v1/rentals/${id}`),
 
   /**
-   * GET /api/v1/rentals/config — Rental POS configuration (F-06 — DEC-069)
-   * Returns the configured hourly rate and standard duration options from settings.
-   * Frontend must NOT define standard durations as a business constant (BR-26).
+   * POST /api/v1/rentals/:id/cancel — cancel active rental
    */
-  getConfig: () =>
-    api.get<{ success: boolean; data: { pricePerHour: number; durationOptions: number[]; lateFeePerMinute: number } }>('/api/v1/rentals/config'),
+  cancel: (id: number) =>
+    api.post<{ success: boolean; data: RentalDTO }>(`/api/v1/rentals/${id}/cancel`, {}),
 
   /**
-   * GET /api/v1/customers/:id/rentals — customer rental history (DEC-055)
+   * POST /api/v1/rentals/:id/finalize — collect final payment after all items returned
+   */
+  finalize: (id: number, body: FinalizeRentalBody) =>
+    api.post<{ success: boolean; data: RentalDTO }>(`/api/v1/rentals/${id}/finalize`, body),
+
+  /**
+   * GET /api/v1/customers/:id/rentals — customer rental history
    */
   getCustomerRentals: (customerId: number, params?: { page?: number; perPage?: number }) =>
     api.get<{ success: boolean; data: CustomerRentalHistoryItem[]; pagination: PaginationMeta }>(
@@ -213,23 +292,44 @@ export const rentalsService = {
     ),
 
   /**
-   * POST /api/v1/rentals/:id/return — return a rental and process late fee (Phase 07)
+   * Legacy: POST /api/v1/rentals/:id/return — single-skate return (compat)
+   * Use rentalItemsService.return() for the new per-item flow.
    */
   return: (id: number, body: ReturnRentalBody) =>
-    api.post<{ success: boolean; data: RentalDTO & { lastInspectionId: number } }>(`/api/v1/rentals/${id}/return`, body),
+    api.post<{ success: boolean; data: RentalDTO & { lastInspectionId: number } }>(
+      `/api/v1/rentals/${id}/return`,
+      body,
+    ),
 }
 
-export interface ReturnRentalBody {
-  waivedFee: number
-  waiverReason?: string
-  payments: { paymentMethodId: number; amount: number }[]
-  inspection: {
-    wheelsCondition: 'good' | 'minor_damage' | 'damaged' | 'broken'
-    brakeCondition: 'good' | 'minor_damage' | 'damaged' | 'broken'
-    strapCondition: 'good' | 'minor_damage' | 'damaged' | 'broken'
-    bearingsCondition: 'good' | 'minor_damage' | 'damaged' | 'broken'
-    bodyCondition: 'good' | 'minor_damage' | 'damaged' | 'broken'
-    maintenanceRequired: boolean
-    otherNotes?: string
-  }
+// ---------------------------------------------------------------------------
+// Rental Items service — per-skate operations
+// ---------------------------------------------------------------------------
+
+export const rentalItemsService = {
+  /**
+   * GET /api/v1/rental-items/:id — single item detail
+   */
+  get: (itemId: number) =>
+    api.get<{ success: boolean; data: RentalItemDTO }>(`/api/v1/rental-items/${itemId}`),
+
+  /**
+   * POST /api/v1/rental-items/:id/return — return a single item (partial return)
+   * Server captures returned_at IMMEDIATELY — billing is frozen server-side.
+   */
+  return: (itemId: number, body: ReturnRentalItemBody) =>
+    api.post<{ success: boolean; data: ReturnItemResult }>(
+      `/api/v1/rental-items/${itemId}/return`,
+      body,
+    ),
+
+  /**
+   * POST /api/v1/rental-items/:id/extend — extend a single item's expected duration
+   * Does NOT change billing — billing uses actual_duration_minutes at return.
+   */
+  extend: (itemId: number, body: ExtendRentalItemBody) =>
+    api.post<{ success: boolean; data: RentalItemDTO }>(
+      `/api/v1/rental-items/${itemId}/extend`,
+      body,
+    ),
 }

@@ -31,17 +31,14 @@ import {
   lifetimeStatusToBadge,
 } from './rentals.service'
 import { formatCurrency } from '../../utils/currency'
+import { formatDateTimeAr } from '../../utils/date'
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatDateTime(isoStr: string): string {
-  return new Date(isoStr).toLocaleString('ar-EG', {
-    month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
+const formatDateTime = formatDateTimeAr
+
 
 // ---------------------------------------------------------------------------
 // Main Page
@@ -82,10 +79,23 @@ export default function RentalsPage() {
 
   const columns: TableColumn<any>[] = [
     { key: 'rentalCode', header: 'كود الإيجار', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{r.rentalCode}</span> },
-    { key: 'customer', header: 'العميل', render: (_, r: any) => r.customer.name },
-    { key: 'skate', header: 'الاسكيت', render: (_, r: any) => `${r.skate.skateCode} / ${r.skate.size}` },
-    { key: 'duration', header: 'المدة', render: (_, r: any) => `${r.durationMinutes} د` },
-    { key: 'amount', header: 'المبلغ', render: (_, r: any) => formatCurrency(r.rentalAmount) },
+    { key: 'customer', header: 'العميل', render: (_, r: any) => r.customer?.name ?? '—' },
+    {
+      key: 'skates', header: 'الاسكيتات',
+      render: (_, r: any) => {
+        const items = r.items ?? []
+        if (items.length === 0) return '—'
+        const codes = items.map((i: any) => i.skate?.skateCode).filter(Boolean)
+        return codes.join(' ، ')
+      }
+    },
+    {
+      key: 'amount', header: 'المبلغ',
+      render: (_, r: any) => {
+        const amount = r.totalAmount ?? r.items?.reduce((s: number, i: any) => s + (i.actualAmount ?? 0), 0)
+        return amount != null ? formatCurrency(amount) : '— (لم يُحدد بعد)'
+      }
+    },
     { key: 'startedAt', header: 'البداية', render: (_, r: any) => <span dir="ltr">{formatDateTime(r.startedAt)}</span> },
     { key: 'status', header: 'الحالة', render: (_, r: any) => <Badge status={lifetimeStatusToBadge(r.status)}>{getRentalStatusLabel(r.status)}</Badge> },
     {
