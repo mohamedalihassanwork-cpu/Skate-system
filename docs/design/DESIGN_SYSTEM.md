@@ -620,3 +620,16 @@ Before marking any new page or screen as complete:
 *Last updated: 2026-09-10 — Phase 03.5 Stage 1 establishment*  
 *Authority: Owner-approved (OD-001 through OD-005)*  
 *Reference: `KOSHK_SKATE_VISUAL_DESIGN_REFERENCE.md`, `docs/decisions/DECISION_LOG.md`*
+
+## Desktop audit refinements — 2026-10-11
+
+The owner-requested desktop audit preserves the existing visual identity and component APIs. New rules use `@media screen and (min-width: 1024px)`; mobile/tablet below 1024px and print output retain their original styling. The existing sidebar breakpoint at 768px is unchanged.
+
+- `styles/desktop.css` supplies existing markup's missing layout utilities and desktop component refinements, using approved tokens. It is loaded after the page styles in `main.tsx`.
+- Missing legacy token names are aliases in `design-system.css`, scoped to desktop screen media. They do not replace the brand palette or introduce new fonts.
+- Page titles use the approved 30px token; text blocks keep a readable minimum width and controls wrap before compressing headings. Content remains bounded by the existing 1280px maximum and 32px gutters.
+- Shared data rows use the approved 56px density; filters, forms and long identifiers can shrink or wrap without expanding the page.
+- Desktop success/danger Badge foregrounds use the existing primary text token because the original small-text pairs measure 3.15:1/3.64:1. Semantic backgrounds and labels remain unchanged; corrected ratios are 12.78:1/11.71:1. This resolves the conflict with the design system's 4.5:1 text requirement without changing brand colors (DEC-081).
+- Existing shared dialogs retain their APIs and workflow, with desktop focus containment, focus restoration and a bounded body scroller. Rental dialogs retain their own error-recovery scroll target and pinned action area.
+
+See [the desktop audit](../quality/DESKTOP_UI_UX_AUDIT.md) for coverage, evidence, limitations and remaining legacy findings.

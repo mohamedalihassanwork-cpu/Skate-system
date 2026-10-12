@@ -157,3 +157,14 @@ See `docs/phases/PHASE_04_CUSTOMERS_MODULE.md` for full test matrix.
 ---
 
 *Last updated: 2026-09-15 (Phase 04 — documentation reconciliation)*
+
+---
+
+## Desktop UI/UX audit — 2026-10-11
+
+**Status:** IMPLEMENTED — desktop presentation changes; verification evidence is maintained in the [central desktop audit report](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+- **Source coverage:** Customers list and profile, create/edit dialogs, and activation/deactivation confirmations.
+- **Changes:** The profile history table now follows desktop row spacing and header emphasis. Long profile values can shrink and wrap. The list continues to use the shared DataTable, SearchBar, IconButton, Modal and ConfirmDialog.
+- **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
+- **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.

@@ -52,7 +52,7 @@ export default function ExpenseReport({ startDate, endDate }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       {/* Hero Card */}
-      <div style={{
+      <div className="report-hero" style={{
         padding: 'var(--space-8)',
         borderRadius: 'var(--radius-lg)',
         backgroundColor: 'var(--color-danger-50)',
@@ -68,13 +68,13 @@ export default function ExpenseReport({ startDate, endDate }: Props) {
               {formatCurrency(data.totalExpenses)}
             </h2>
           </div>
-          <div style={{ padding: 'var(--space-4)', backgroundColor: 'var(--color-danger-100)', borderRadius: 'var(--radius-full)' }}>
+          <div className="report-hero-icon" style={{ padding: 'var(--space-4)', backgroundColor: 'var(--color-danger-100)', borderRadius: 'var(--radius-full)' }}>
             <TrendingDown size={40} style={{ color: 'var(--color-danger-600)' }} />
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
+      <div className="report-charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
         {/* Timeline Chart */}
         <div style={{
           padding: 'var(--space-6)',

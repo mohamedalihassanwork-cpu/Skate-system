@@ -320,3 +320,9 @@ Every list/table must have an empty state (Arabic text, contextual icon).
 ---
 
 *Last updated: 2026-09-09*
+
+## Desktop presentation layer — 2026-10-11
+
+The desktop audit adds `apps/web/src/styles/desktop.css`, imported after `App.tsx` in `main.tsx`. It contains only screen media rules at or above 1024px. Component/page hooks preserve existing DOM below that breakpoint, and desktop-only interaction changes are guarded with `matchMedia`. Legacy semantic aliases live in `design-system.css` with the same screen/width guard. Existing API clients, routing, permissions and business state remain unchanged.
+
+`tests/desktop_ui_audit.py` provides isolated browser presentation coverage using synthetic intercepted API responses; it does not validate backend authorization, persistence or financial correctness. See [desktop audit evidence](../quality/DESKTOP_UI_UX_AUDIT.md).

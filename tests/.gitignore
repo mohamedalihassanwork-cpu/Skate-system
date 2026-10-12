@@ -1,0 +1,3 @@
+﻿# Generated browser evidence; keep the reusable harness in version control.
+desktop-artifacts/
+__pycache__/

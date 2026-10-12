@@ -1,7 +1,7 @@
-﻿# Module: Notifications
+# Module: Notifications
 
-**Status:** PLANNED / NOT IMPLEMENTED
-**Last updated:** 2026-09-09
+**Status:** IMPLEMENTED — desktop presentation audited; see phase specification for workflow verification
+**Last updated:** 2026-10-11
 
 ---
 
@@ -13,7 +13,7 @@ Delivers operational alerts to cashiers, primarily for rental expiration warning
 
 ## Current Status
 
-All components PLANNED — No implementation exists.
+`apps/web/src/components/ui/NotificationBell.tsx` implements the existing polling-based notification panel. The desktop audit adds Escape/outside-click dismissal and bounded panel height, and improves count/select focus visibility. Notification polling, sound settings and mobile interaction behavior are unchanged.
 
 ---
 
@@ -96,3 +96,9 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+## Desktop audit evidence — 2026-10-11
+
+The historical target sections below the current status are not a claim that the implemented frontend is missing. Detailed current behavior and earlier test status remain in the Phase 15/17 specifications. This change closes no phase or backend verification gap.
+
+See [Desktop UI/UX audit](../quality/DESKTOP_UI_UX_AUDIT.md) for route, state and keyboard checks, and mobile-preservation evidence.

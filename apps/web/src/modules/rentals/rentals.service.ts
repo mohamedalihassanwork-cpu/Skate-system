@@ -63,6 +63,9 @@ export interface RentalItemDTO {
   pricePerHour:            number
   inspectionId:            number | null
   status:                  RentalItemStatus
+  // Existing server-computed billing fields used by the finalization view.
+  lateMinutes:             number | null
+  lateFeeCollected:        number | null
   // Server-computed for active items
   operationalStatus?:      RentalOperationalStatus
   remainingMinutes?:       number

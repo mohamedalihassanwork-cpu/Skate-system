@@ -17,6 +17,7 @@ import { ToastProvider, ErrorBoundary } from './components/ui'
 import { PrintProvider } from './contexts/PrintContext'
 import './styles/index.css'
 import App from './App.tsx'
+import './styles/desktop.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

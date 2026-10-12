@@ -95,7 +95,11 @@ export function Modal({
   useEffect(() => {
     if (modalState !== 'visible') return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        const dialogs = document.querySelectorAll('.modal-container')
+        if (window.matchMedia('(min-width: 1024px)').matches && dialogs[dialogs.length - 1] !== dialogRef.current) return
+        onClose()
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
@@ -103,12 +107,57 @@ export function Modal({
 
   // Focus first focusable element when modal opens (not during closing animation).
   useEffect(() => {
-    if (!isOpen || isClosing) return
+    if (!isOpen || isClosing || window.matchMedia('(min-width: 1024px)').matches) return
     const focusable = dialogRef.current?.querySelector<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
     focusable?.focus()
   }, [isOpen, isClosing])
+
+  // Desktop keyboard containment; preserve the existing mobile interaction path.
+  const isRendered = modalState !== 'hidden'
+  useEffect(() => {
+    if (!isRendered) return
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const origin = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const isTopmost = () => {
+      const dialogs = document.querySelectorAll('.modal-container')
+      return dialogs[dialogs.length - 1] === dialog
+    }
+    const focusables = () => Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(element => element.getClientRects().length > 0)
+    const frame = requestAnimationFrame(() => {
+      if (isTopmost() && window.matchMedia('(min-width: 1024px)').matches) (focusables()[0] ?? dialog).focus()
+    })
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !isTopmost() || !window.matchMedia('(min-width: 1024px)').matches) return
+      const controls = focusables()
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (!first) { event.preventDefault(); dialog.focus(); return }
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus()
+      }
+    }
+    const onFocusIn = (event: FocusEvent) => {
+      if (isTopmost() && window.matchMedia('(min-width: 1024px)').matches && event.target instanceof Node && !dialog.contains(event.target)) {
+        (focusables()[0] ?? dialog).focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+      if (origin?.isConnected && window.matchMedia('(min-width: 1024px)').matches &&
+          (dialog.contains(document.activeElement) || document.activeElement === document.body)) origin.focus()
+    }
+  }, [isRendered])
 
   // Scroll lock — maintained throughout the animation, released only on 'hidden'.
   useEffect(() => {
@@ -133,6 +182,7 @@ export function Modal({
       <div
         ref={dialogRef}
         role="dialog"
+        tabIndex={-1}
         aria-modal="true"
         aria-labelledby={titleId}
         className={`modal-container${isClosing ? ' modal-container--closing' : ''}`}

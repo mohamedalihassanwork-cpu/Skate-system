@@ -95,3 +95,16 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+---
+
+## Desktop UI/UX audit — 2026-10-11
+
+**Status:** IMPLEMENTED — desktop presentation changes; verification evidence is maintained in the [central desktop audit report](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+- **Source coverage:** Sales POS catalog/search/categories, cart quantities and split payments, sales history, sale-details dialog and cancellation confirmation.
+- **Changes:** The desktop POS catalog and cart fit the available width beside the sidebar. Categories wrap, long product names remain visible, and the cart heading uses inverse text on navy. Catalog and cart scroll independently; checkout remains reachable as payment rows grow. Sales history inherits shared desktop table improvements. Existing native cancellation confirmations and the bespoke sale-details modal remain recorded cross-breakpoint findings in the central report.
+- **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
+- **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
+
+The original planned-only sections above are historical stubs. Implemented frontend coverage is listed here and in the central audit; implementation and backend verification status are governed by the current project state and phase records.

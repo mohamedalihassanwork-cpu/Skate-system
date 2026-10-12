@@ -950,3 +950,18 @@ When extending an existing component:
 *Last updated: 2026-09-15 — Phase 04: IconButton §4.19 added (SYS-002, DEC-057)*  
 *Authority: Owner-approved (OD-001 through OD-005; DEC-057)*  
 *Reference: `docs/design/DESIGN_SYSTEM.md`*
+
+## Desktop-only refinements — 2026-10-11
+
+No new UI component or dependency was introduced. Existing APIs remain unchanged.
+
+| Component/pattern | Desktop refinement |
+|---|---|
+| Badge | `data-variant` identifies the existing resolved semantic variant; desktop success/danger text uses the approved primary text token for AA contrast. |
+| Modal | Initial focus, Tab/Shift+Tab containment, Escape limited to the topmost shared dialog, and return to trigger; scrollable content within a bounded dialog. Desktop guards preserve the mobile interaction path. |
+| DataTable | Existing component retained; scoped CSS provides readable headers, tabular numbers, 56px rows, wrapping and contained horizontal scrolling. |
+| FormFields | Existing controls retained; missing legacy class-only controls receive the same desktop base styling; helper/focus contrast and select-arrow clearance corrected. |
+| App shell | Desktop route title, keyboard skip link and route focus; original mobile title/drawer behavior remains. |
+| NotificationBell | Desktop Escape/outside-click dismissal, bounded panel, readable count and visible select focus. Polling/sound behavior unchanged. |
+
+Legacy raw tables and the sale-details overlay remain existing implementation, not new shared alternatives. Their future migration is recorded in the [audit](../quality/DESKTOP_UI_UX_AUDIT.md).

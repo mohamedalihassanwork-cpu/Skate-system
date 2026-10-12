@@ -1,7 +1,7 @@
 ﻿# Module: Reports
 
-**Status:** PLANNED / NOT IMPLEMENTED
-**Last updated:** 2026-09-09
+**Status:** IMPLEMENTED ? PARTIALLY VERIFIED (see phase specification)
+**Last updated:** 2026-10-11 (desktop UI audit)
 
 ---
 
@@ -29,7 +29,7 @@ All components PLANNED — No implementation exists.
 
 ## Frontend
 
-**Target location:** `apps/web/src/modules/` (path TBD during implementation)
+**Implemented page:** `apps/web/src/modules/reports/ReportsPage.tsx`
 
 ---
 
@@ -96,3 +96,9 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+## Desktop UI audit ? 2026-10-11
+
+Reviewed all 11 tabs, charts, date controls, exports and list/empty/loading/error states. Desktop report panes now use page scrolling, a sticky secondary navigation column, shrinkable charts and KPI cards, wrapping controls and readable operating-result contrast. The existing generic-list field-formatting heuristic and native export alerts remain outside this layout-only change.
+
+Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.

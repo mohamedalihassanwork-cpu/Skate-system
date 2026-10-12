@@ -182,3 +182,14 @@ Per `docs/00-governance/DEFINITION_OF_DONE.md` and `docs/phases/PHASE_03_SKATES_
 ---
 
 *Last updated: 2026-09-10 (Final reconciliation — IMPL-001 to IMPL-004 resolved — Phase 03 fully specified)*
+
+---
+
+## Desktop UI/UX audit — 2026-10-11
+
+**Status:** IMPLEMENTED — desktop presentation changes; verification evidence is maintained in the [central desktop audit report](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+- **Source coverage:** Inventory cards and filters, create and edit dialogs, disabled and rental/reservation status presentation.
+- **Changes:** Create/edit forms use a 16px desktop gap between existing shared fields and field groups. Long inventory codes/types/notes wrap inside cards without pushing the status badge out of the card.
+- **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
+- **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.

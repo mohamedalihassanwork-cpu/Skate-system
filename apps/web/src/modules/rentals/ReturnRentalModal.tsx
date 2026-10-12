@@ -96,7 +96,7 @@ export function ReturnRentalModal({ isOpen, onClose, item, onSuccess }: ReturnRe
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`إعادة الاسكيت: ${item.skate.skateCode}`} size="lg">
-      <div ref={modalBodyRef} style={{ maxHeight: '70vh', overflowY: 'auto', padding: '2px' }}>
+      <div ref={modalBodyRef} className="rental-modal-content" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '2px' }}>
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
 
         {/* Item summary */}
@@ -150,7 +150,7 @@ export function ReturnRentalModal({ isOpen, onClose, item, onSuccess }: ReturnRe
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+      <div className="rental-modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
         <Button variant="ghost" onClick={onClose} disabled={loading}>إلغاء</Button>
         <Button
           id="confirm-return-item-btn"
@@ -161,6 +161,23 @@ export function ReturnRentalModal({ isOpen, onClose, item, onSuccess }: ReturnRe
           <CheckCircle size={16} style={{ marginInlineEnd: 6 }} /> تأكيد الإعادة
         </Button>
       </div>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .modal-container .modal-body:has(> .rental-modal-content) {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            overflow: hidden;
+          }
+          .modal-body > .rental-modal-content {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none !important;
+            padding: var(--space-1) !important;
+          }
+          .modal-body > .rental-modal-actions { flex: 0 0 auto; flex-wrap: wrap; }
+        }
+      `}</style>
     </Modal>
   )
 }

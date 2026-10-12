@@ -181,7 +181,7 @@ export default function SalesPOSPage() {
   }
 
   return (
-    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--header-height))' }}>
+    <div className="page-container sales-pos-page" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--header-height))' }}>
       {/* Page Header */}
       <div className="page-header" style={{ flexShrink: 0 }}>
         <div className="page-header-text">
@@ -191,7 +191,7 @@ export default function SalesPOSPage() {
       </div>
 
       {/* POS Layout: Product Area + Cart Panel */}
-      <div style={{
+      <div className="sales-pos-workspace" style={{
         flex: 1,
         minHeight: 0,
         display: 'flex',
@@ -202,11 +202,11 @@ export default function SalesPOSPage() {
         overflow: 'hidden',
       }}>
         {/* Main Product Area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: 'var(--space-5)', overflow: 'hidden' }}>
+        <div className="sales-pos-catalog" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: 'var(--space-5)', overflow: 'hidden' }}>
           
           {/* Search & Categories Toolbar */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-5)', flexShrink: 0 }}>
-            <div style={{ width: '280px', flexShrink: 0 }}>
+          <div className="sales-pos-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-5)', flexShrink: 0 }}>
+            <div className="sales-pos-search" style={{ width: '280px', flexShrink: 0 }}>
               <SearchBar
                 value={searchTerm}
                 onChange={setSearchTerm}
@@ -214,7 +214,7 @@ export default function SalesPOSPage() {
                 onClear={() => setSearchTerm('')}
               />
             </div>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', flex: 1, alignItems: 'center' }}>
+            <div className="sales-pos-categories" style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', flex: 1, alignItems: 'center' }}>
               <Button 
                 variant={activeCategory === null ? 'primary' : 'secondary'} 
                 size="sm" 
@@ -236,7 +236,7 @@ export default function SalesPOSPage() {
           </div>
 
           {/* Products Grid */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div className="sales-pos-products" style={{ flex: 1, overflowY: 'auto' }}>
             {products.length === 0 ? (
               <EmptyState
                 icon={PackageOpen}
@@ -287,7 +287,7 @@ export default function SalesPOSPage() {
                       }}>
                         <ShoppingCart style={{ color: 'var(--color-text-muted)', opacity: 0.35 }} size={28} />
                       </div>
-                      <h4 style={{
+                      <h4 className="sales-pos-product-name" style={{
                         fontWeight: 'var(--font-weight-semibold)' as any,
                         fontSize: 'var(--font-size-sm)',
                         color: 'var(--color-navy-800)',
@@ -298,7 +298,7 @@ export default function SalesPOSPage() {
                       }} title={p.nameAr}>
                         {p.nameAr}
                       </h4>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 'var(--space-1)' }}>
+                      <div className="sales-pos-product-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 'var(--space-1)' }}>
                         <span style={{ color: 'var(--color-navy-800)', fontWeight: 'var(--font-weight-bold)' as any, fontSize: 'var(--font-size-base)' }} dir="ltr">{p.price} ج.م</span>
                         <span style={{
                           fontSize: 'var(--font-size-xs)',
@@ -318,7 +318,7 @@ export default function SalesPOSPage() {
         </div>
 
         {/* Cart Panel */}
-        <div style={{
+        <div className="sales-pos-cart" style={{
           width: '360px',
           flexShrink: 0,
           backgroundColor: 'var(--color-page-bg)',
@@ -337,7 +337,7 @@ export default function SalesPOSPage() {
             alignItems: 'center',
             flexShrink: 0,
           }}>
-            <h3 style={{ fontWeight: 'var(--font-weight-semibold)' as any, display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--font-size-lg)', margin: 0 }}>
+            <h3 className="sales-pos-cart-title" style={{ fontWeight: 'var(--font-weight-semibold)' as any, display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--font-size-lg)', margin: 0 }}>
               <ShoppingCart size={20} /> السلة الحالية
             </h3>
             <span style={{
@@ -352,7 +352,7 @@ export default function SalesPOSPage() {
           </div>
 
           {/* Cart Items */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div className="sales-pos-cart-items" style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {cart.length === 0 ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
                 <ShoppingCart size={48} style={{ opacity: 0.2, marginBottom: 'var(--space-3)' }} />
@@ -371,7 +371,7 @@ export default function SalesPOSPage() {
                 boxShadow: 'var(--shadow-xs)',
                 position: 'relative',
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-2)', paddingLeft: 'var(--space-6)' }}>
+                <div className="sales-pos-cart-item-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-2)', paddingLeft: 'var(--space-6)' }}>
                   <span style={{ fontWeight: 'var(--font-weight-semibold)' as any, fontSize: 'var(--font-size-sm)', color: 'var(--color-navy-800)' }}>{item.nameAr}</span>
                   <span style={{ fontWeight: 'var(--font-weight-bold)' as any, color: 'var(--color-navy-800)', flexShrink: 0 }} dir="ltr">{item.price * item.cartQuantity} ج.م</span>
                   <button
@@ -430,7 +430,7 @@ export default function SalesPOSPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
                   {payments.map((p, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                    <div key={idx} className="sales-pos-payment-row" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                       <select 
                         className="field-control" 
                         style={{ flex: 1, height: '36px', fontSize: 'var(--font-size-sm)' }}
@@ -488,6 +488,42 @@ export default function SalesPOSPage() {
           </div>
         </div>
       </div>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .sales-pos-page { min-height: 40rem; }
+          .sales-pos-workspace { min-width: 0; }
+          .sales-pos-page .sales-pos-catalog { overflow-y: auto !important; }
+          .sales-pos-page .sales-pos-toolbar { gap: var(--space-3) !important; }
+          .sales-pos-page .sales-pos-search { width: 100% !important; min-width: 0; }
+          .sales-pos-search .searchbar { min-width: 0; max-width: none; width: 100%; }
+          .sales-pos-page .sales-pos-categories {
+            flex: 1 0 100% !important;
+            flex-wrap: wrap;
+            overflow: visible !important;
+          }
+          .sales-pos-categories .btn { max-width: 100%; white-space: normal; }
+          .sales-pos-page .sales-pos-products { flex: 0 0 auto !important; overflow: visible !important; }
+          .sales-pos-page .sales-pos-product-name {
+            height: auto !important;
+            min-height: 2.5em;
+            overflow: visible !important;
+            overflow-wrap: anywhere;
+          }
+          .sales-pos-product-meta { flex-wrap: wrap; gap: var(--space-2); }
+          .sales-pos-page .sales-pos-cart {
+            width: clamp(18rem, 36%, 22.5rem) !important;
+            min-width: 0;
+            overflow-y: auto;
+          }
+          .sales-pos-cart .sales-pos-cart-title { color: var(--color-text-inverse); }
+          .sales-pos-page .sales-pos-cart-items { flex: 1 0 auto !important; overflow: visible !important; }
+          .sales-pos-cart-item-heading { flex-wrap: wrap; }
+          .sales-pos-cart-item-heading > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+          .sales-pos-payment-row > select { min-width: 0; }
+          .sales-pos-payment-row > input { flex-shrink: 0; }
+          .sales-pos-payment-row > button { flex-shrink: 0; }
+        }
+      `}</style>
     </div>
   )
 }

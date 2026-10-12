@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowRight, Clock, Receipt, CheckCircle, RefreshCw } from 'lucide-react'
+import { ArrowRight, Receipt, CheckCircle, RefreshCw } from 'lucide-react'
 import {
   Badge,
   Alert,
@@ -81,7 +81,7 @@ function RentalItemCard({ item, isRentalActive, onReturn, onExtend }: ItemCardPr
       overflow: 'hidden',
     }}>
       {/* Item header */}
-      <div style={{
+      <div className="rental-item-header" style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '10px 14px',
         background: 'var(--color-surface-raised)',
@@ -499,6 +499,16 @@ export default function RentalDetailPage() {
         }
         .invoice-label { font-weight: var(--font-weight-medium); }
         .invoice-amount { font-family: var(--font-family-mono); font-weight: var(--font-weight-bold); }
+        @media screen and (min-width: 1024px) {
+          .detail-section .detail-section-title { text-transform: none; letter-spacing: normal; }
+          .detail-section .detail-value { min-width: 0; overflow-wrap: anywhere; }
+          .detail-section .detail-value[dir="rtl"] { text-align: right; }
+          .rental-item-header { flex-wrap: wrap; gap: var(--space-2); }
+          .rental-item-header > div { min-width: 0; flex-wrap: wrap; overflow-wrap: anywhere; }
+          .invoice-section .invoice-row { gap: var(--space-4); }
+          .invoice-section .invoice-label { min-width: 0; overflow-wrap: anywhere; }
+          .invoice-section .invoice-amount { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        }
       `}</style>
     </div>
   )

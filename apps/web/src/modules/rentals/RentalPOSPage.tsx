@@ -810,6 +810,24 @@ export default function RentalPOSPage() {
         .step-indicator-item.active .step-indicator-label { color: var(--color-primary); font-weight: var(--font-weight-medium); }
         .step-indicator-line { position: absolute; top: 16px; inset-inline-start: calc(50% + 16px); width: calc(100% - 32px); height: 2px; background: var(--color-border); z-index: 0; }
         .step-indicator-item.done .step-indicator-line { background: var(--color-success-text); }
+        @media screen and (min-width: 1024px) {
+          .page-container .step-indicator { max-width: 680px; margin-inline: auto; }
+          .rental-pos-container { width: 100%; min-width: 0; }
+          .rental-pos-step > .rental-pos-step { padding: 0; border: 0; background: transparent; }
+          .rental-pos-step .review-section-title { text-transform: none; letter-spacing: normal; }
+          .rental-pos-step .review-row { align-items: flex-start; gap: var(--space-4); }
+          .rental-pos-step .review-label { flex-shrink: 0; }
+          .rental-pos-step .review-value { min-width: 0; overflow-wrap: anywhere; }
+          .rental-pos-step .customer-result-name,
+          .rental-pos-step .skate-card-code,
+          .rental-pos-step .skate-card-type { overflow-wrap: anywhere; }
+          .rental-pos-step .customer-result-name > svg { flex-shrink: 0; }
+          .rental-pos-step .customer-result-info { font-variant-numeric: tabular-nums; }
+          .rental-pos-actions { flex-wrap: wrap; gap: var(--space-3); }
+          .rental-pos-actions .lucide-chevron-left,
+          .rental-pos-actions .lucide-chevron-right { transform: scaleX(-1); }
+          .step-indicator .step-indicator-label { font-size: var(--font-size-sm); }
+        }
       `}</style>
     </div>
   )

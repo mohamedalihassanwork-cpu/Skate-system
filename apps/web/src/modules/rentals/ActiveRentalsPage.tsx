@@ -23,14 +23,11 @@ import {
 } from '../../components/ui'
 import {
   rentalsService,
-  rentalItemsService,
   type ActiveRentalDTO,
   type RentalItemDTO,
   type RentalDTO,
   getOperationalStatusLabel,
   operationalStatusToBadge,
-  getRentalStatusLabel,
-  lifetimeStatusToBadge,
 } from './rentals.service'
 import { ReturnRentalModal } from './ReturnRentalModal'
 import { FinalizeRentalModal } from './FinalizeRentalModal'
@@ -66,7 +63,7 @@ function RentalItemRow({ item, onReturn }: ItemRowProps) {
   const opLabel = getOperationalStatusLabel(opStatus)
 
   return (
-    <div style={{
+    <div className="active-rental-item" style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '8px 12px',
       background: opStatus === 'overdue' ? 'var(--color-danger-bg)' : opStatus === 'ending_soon' ? 'var(--color-warning-bg)' : 'var(--color-surface-raised)',
@@ -391,6 +388,15 @@ export default function ActiveRentalsPage() {
         .rental-card-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-4); background: var(--color-surface-raised); border-bottom: 1px solid var(--color-border); }
         .rental-card-code { font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
         .rental-card-footer { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-4); background: var(--color-surface-raised); border-top: 1px solid var(--color-border); }
+        @media screen and (min-width: 1024px) {
+          .rental-card .rental-card-header { align-items: flex-start; gap: var(--space-3); }
+          .rental-card-header > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+          .rental-card-header > div:last-child { flex-shrink: 0; justify-content: flex-end; }
+          .rental-card .active-rental-item { flex-wrap: wrap; }
+          .active-rental-item > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+          .active-rental-item > div:last-child { margin-inline-start: auto; }
+          .rental-card-header button { min-width: var(--space-8); min-height: var(--space-8); }
+        }
       `}</style>
     </div>
   )

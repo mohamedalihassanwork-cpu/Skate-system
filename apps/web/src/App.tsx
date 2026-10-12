@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useRef, type ReactNode } from 'react'
-import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   Calendar,
   LayoutDashboard,
@@ -743,6 +743,14 @@ interface TopbarProps {
 
 function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef }: TopbarProps) {
   const { user } = useAuth()
+  const { pathname } = useLocation()
+  const desktopTitle = pageTitle ?? (
+    pathname === '/rentals/new' ? 'إيجار جديد' :
+    pathname === '/rentals/active' ? 'الإيجارات النشطة' :
+    /^\/rentals\/[^/]+$/.test(pathname) ? 'تفاصيل الإيجار' :
+    /^\/customers\/[^/]+$/.test(pathname) ? 'ملف العميل' :
+    [...NAV_ITEMS, ...ADMIN_NAV_ITEMS].find(item => item.to === pathname)?.label ?? 'الرئيسية'
+  )
 
   return (
     <>
@@ -760,7 +768,8 @@ function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef }: TopbarProps) {
           <Menu size={20} aria-hidden="true" />
         </button>
 
-        <span className="topbar-title">{pageTitle ?? 'الرئيسية'}</span>
+        <span className="topbar-title topbar-current-title">{pageTitle ?? 'الرئيسية'}</span>
+        <span className="topbar-title topbar-desktop-title">{desktopTitle}</span>
 
         <div className="topbar-actions">
           {/* Notification bell component (polling + UI) */}
@@ -788,6 +797,12 @@ function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef }: TopbarProps) {
           z-index: var(--z-sticky);
           box-shadow: var(--shadow-xs);
           gap: var(--space-4);
+        }
+
+        .topbar-desktop-title { display: none; }
+        @media screen and (min-width: 1024px) {
+          .topbar-current-title { display: none; }
+          .topbar-desktop-title { display: block; }
         }
 
         .topbar-title {
@@ -879,6 +894,16 @@ function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef }: TopbarProps) {
 function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: string }) {
   const { logout } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
+  const previousPath = useRef(pathname)
+
+  useEffect(() => {
+    if (previousPath.current !== pathname && window.matchMedia('(min-width: 1024px)').matches) {
+      mainRef.current?.focus({ preventScroll: true })
+    }
+    previousPath.current = pathname
+  }, [pathname])
 
   // Persist collapse state in localStorage (OD-005)
   const [collapsed, setCollapsed] = useState(() => {
@@ -934,6 +959,7 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
   return (
     <>
       <div className="app-shell">
+        <a className="desktop-skip-link" href="#main-content">انتقل إلى المحتوى الرئيسي</a>
         <Sidebar
           collapsed={collapsed}
           onToggleCollapse={handleToggleCollapse}
@@ -952,13 +978,32 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
             onMobileMenuOpen={() => setMobileOpen(true)}
             hamburgerRef={hamburgerRef}
           />
-          <main className="app-main" style={{ flex: 1 }}>
+          <main id="main-content" ref={mainRef} tabIndex={-1} className="app-main" style={{ flex: 1 }}>
             {children}
           </main>
         </div>
       </div>
 
       <style>{`
+        .desktop-skip-link { display: none; }
+        @media screen and (min-width: 1024px) {
+          .desktop-skip-link {
+            display: block;
+            position: fixed;
+            inset-block-start: var(--space-3);
+            inset-inline-start: var(--space-4);
+            transform: translateY(-200%);
+            z-index: var(--z-toast);
+            padding: var(--space-3) var(--space-4);
+            background: var(--color-white);
+            color: var(--color-navy-800);
+            border-radius: var(--radius-base);
+            box-shadow: var(--shadow-md);
+          }
+          .desktop-skip-link:focus { transform: translateY(0); }
+          .app-main:focus { outline: none; }
+        }
+
         .app-shell {
           display: flex;
           min-height: 100vh;

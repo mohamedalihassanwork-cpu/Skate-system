@@ -1810,3 +1810,16 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 ---
 
 *Last updated: 2026-10-03 (DEC-075 through DEC-080 added — Phase 05.5 Settings Administration) by AI Agent*
+
+### DEC-081 — Desktop UI audit scope and accessibility corrections
+
+**Date:** 2026-10-11
+**Category:** UI implementation / scope reconciliation
+**Status:** ACTIVE — authorized by the owner's desktop audit and improvement request
+
+- Limit presentation changes to screen widths >=1024px; preserve the existing 768px sidebar switch and all below-desktop/print presentation.
+- Restore existing layouts and missing legacy token aliases using the approved design system and shared components; no new design language, dependency or business behavior.
+- Use the existing primary text token for desktop success/danger badge foregrounds and the financial report's soft semantic panels. The original small badge text pairs fail the approved 4.5:1 requirement; semantic backgrounds and labels are preserved. This is a justified accessibility correction within the approved palette, not a palette replacement.
+- Record existing cross-viewport markup/workflow shortcomings separately. This audit does not close prior business/production verification gaps.
+
+**Evidence:** [Desktop UI/UX audit](../quality/DESKTOP_UI_UX_AUDIT.md).

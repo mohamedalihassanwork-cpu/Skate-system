@@ -97,18 +97,18 @@ export default function AuditLogsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-6 audit-page">
+      <div className="flex items-center gap-4 audit-page-header">
         <Activity className="w-8 h-8 text-indigo-500" />
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">سجل التدقيق</h1>
-          <p className="text-slate-500 text-sm">سجل شامل لجميع الحركات والتغييرات في النظام</p>
+          <h1 className="text-2xl font-bold text-slate-900 audit-page-title">سجل التدقيق</h1>
+          <p className="text-slate-500 text-sm audit-page-subtitle">سجل شامل لجميع الحركات والتغييرات في النظام</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="audit-card">
         <div className="bg-slate-50 border-b p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex flex-col md:flex-row gap-4 items-end audit-filters">
             <div className="space-y-1.5 flex-1 w-full">
               <label className="text-sm font-medium text-slate-700">المستخدم</label>
               <select
@@ -186,8 +186,8 @@ export default function AuditLogsPage() {
               <p>لا يوجد سجلات مطابقة للبحث</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-right">
+            <div className="overflow-x-auto audit-table-scroll">
+              <table className="w-full text-sm text-right audit-data-table">
                 <thead className="bg-slate-50 text-slate-600 font-semibold border-b">
                   <tr>
                     <th className="px-4 py-3 text-center">رقم</th>
@@ -264,6 +264,32 @@ export default function AuditLogsPage() {
           )}
         </div>
       </Card>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .audit-page { padding: var(--page-padding); max-width: var(--content-max-width); margin-inline: auto; min-width: 0; }
+          .audit-page-header { margin-bottom: var(--space-6); }
+          .audit-page-title { font-size: var(--font-size-3xl); color: var(--color-navy-800); margin: 0; }
+          .audit-page-subtitle { color: var(--color-text-secondary); margin: var(--space-1) 0 0; }
+          .audit-page .audit-card { padding: 0 !important; overflow: hidden; min-width: 0; }
+          .audit-page .audit-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+            align-items: end;
+            gap: var(--space-4);
+          }
+          .audit-filters > div { min-width: 0; }
+          .audit-filters label { display: block; color: var(--color-text-secondary); }
+          .audit-filters select { min-width: 0; min-height: 44px; background: var(--color-white); color: var(--color-text-primary); }
+          .audit-filters select:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+          .audit-table-scroll { width: 100%; overflow-x: auto; }
+          .audit-data-table { width: 100%; border-collapse: collapse; direction: rtl; }
+          .audit-data-table th, .audit-data-table td { padding: var(--space-3) var(--space-4); text-align: right; vertical-align: middle; }
+          .audit-data-table th { background: var(--color-page-bg); color: var(--color-text-secondary); font-weight: var(--font-weight-semibold); white-space: nowrap; }
+          .audit-data-table td { border-bottom: 1px solid var(--color-border); color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
+          .audit-data-table tr:last-child td { border-bottom: 0; }
+          .audit-data-table tbody tr:hover { background: var(--color-page-bg); }
+        }
+      `}</style>
     </div>
   )
 }

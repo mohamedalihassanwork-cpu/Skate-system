@@ -333,3 +333,14 @@ Before marking RENTALS as COMPLETED:
 ---
 
 *Last updated: 2026-09-09*
+
+---
+
+## Desktop UI/UX audit — 2026-10-11
+
+**Status:** IMPLEMENTED — desktop presentation changes; verification evidence is maintained in the [central desktop audit report](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+- **Source coverage:** Rental list, all four POS steps, inline customer creation, active cards, rental details and extension, return inspection, finalization payments and damage-report dialogs.
+- **Changes:** Desktop POS progress aligns with the existing form width; the skate-selection step no longer nests two padded cards. RTL step arrows and long labels are corrected. Active/detail cards wrap long content, Arabic detail values align right, and invoice amounts remain legible. Return/finalization dialogs retain one scrollable content area with reachable action rows. Existing frontend DTO declarations now include the nullable lateMinutes and lateFeeCollected fields already returned by the server and rendered by finalization; calculations and payloads are unchanged.
+- **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
+- **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.

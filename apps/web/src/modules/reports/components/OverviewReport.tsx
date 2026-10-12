@@ -73,9 +73,9 @@ export default function OverviewReport({ startDate, endDate }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
+      <div className="report-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
         {statCards.map((stat, idx) => (
-          <div key={idx} style={{
+          <div key={idx} className="report-kpi-card" style={{
             padding: 'var(--space-5)',
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--color-border)',
@@ -98,7 +98,7 @@ export default function OverviewReport({ startDate, endDate }: Props) {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
+      <div className="report-charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
         {/* Pie Chart */}
         <div style={{ padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-card)', backgroundColor: 'var(--color-white)' }}>
           <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)', marginBottom: 'var(--space-6)' }}>حالة الإيجارات</h3>

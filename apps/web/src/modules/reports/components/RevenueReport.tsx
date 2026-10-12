@@ -45,7 +45,7 @@ export default function RevenueReport({ startDate, endDate }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       {/* Hero Card */}
-      <div style={{
+      <div className="report-hero" style={{
         padding: 'var(--space-8)',
         borderRadius: 'var(--radius-lg)',
         backgroundColor: 'var(--color-navy-800)',
@@ -60,7 +60,7 @@ export default function RevenueReport({ startDate, endDate }: Props) {
               {formatCurrency(data.totalRevenue)}
             </h2>
           </div>
-          <div style={{ padding: 'var(--space-4)', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 'var(--radius-full)' }}>
+          <div className="report-hero-icon" style={{ padding: 'var(--space-4)', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 'var(--radius-full)' }}>
             <TrendingUp size={40} style={{ color: 'var(--color-gold-400)' }} />
           </div>
         </div>

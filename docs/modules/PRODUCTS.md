@@ -94,3 +94,16 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+---
+
+## Desktop UI/UX audit — 2026-10-11
+
+**Status:** IMPLEMENTED — desktop presentation changes; verification evidence is maintained in the [central desktop audit report](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+- **Source coverage:** Product list and search, product create/edit dialog and category-create dialog.
+- **Changes:** Product/category forms now use the approved 16px desktop field-group gap. The existing shared DataTable and form components remain in use.
+- **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
+- **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
+
+The original planned-only sections above are historical stubs. Implemented frontend coverage is listed here and in the central audit; implementation and backend verification status are governed by the current project state and phase records.

@@ -1,7 +1,7 @@
 ﻿# Module: Treasury
 
-**Status:** PLANNED / NOT IMPLEMENTED
-**Last updated:** 2026-09-09
+**Status:** IMPLEMENTED ? PARTIALLY VERIFIED (see phase specification)
+**Last updated:** 2026-10-11 (desktop UI audit)
 
 ---
 
@@ -29,7 +29,7 @@ All components PLANNED — No implementation exists.
 
 ## Frontend
 
-**Target location:** `apps/web/src/modules/` (path TBD during implementation)
+**Implemented page:** `apps/web/src/modules/treasury/TreasuryPage.tsx`
 
 ---
 
@@ -96,3 +96,9 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+## Desktop UI audit ? 2026-10-11
+
+Reviewed active/inactive shifts, opening/closing forms, petty-expense entry and the expense list. Desktop close-shift fields and action wrap without squeezing the native date/time input; opening controls, expense headers and long descriptions remain contained. Shift, expense, amount and permission behavior is unchanged. The current page also uses Phase 12 shift/expense functionality.
+
+Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.

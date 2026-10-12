@@ -69,7 +69,7 @@ export default function ReportsPage() {
   const activeTabInfo = REPORT_TABS.find(t => t.id === activeTab)
 
   return (
-    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--header-height))' }}>
+    <div className="page-container reports-page" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--header-height))' }}>
       {/* Page Header */}
       <div className="page-header" style={{ flexShrink: 0 }}>
         <div className="page-header-text">
@@ -78,14 +78,15 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--space-6)', flex: 1, minHeight: 0 }}>
+      <div className="reports-layout" style={{ display: 'flex', gap: 'var(--space-6)', flex: 1, minHeight: 0 }}>
         {/* Report Navigation Sidebar */}
-        <div style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        <div className="reports-navigation" style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {REPORT_TABS.map((tab) => {
               const isActive = activeTab === tab.id
               return (
                 <button
+                  className="reports-navigation-button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   style={{
@@ -119,7 +120,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Main Report Content */}
-        <div style={{
+        <div className="reports-panel" style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -158,8 +159,8 @@ export default function ReportsPage() {
               </h2>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
-              <div style={{
+            <div className="reports-filter-actions" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
+              <div className="reports-date-range" style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 'var(--space-3)',
@@ -189,7 +190,7 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <div className="reports-exports" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                 <Button variant="secondary" size="sm" onClick={() => handleExport('excel')} disabled={isExporting}>
                   <FileDown size={16} />
                   Excel
@@ -207,7 +208,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Report Canvas */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-6)', backgroundColor: 'var(--color-page-bg)' }}>
+          <div className="reports-canvas" style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-6)', backgroundColor: 'var(--color-page-bg)' }}>
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
               {activeTab === 'overview' && <OverviewReport startDate={startDate} endDate={endDate} />}
               {activeTab === 'financial' && <FinancialReport startDate={startDate} endDate={endDate} />}
@@ -220,6 +221,59 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+      <style>{`
+        /* Keep existing tablet/mobile presentation; desktop uses the page scroll. */
+        @media screen and (min-width: 1024px) {
+          .reports-page { height: auto !important; min-height: calc(100vh - var(--header-height)); }
+          .reports-layout {
+            display: grid !important;
+            grid-template-columns: minmax(160px, 190px) minmax(0, 1fr);
+            align-items: start;
+          }
+          .reports-navigation {
+            width: auto !important;
+            position: sticky;
+            top: calc(var(--header-height) + var(--space-4));
+            max-height: calc(100vh - var(--header-height) - var(--space-8));
+          }
+          .reports-navigation-button:focus-visible {
+            outline: 2px solid var(--color-border-focus);
+            outline-offset: -2px;
+          }
+          .reports-panel { height: auto !important; min-width: 0; }
+          .reports-filter-actions { flex: 1 1 32rem; min-width: 0; }
+          .reports-date-range { flex: 1 1 19rem; min-width: 0; }
+          .reports-date-range > div { flex: 1; min-width: 0; width: auto !important; }
+          .reports-exports { flex-wrap: wrap; }
+          .reports-canvas { overflow: visible !important; min-width: 0; }
+          .report-charts-grid {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)) !important;
+          }
+          .report-charts-grid > div { min-width: 0; }
+          .reports-page .recharts-legend-item-text { color: var(--color-text-secondary) !important; }
+          .reports-page .recharts-cartesian-axis-tick-value { fill: var(--color-text-secondary) !important; }
+          .report-kpi-grid {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)) !important;
+          }
+          .report-kpi-card > div { gap: var(--space-2); }
+          .report-kpi-card > div > div:first-child { min-width: 0; }
+          .report-kpi-card h3 { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+          .report-hero > div { gap: var(--space-4); }
+          .report-hero > div > div:first-child { min-width: 0; }
+          .report-hero h2 {
+            font-size: clamp(var(--font-size-2xl), 2.5vw, var(--font-size-4xl)) !important;
+            overflow-wrap: anywhere;
+            font-variant-numeric: tabular-nums;
+            flex-wrap: wrap;
+          }
+          .report-hero-icon { flex-shrink: 0; }
+          .report-hero--positive { background-color: var(--color-success-bg) !important; }
+          .report-hero--negative { background-color: var(--color-danger-bg) !important; }
+          .report-hero--financial { color: var(--color-text-primary) !important; }
+          .report-hero--financial p { color: var(--color-text-secondary) !important; }
+          .report-hero--financial svg { color: var(--color-text-primary) !important; }
+        }
+      `}</style>
     </div>
   )
 }

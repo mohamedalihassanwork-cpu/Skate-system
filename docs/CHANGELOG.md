@@ -4,6 +4,20 @@
 
 ---
 
+## [2026-10-11] — Desktop UI/UX audit and improvement
+
+**Type:** UI FIX + VERIFICATION + DOCUMENTATION
+
+- Audited every implemented route; restored desktop layout utilities and approved token aliases without changing widths below 1024px or print styles.
+- Fixed clipped POS/report panes, compressed headings, form/table spacing, long-value wrapping, hierarchy and status contrast.
+- Improved desktop modal keyboard containment/scrolling, route titles/skip navigation and notification dismissal/focus.
+- Preserved business handlers, API requests, permissions and calculations. Fixed pre-existing TypeScript blockers with verified DTO declarations and unused-import cleanup.
+- Added reusable isolated browser audit/comparison scripts. Build and lint pass; all 84 desktop route/width cases fit the document viewport, with 63/63 below-desktop geometry/style/content comparisons unchanged.
+- Updated design/component/architecture/module documentation, project map/state and DEC-081. Existing legacy markup/workflow gaps and live verification limits are explicit in the [audit report](quality/DESKTOP_UI_UX_AUDIT.md).
+- No deployment or push.
+
+---
+
 ## [2026-10-03] — Phase 05.5: Settings Administration
 
 **Type:** FEATURE + BUG FIX

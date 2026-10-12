@@ -71,6 +71,7 @@ export function Badge({ children, status, variant, className = '' }: BadgeProps)
   return (
     <span
       className={['badge', className].filter(Boolean).join(' ')}
+      data-variant={resolvedVariant}
       style={{ backgroundColor: bg, color }}
     >
       {children}

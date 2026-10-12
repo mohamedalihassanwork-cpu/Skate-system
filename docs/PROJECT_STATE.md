@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 5.4  
-**Last updated:** 2026-10-03 (Phase 05.5 — Settings Administration. SettingsPage fully implemented. Backend validation hardened. 29 new tests. Total: 350/350 PASS. Frontend build PASS. DEC-075–DEC-080 recorded.)  
-**Updated by:** AI Agent (Phase 05.5 — Settings Administration)
+**Version:** 5.5
+**Last updated:** 2026-10-12 — Desktop UI/UX audit (isolated browser verification; business phase status unchanged).
+**Updated by:** AI Agent — Desktop UI/UX audit
 
 ---
 
@@ -17,10 +17,10 @@
 | **Environment** | Node.js (ESM), Vite, React 19, Drizzle ORM, MySQL 8 |
 | **Databases** | `koshk_skate` (Development/Demo), `koshk_skate_test` (Automated Tests Only — **WARNING: Tests must never run against development DB.**) |
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
-| **Active Work** | None |
+| **Active Work** | None — desktop UI audit verified and documented for local delivery. |
 | **Blocked Work** | Browser verification (Playwright driver failure — 404 from Azure edge node) affects P05.5, P13, P14, P15, P16, P17 |
-| **Last Verification** | 2026-10-03 — Phase 05.5. Tests 350/350 PASS (1 run). Backend build PASS. Frontend build PASS. |
-| **Last Git Commit** | `08c4dcc` — feat(settings): Phase 05.5 — Settings Administration UI and validation hardening |
+| **Last Verification** | 2026-10-11 — Desktop UI: frontend build/lint PASS; 147 route/width browser cases, 63 below-desktop preservation comparisons. See desktop audit for limits. Prior backend test results remain historical. |
+| **Last Git Commit** | `fix(ui): improve desktop ERP layouts and accessibility` — this documented change; hash available from `git log -1`. |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Resolve OWNER-001, OWNER-002, UNK-005 decisions; resolve browser verification block; address test coverage gaps |
 
@@ -345,3 +345,17 @@
 ---
 
 *Last updated: 2026-10-03 (Phase 05.5 Settings Administration — IMPLEMENTED. SettingsPage rewritten. Backend validation hardened. TagInput shared component created. 29 new tests. 350/350 PASS. Both builds PASS. DEC-075–080 recorded. By AI Agent)*
+
+## Desktop UI/UX audit — 2026-10-11
+
+**Status:** VERIFIED and DOCUMENTED; isolated frontend verification only. Local delivery finalized 2026-10-12.
+
+- All 21 implemented routes source-reviewed and rendered at four desktop widths. Shared layout, headers, tables, forms, POS/report panes, modal focus/scrolling, navigation and contrast improved.
+- New visual rules apply only to screen widths >=1024px. All 63 below-desktop comparisons retain the baseline geometry, sampled styles, control content and text.
+- Build PASS; lint PASS with 43 existing warnings. Existing build blockers were corrected through unused-symbol cleanup and declarations matching the server DTO.
+- Backend/API/database, business calculations, permissions and print code unchanged. Live financial/auth/export/print verification was not performed; this does not close any earlier phase gap.
+- Desktop browser verification is now available through the installed Python Playwright/system Chrome runtime; the historical browser block above remains a record of prior phase verification, not a limitation on this isolated audit.
+- Remaining legacy findings: native confirm/alert usage, bespoke sale-detail overlay, generic report date inference, incomplete labels/feedback and coordinated shared-component migration. DEFERRED outside this desktop presentation pass; see the audit for details.
+- Final browser interaction checks: 162/162 PASS. Delivery is local only; no push or deployment.
+
+Evidence: [Desktop UI/UX Audit](quality/DESKTOP_UI_UX_AUDIT.md). Decision: DEC-081.

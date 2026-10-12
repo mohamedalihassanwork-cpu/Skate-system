@@ -127,7 +127,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`إتمام الإيجار — ${rental.rentalCode}`} size="lg">
-      <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '2px' }}>
+      <div className="rental-modal-content" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '2px' }}>
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
 
         {/* Items breakdown */}
@@ -197,7 +197,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {payments.map((p, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div key={idx} className="finalize-payment-row" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
                     value={p.methodId}
                     onChange={e => handleUpdatePayment(idx, 'methodId', parseInt(e.target.value, 10))}
@@ -228,7 +228,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
                 </div>
               ))}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-subtle)', fontWeight: 'var(--font-weight-bold)' }}>
+              <div className="finalize-payment-totals" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-subtle)', fontWeight: 'var(--font-weight-bold)' }}>
                 <span style={{ color: isExact ? 'var(--color-success-text)' : 'var(--color-danger-text)' }}>
                   إجمالي المدفوع: {formatCurrency(totalPayments)}
                 </span>
@@ -244,7 +244,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+      <div className="rental-modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
         <Button variant="ghost" onClick={onClose} disabled={loading}>إلغاء</Button>
         <Button
           id="finalize-rental-btn"
@@ -256,6 +256,28 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
           <CheckCircle size={16} style={{ marginInlineEnd: 6 }} /> إتمام الإيجار وطباعة الفاتورة
         </Button>
       </div>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .modal-container .modal-body:has(> .rental-modal-content) {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            overflow: hidden;
+          }
+          .modal-body > .rental-modal-content {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none !important;
+            padding: var(--space-1) !important;
+          }
+          .modal-body > .rental-modal-actions { flex: 0 0 auto; flex-wrap: wrap; }
+          .finalize-payment-row > select { min-width: 0; height: var(--space-10); padding-block: 0 !important; }
+          .finalize-payment-row .field-label:empty { display: none; }
+          .finalize-payment-row > .field-wrapper { flex: 0 0 7rem; min-width: 0; }
+          .finalize-payment-row > button { flex-shrink: 0; min-width: var(--space-8); min-height: var(--space-8); }
+          .finalize-payment-totals { flex-wrap: wrap; gap: var(--space-2); }
+        }
+      `}</style>
     </Modal>
   )
 }

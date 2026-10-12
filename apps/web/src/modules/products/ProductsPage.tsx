@@ -338,6 +338,11 @@ export default function ProductsPage() {
           <Input id="newCatName" label="اسم الفئة بالإنجليزي *" placeholder="مثال: Beverages" required value={newCatName} onChange={(e: any) => setNewCatName(e.target.value)} />
         </form>
       </Modal>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          #product-form, #category-form { display: flex; flex-direction: column; gap: var(--space-4); }
+        }
+      `}</style>
     </div>
   )
 }

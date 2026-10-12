@@ -153,3 +153,9 @@ Per `docs/00-governance/DEFINITION_OF_DONE.md`:
 ---
 
 *Last updated: 2026-10-03 (Phase 05.5 — Settings Administration implementation)*
+
+## Desktop UI audit ? 2026-10-11
+
+Reviewed all five settings across pricing, duration, printing and notification sections, plus dirty, view-only, validation and error states. Existing shared form controls, save diff, validation and permissions are retained. Desktop shared header action alignment and content wrapping corrections apply; the 800px form measure and mobile rules remain unchanged.
+
+See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for desktop-only scope, evidence and verification results. This audit does not change previous backend verification status.

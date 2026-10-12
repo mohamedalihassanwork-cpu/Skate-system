@@ -100,7 +100,7 @@ export default function TreasuryPage() {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container treasury-page">
       <div className="page-header">
         <div className="page-header-text">
           <h1 className="page-header-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -111,7 +111,7 @@ export default function TreasuryPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
+      <div className="treasury-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
         {/* Shift Management */}
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)' as any }}>
@@ -135,7 +135,7 @@ export default function TreasuryPage() {
               {canManage && (
                 <form onSubmit={handleCloseShift} style={{ padding: 'var(--space-4)', backgroundColor: 'var(--color-danger-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-danger-200)' }}>
                   <h3 style={{ fontWeight: 'var(--font-weight-bold)' as any, color: 'var(--color-danger-700)', marginBottom: 'var(--space-2)' }}>إغلاق الوردية</h3>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end' }}>
+                  <div className="treasury-close-fields" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end' }}>
                     <div style={{ flex: 1 }}>
                       <Input
                         id="actualBalance"
@@ -172,7 +172,7 @@ export default function TreasuryPage() {
               </div>
               
               {canManage && (
-                <form onSubmit={handleOpenShift} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end' }}>
+                <form className="treasury-open-shift" onSubmit={handleOpenShift} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end' }}>
                   <div style={{ flex: 1 }}>
                     <Input
                       id="openingBalance"
@@ -194,7 +194,7 @@ export default function TreasuryPage() {
 
         {/* Expenses */}
         <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+          <div className="treasury-expense-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)' as any }}>
               <ArrowDownToLine style={{ color: 'var(--color-warning-500)' }} />
               <h2>المصروفات النثرية</h2>
@@ -243,7 +243,7 @@ export default function TreasuryPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
               {expenses.map(exp => (
-                <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3)', backgroundColor: 'var(--color-page-bg)', borderRadius: 'var(--radius-lg)' }}>
+                <div key={exp.id} className="treasury-expense-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3)', backgroundColor: 'var(--color-page-bg)', borderRadius: 'var(--radius-lg)' }}>
                   <div>
                     <p style={{ fontWeight: 'var(--font-weight-semibold)' as any, margin: 0 }}>{exp.description}</p>
                     <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', margin: 0 }}>{new Date(exp.createdAt).toLocaleTimeString('ar-EG')}</p>
@@ -257,6 +257,29 @@ export default function TreasuryPage() {
           )}
         </Card>
       </div>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .treasury-grid {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)) !important;
+            align-items: start;
+          }
+          .treasury-grid > .card { min-width: 0; }
+          .treasury-grid h2 { font-size: var(--font-size-xl); line-height: var(--line-height-tight); }
+          .treasury-close-fields {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+            gap: var(--space-4) !important;
+          }
+          .treasury-close-fields > div { min-width: 0; }
+          .treasury-close-fields > .btn { grid-column: 1 / -1; justify-self: start; }
+          .treasury-open-shift { flex-wrap: wrap; }
+          .treasury-open-shift > div { flex-basis: 220px !important; min-width: 0; }
+          .treasury-expense-header { flex-wrap: wrap; gap: var(--space-3); }
+          .treasury-expense-row { gap: var(--space-4); }
+          .treasury-expense-row > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+          .treasury-expense-row > div:last-child { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        }
+      `}</style>
     </div>
   )
 }

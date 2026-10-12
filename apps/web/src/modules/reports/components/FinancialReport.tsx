@@ -62,7 +62,7 @@ export default function FinancialReport({ startDate, endDate }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
       
       {/* Operating Result Hero Card */}
-      <div style={{
+      <div className={`report-hero report-hero--financial report-hero--${isPositiveResult ? 'positive' : 'negative'}`} style={{
         padding: 'var(--space-8)',
         borderRadius: 'var(--radius-lg)',
         backgroundColor: isPositiveResult ? 'var(--color-success-500)' : 'var(--color-danger-500)',
@@ -82,14 +82,14 @@ export default function FinancialReport({ startDate, endDate }: Props) {
               )}
             </h2>
           </div>
-          <div style={{ padding: 'var(--space-4)', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 'var(--radius-full)' }}>
+          <div className="report-hero-icon" style={{ padding: 'var(--space-4)', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 'var(--radius-full)' }}>
             <DollarSign size={40} style={{ color: 'var(--color-white)' }} />
           </div>
         </div>
       </div>
 
       {/* Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
+      <div className="report-charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
         <div style={cardStyle}>
           <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <ArrowUpRight size={20} style={{ color: 'var(--color-success-text)' }} />

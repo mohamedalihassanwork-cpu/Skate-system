@@ -48,6 +48,28 @@ export function NotificationBell() {
   const [soundType, setSoundType] = useState<'beep' | 'chime' | 'pulse'>('beep')
   const seenKeys = useRef<Set<string>>(new Set())
   const soundEnabled = useRef(true)
+  const controlRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isDesktop()) {
+        setIsOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      if (isDesktop() && event.target instanceof Node && !controlRef.current?.contains(event.target)) setIsOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [isOpen])
 
   // Load sound setting from localStorage
   useEffect(() => {
@@ -105,18 +127,21 @@ export function NotificationBell() {
   }, [soundType])
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={controlRef} className="notification-control" style={{ position: 'relative' }}>
       <button
         type="button"
         className="topbar-icon-btn"
         aria-label="الإشعارات"
         id="notifications-btn"
+        ref={triggerRef}
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? 'notifications-panel' : undefined}
         onClick={() => setIsOpen(!isOpen)}
         style={{ position: 'relative' }}
       >
         <Bell size={20} aria-hidden="true" />
         {notifications.length > 0 && (
-          <span style={{
+          <span className="notification-count" style={{
             position: 'absolute',
             top: '4px',
             right: '4px',
@@ -134,7 +159,7 @@ export function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div style={{
+        <div id="notifications-panel" className="notification-panel" style={{
           position: 'absolute',
           top: '100%',
           left: 0,
@@ -154,7 +179,7 @@ export function NotificationBell() {
             {/* Sound Selector */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
               <Volume2 size={14} color="var(--color-text-muted)" />
-              <select 
+              <select aria-label="صوت التنبيهات"
                 value={soundType}
                 onChange={(e) => handleSoundChange(e.target.value as any)}
                 style={{ fontSize: '12px', padding: '2px 4px', border: '1px solid var(--color-border)', borderRadius: '4px', outline: 'none' }}

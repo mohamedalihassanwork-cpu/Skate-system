@@ -568,6 +568,13 @@ export default function SkatesPage() {
       )}
 
       <style>{`
+        @media screen and (min-width: 1024px) {
+          #create-skate-form, #edit-skate-form { display: flex; flex-direction: column; gap: var(--space-4); }
+          .skates-grid .card { min-width: 0; }
+          .skate-card-inner { min-width: 0; overflow-wrap: anywhere; }
+          .skate-card-inner > div:first-child { gap: var(--space-3); }
+          .skate-card-inner > div:first-child > div { min-width: 0; }
+        }
         /*
          * M-002/M-014: .skates-filter-select
          * In the flex row: fixed 160px width (overrides field-control's width:100%).

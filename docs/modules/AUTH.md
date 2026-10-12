@@ -119,3 +119,9 @@ apps/web/src/
 | DEC-027 | In-memory rate limiter, 10 req/min/IP |
 | DEC-028 | Separate JWT_SECRET / JWT_REFRESH_SECRET |
 | DEC-029 | Password reset out of scope for Phase 02 |
+
+## Desktop UI audit — 2026-10-11
+
+Reviewed the existing split login layout, form, error state and keyboard controls. Desktop brand-caption/footer text now uses approved readable text tokens. Authentication, login submission and the mobile view are unchanged. Shell desktop navigation gains route-specific titles and keyboard access to main content.
+
+Evidence and verification limits: [Desktop UI/UX audit](../quality/DESKTOP_UI_UX_AUDIT.md).

@@ -657,3 +657,15 @@ For each module: where to find code, documentation, database tables, and API rou
 ---
 
 *Last updated: 2026-09-21 (Phase 05 Closure Gate — FINAL GATE PASSED ✅. Rentals module VERIFIED. Rentals files added to file tree. Migrations 0003_settings.sql and 0004_rentals.sql added. Decisions count updated to 70 (DEC-060 through DEC-070). IMPORTANT alert updated: Phase 06 is next.)*
+
+## Desktop audit additions — 2026-10-11
+
+| Path | Purpose |
+|---|---|
+| `apps/web/src/styles/desktop.css` | Screen-only desktop presentation fixes (>=1024px); loaded after page CSS. |
+| `tests/desktop_ui_audit.py` | Isolated Playwright browser audit with synthetic API fixtures and no business-data writes. |
+| `tests/compare_desktop_audit.py` | Baseline comparison for below-desktop geometry/styles plus desktop overflow/runtime checks. |
+| `tests/desktop-artifacts/` | Ignored local screenshots, metrics and test evidence. |
+| `docs/quality/DESKTOP_UI_UX_AUDIT.md` | Findings, full implemented-route coverage, fixes, verification and retained limitations. |
+
+Actual routes audited: `/login`, `/`, `/users`, `/roles`, `/skates`, `/customers`, `/customers/:id`, `/rentals`, `/rentals/new`, `/rentals/active`, `/rentals/:id`, `/products`, `/sales-pos`, `/sales`, `/reservations`, `/damages`, `/treasury`, `/maintenance`, `/reports`, `/settings`, `/audit-logs`. No route was added or changed.

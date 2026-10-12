@@ -1,7 +1,7 @@
 ﻿# Module: Damage Management
 
-**Status:** PLANNED / NOT IMPLEMENTED
-**Last updated:** 2026-09-09
+**Status:** IMPLEMENTED ? PARTIALLY VERIFIED (see phase specification)
+**Last updated:** 2026-10-11 (desktop UI audit)
 
 ---
 
@@ -29,7 +29,7 @@ All components PLANNED — No implementation exists.
 
 ## Frontend
 
-**Target location:** `apps/web/src/modules/` (path TBD during implementation)
+**Implemented page:** `apps/web/src/modules/damage/DamagesPage.tsx`
 
 ---
 
@@ -96,3 +96,9 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+## Desktop UI audit ? 2026-10-11
+
+Reviewed the list and detail, collection and waiver dialog tabs. Shared desktop table/focus/wrapping improvements and token aliases restore selected-tab and financial-summary emphasis. Charge calculations, collection, waiver, permissions and API calls are unchanged.
+
+Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.

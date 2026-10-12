@@ -322,7 +322,7 @@ export default function CustomerProfilePage() {
             <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>لا توجد إيجارات مسجلة لهذا العميل</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
+              <table className="customer-history-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--color-text-secondary)', fontWeight: 'var(--font-weight-bold)' }}>كود الإيجار</th>
@@ -484,6 +484,16 @@ export default function CustomerProfilePage() {
           word-break: break-word;
         }
 
+        @media screen and (min-width: 1024px) {
+          .profile-info-row .profile-info-value { min-width: 0; overflow-wrap: anywhere; }
+          .customer-history-table th { background: var(--color-page-bg); }
+          .customer-history-table th, .customer-history-table td {
+            padding: var(--space-3) var(--space-4) !important;
+            overflow-wrap: anywhere;
+          }
+          .customer-history-table td { height: 52px; }
+          .customer-history-table tbody tr:hover { background: var(--color-page-bg); }
+        }
         @media (max-width: 480px) {
           .profile-info-row {
             flex-direction: column;

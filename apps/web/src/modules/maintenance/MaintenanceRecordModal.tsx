@@ -209,7 +209,7 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
       {loading ? (
         <PageLoader />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 maintenance-record-grid">
           {/* Left Column: Details & Edit */}
           <div className="space-y-4">
             <h3 className="font-semibold text-lg border-b pb-2">تفاصيل المشكلة</h3>
@@ -363,6 +363,13 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
           )}
         </div>
       )}
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .modal-body .maintenance-record-grid:has(> div:only-of-type) {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+      `}</style>
     </Modal>
   )
 }

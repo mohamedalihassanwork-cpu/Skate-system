@@ -112,7 +112,7 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
       title={existingReservation ? 'تعديل الحجز' : 'حجز اسكيت'}
       onClose={onClose}
     >
-      <form onSubmit={handleSubmit}>
+      <form className="reservation-form" onSubmit={handleSubmit}>
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
 
         {!existingReservation && (
@@ -171,6 +171,12 @@ export default function ReservationModal({ onClose, onSaved, existingReservation
           </Button>
         </div>
       </form>
+      <style>{`
+        @media screen and (min-width: 1024px) {
+          .reservation-form { display: flex; flex-direction: column; gap: var(--space-4); }
+          .reservation-form > div > .field-wrapper { min-width: 0; }
+        }
+      `}</style>
     </Modal>
   )
 }
