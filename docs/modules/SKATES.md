@@ -193,3 +193,10 @@ Per `docs/00-governance/DEFINITION_OF_DONE.md` and `docs/phases/PHASE_03_SKATES_
 - **Changes:** Create/edit forms use a 16px desktop gap between existing shared fields and field groups. Long inventory codes/types/notes wrap inside cards without pushing the status badge out of the card.
 - **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
 - **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Inventory cards, search/filter rows and create/edit forms fit phone/tablet gutters and retain the shared components. Inventory/status handlers are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

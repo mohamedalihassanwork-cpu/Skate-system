@@ -358,12 +358,14 @@ async function seed() {
   // 5. Seed Phase 06 Treasury Accounts and Payment Methods
   console.log('  → Seeding Phase 06 Treasury Accounts & Payment Methods...')
 
+  // 'Main Cash' is the designated cash drawer account used for expense recording.
+  // isCashDrawer=true is required for the expense service (NO_CASH_DRAWER guard).
   const TREASURY_ACCOUNTS = [
-    { name: 'Main Cash', nameAr: 'الخزينة الرئيسية' },
-    { name: 'Bank', nameAr: 'البنك' },
-    { name: 'Card', nameAr: 'بطاقة ائتمان' },
-    { name: 'InstaPay', nameAr: 'انستا باي' },
-    { name: 'Other', nameAr: 'أخرى' }
+    { name: 'Main Cash', nameAr: 'الخزينة الرئيسية', isCashDrawer: true },
+    { name: 'Bank', nameAr: 'البنك', isCashDrawer: false },
+    { name: 'Card', nameAr: 'بطاقة ائتمان', isCashDrawer: false },
+    { name: 'InstaPay', nameAr: 'انستا باي', isCashDrawer: false },
+    { name: 'Other', nameAr: 'أخرى', isCashDrawer: false }
   ]
 
   for (const acc of TREASURY_ACCOUNTS) {
@@ -371,7 +373,8 @@ async function seed() {
     if (!existingAcc) {
       const [result] = await db.insert(treasuryAccounts).values({
         name: acc.name,
-        nameAr: acc.nameAr
+        nameAr: acc.nameAr,
+        isCashDrawer: acc.isCashDrawer,
       })
       console.log(`     Treasury Account seeded: ${acc.name}`)
 
@@ -383,7 +386,16 @@ async function seed() {
       })
       console.log(`     Payment Method seeded: ${acc.name}`)
     } else {
-      console.log(`     Treasury Account exists: ${acc.name} (skipped)`)
+      // Idempotent fix: if Main Cash already exists without isCashDrawer=true, update it.
+      // This fixes databases seeded by the old script that missed isCashDrawer.
+      if (acc.isCashDrawer && !existingAcc.isCashDrawer) {
+        await db.update(treasuryAccounts)
+          .set({ isCashDrawer: true })
+          .where(eq(treasuryAccounts.id, existingAcc.id))
+        console.log(`     Treasury Account updated: ${acc.name} → isCashDrawer=true (expense fix)`)
+      } else {
+        console.log(`     Treasury Account exists: ${acc.name} (skipped)`)
+      }
     }
   }
 

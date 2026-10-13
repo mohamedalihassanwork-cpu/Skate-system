@@ -102,3 +102,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 Reviewed list/status filtering, create/edit/completed records, parts and system/external payment dialogs. The desktop audit identified missing utility styles in the existing dialogs; shared desktop utility restoration supplies their intended grid, spacing, summary and action layout. New-record dialogs use the full desktop form width; existing records retain two detail/parts columns. Maintenance lifecycle, costs and payment actions are unchanged.
 
 Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Existing record details, parts, summary/payment controls and footer actions receive scoped layout/spacing; new records use the full form width. Part deletion controls meet the approved touch size. Maintenance rules and operations are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

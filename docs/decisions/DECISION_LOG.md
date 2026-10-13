@@ -1823,3 +1823,19 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 - Record existing cross-viewport markup/workflow shortcomings separately. This audit does not close prior business/production verification gaps.
 
 **Evidence:** [Desktop UI/UX audit](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+### DEC-082 — Phone/tablet UI audit scope and existing-pattern corrections
+
+**Date:** 2026-10-12
+**Category:** UI implementation / scope reconciliation
+**Status:** ACTIVE — authorized by the owner's mobile/tablet audit and improvement request
+
+- Restrict new presentation rules to screen widths below 1024px; preserve completed desktop styling and print.
+- Retain the explicit existing 768px sidebar switch. Restore responsive operation using existing components, palette/tokens and RTL, with no new visual language or business/permission changes.
+- Extend existing dialog focus containment/topmost dismissal/trigger restoration and notification dismissal to phone/tablet. Improve touch controls, readable forms, contained tables, responsive POS/report layouts and safe viewport bounds.
+- Map missing legacy aliases to approved tokens below desktop; use approved primary/secondary text on semantic surfaces where small text fails the existing contrast requirement.
+- Keep prior business verification gaps explicit. Synthetic frontend tests do not certify persistence, financial calculations or backend authorization.
+
+**Plan and evidence:** [Mobile/tablet audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md).
+
+**DEC-082 completion review (2026-10-13):** Reconfirmed by the current owner request. Correct existing nested-dialog layering and collapsed-tablet targets; add nonvisual Arabic names/selected states, keyboard access to existing mobile table scrollers and approved semantic foreground corrections. These preserve existing patterns, desktop presentation and business handlers. Verification uses the completed desktop commit `cb5bec7` as an isolated baseline.

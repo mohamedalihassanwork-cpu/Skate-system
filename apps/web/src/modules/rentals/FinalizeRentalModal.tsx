@@ -139,6 +139,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
             {rental.items.filter(i => i.status === 'returned').map(item => (
               <div
                 key={item.id}
+                className="finalize-item-breakdown"
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '10px 14px', background: 'var(--color-surface-raised)',
@@ -199,6 +200,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
               {payments.map((p, idx) => (
                 <div key={idx} className="finalize-payment-row" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
+                    aria-label={`طريقة الدفع ${idx + 1}`}
                     value={p.methodId}
                     onChange={e => handleUpdatePayment(idx, 'methodId', parseInt(e.target.value, 10))}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-sm)', appearance: 'auto' }}
@@ -207,6 +209,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
                   </select>
                   <Input
                     id={`finalize-payment-amount-${idx}`}
+                    aria-label={`مبلغ الدفع ${idx + 1}`}
                     label=""
                     type="number"
                     min="0"
@@ -219,6 +222,7 @@ export function FinalizeRentalModal({ isOpen, onClose, rental, onSuccess }: Fina
                     <button
                       type="button"
                       onClick={() => handleRemovePayment(idx)}
+                      aria-label={`حذف الدفعة ${idx + 1}`}
                       style={{ background: 'none', border: 'none', color: 'var(--color-danger-text)', cursor: 'pointer', padding: 4 }}
                       title="حذف"
                     >

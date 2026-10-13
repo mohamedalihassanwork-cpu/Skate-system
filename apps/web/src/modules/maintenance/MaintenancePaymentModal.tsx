@@ -85,7 +85,7 @@ export default function MaintenancePaymentModal({ recordId, onClose, onSave }: P
 
   return (
     <Modal isOpen={true} onClose={onClose} title="دفع تكلفة الصيانة">
-      <div className="flex flex-col gap-[var(--space-4)]">
+      <div className="flex flex-col gap-[var(--space-4)] maintenance-payment">
         {loading ? (
           <div className="flex justify-center py-[var(--space-8)]">
             <span className="text-[var(--text-subtle)]">جارٍ التحميل...</span>

@@ -108,3 +108,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 - **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
 
 The original planned-only sections above are historical stubs. Implemented frontend coverage is listed here and in the central audit; implementation and backend verification status are governed by the current project state and phase records.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Phone/tablet catalog, categories and cart use document scrolling; product names and split-payment rows wrap. Sale details use the existing shared Modal below 1024px; sales cancellation uses the shared ConfirmDialog there. Desktop wrappers/confirmation paths and business handlers are preserved.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

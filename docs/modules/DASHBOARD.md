@@ -101,3 +101,12 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 The historical target sections below the current status are not a claim that the implemented frontend is missing. Detailed current behavior and earlier test status remain in the Phase 15/17 specifications. This change closes no phase or backend verification gap.
 
 See [Desktop UI/UX audit](../quality/DESKTOP_UI_UX_AUDIT.md) for route, state and keyboard checks, and mobile-preservation evidence.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Phone/tablet date controls, KPI/summary grids, section content and recent-operation tables fit the available sidebar/content width. Tables retain contained horizontal access. Dashboard queries and operational actions are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+Completion review (2026-10-13): existing table scrollers have Arabic region names and keyboard focus below desktop. Mobile chart/caption foregrounds use approved readable tokens; desktop layout is preserved.

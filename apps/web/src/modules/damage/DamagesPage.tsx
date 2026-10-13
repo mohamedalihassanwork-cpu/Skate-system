@@ -75,7 +75,7 @@ export default function DamagesPage() {
   if (loading) return <PageLoader label="جارٍ تحميل تقارير الضرر" />
 
   return (
-    <div className="page-container flex flex-col h-full">
+    <div className="page-container flex flex-col h-full damages-page">
       <div className="page-header shrink-0">
         <div className="page-header-text">
           <h1 className="page-header-title">تقارير الضرر</h1>

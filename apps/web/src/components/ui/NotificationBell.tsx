@@ -53,15 +53,14 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!isOpen) return
-    const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isDesktop()) {
+      if (event.key === 'Escape') {
         setIsOpen(false)
         triggerRef.current?.focus()
       }
     }
     const onPointerDown = (event: PointerEvent) => {
-      if (isDesktop() && event.target instanceof Node && !controlRef.current?.contains(event.target)) setIsOpen(false)
+      if (event.target instanceof Node && !controlRef.current?.contains(event.target)) setIsOpen(false)
     }
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('pointerdown', onPointerDown)

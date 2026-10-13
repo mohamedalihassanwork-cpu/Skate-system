@@ -669,3 +669,20 @@ For each module: where to find code, documentation, database tables, and API rou
 | `docs/quality/DESKTOP_UI_UX_AUDIT.md` | Findings, full implemented-route coverage, fixes, verification and retained limitations. |
 
 Actual routes audited: `/login`, `/`, `/users`, `/roles`, `/skates`, `/customers`, `/customers/:id`, `/rentals`, `/rentals/new`, `/rentals/active`, `/rentals/:id`, `/products`, `/sales-pos`, `/sales`, `/reservations`, `/damages`, `/treasury`, `/maintenance`, `/reports`, `/settings`, `/audit-logs`. No route was added or changed.
+
+
+## Phone/tablet audit additions — 2026-10-12
+
+| Path | Purpose |
+|---|---|
+| `apps/web/src/styles/mobile-shared.css` | Existing shared shell/control/dialog fixes, screen widths below 1024px only |
+| `apps/web/src/styles/mobile-pages.css` | Dashboard, auth, customers/accounts, inventory and rental responsive fixes |
+| `apps/web/src/styles/mobile-modules.css` | Sales, reports, treasury, maintenance, damage, reservations, settings and audit responsive fixes |
+| `apps/web/src/hooks/useMobilePresentation.ts` | Shared media-query subscription for below-desktop presentation paths |
+| `tests/mobile_tablet_ui_audit.py` | Synthetic route/viewport and interaction checks, state/large-text probes and strict desktop visual comparator |
+| `tests/desktop-artifacts/mobile-tablet-*` | Ignored local screenshots/metrics and comparison evidence |
+| `docs/quality/MOBILE_TABLET_UI_UX_AUDIT.md` | Findings, route/source coverage, evidence, limitations and reproduction commands |
+
+All 21 existing routes listed in the desktop additions remain unchanged.
+
+The completion review also adds `tests/mobile_operational_checks.py`: isolated normal-motion rental-wizard, damage/maintenance and nested-confirmation checks. It reuses synthetic fixtures and rejects business writes.

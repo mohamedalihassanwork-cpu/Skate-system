@@ -344,3 +344,12 @@ Before marking RENTALS as COMPLETED:
 - **Changes:** Desktop POS progress aligns with the existing form width; the skate-selection step no longer nests two padded cards. RTL step arrows and long labels are corrected. Active/detail cards wrap long content, Arabic detail values align right, and invoice amounts remain legible. Return/finalization dialogs retain one scrollable content area with reachable action rows. Existing frontend DTO declarations now include the nullable lateMinutes and lateFeeCollected fields already returned by the server and rendered by finalization; calculations and payloads are unchanged.
 - **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
 - **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Rental lists, active cards, detail grids and the creation wizard fit phone/tablet widths. Inspection and payment rows reflow, and existing rental-content error scrolling is preserved with reachable actions. Rental pricing, lifecycle and payloads are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+Completion review (2026-10-13): rental search controls have Arabic accessible names, and skate/duration choices expose pressed state. The full customer-to-review wizard was exercised with synthetic data without starting a rental.

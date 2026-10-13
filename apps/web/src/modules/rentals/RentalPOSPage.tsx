@@ -131,6 +131,7 @@ function CustomerPicker({ onSelect }: CustomerPickerProps) {
           <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
           <input
             id="customer-search"
+            aria-label="البحث عن عميل بالاسم أو الهاتف أو الرقم القومي"
             type="text"
             placeholder="ابحث بالاسم أو الهاتف أو الرقم القومي..."
             value={search}
@@ -254,6 +255,7 @@ function SkatePicker({ selectedIds, onToggle }: SkatePickerProps) {
           <Search size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
           <input
             id="skate-search"
+            aria-label="البحث عن اسكيت بالكود أو المقاس"
             type="text"
             placeholder="ابحث بالكود أو المقاس..."
             value={search}
@@ -277,6 +279,7 @@ function SkatePicker({ selectedIds, onToggle }: SkatePickerProps) {
               <button
                 key={skate.id}
                 id={`skate-card-${skate.id}`}
+                aria-pressed={isSelected}
                 className={`skate-card ${isSelected ? 'skate-card--selected' : ''}`}
                 onClick={() => onToggle(skate)}
                 type="button"
@@ -298,6 +301,7 @@ function SkatePicker({ selectedIds, onToggle }: SkatePickerProps) {
 
       <button
         id="refresh-skates"
+        className="rental-pos-refresh"
         type="button"
         onClick={load}
         style={{ marginTop: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}
@@ -401,6 +405,7 @@ function DurationPicker({ skateCount, onSelect, onBack }: DurationPickerProps) {
             <button
               key={d}
               id={`duration-btn-${d}`}
+              aria-pressed={!useCustom && selectedDuration === d}
               type="button"
               className={`duration-btn ${!useCustom && selectedDuration === d ? 'duration-btn--active' : ''}`}
               onClick={() => { setUseCustom(false); setSelectedDuration(d) }}
@@ -411,6 +416,7 @@ function DurationPicker({ skateCount, onSelect, onBack }: DurationPickerProps) {
           ))}
           <button
             id="duration-btn-custom"
+            aria-pressed={useCustom}
             type="button"
             className={`duration-btn ${useCustom ? 'duration-btn--active' : ''}`}
             onClick={() => setUseCustom(true)}
@@ -702,9 +708,9 @@ export default function RentalPOSPage() {
               <div style={{ marginTop: 16, padding: '12px 16px', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-md)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
                 <span style={{ fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>محدد:</span>
                 {selectedSkates.map(s => (
-                  <span key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: 'var(--font-size-xs)' }}>
+                  <span key={s.id} className="rental-selected-chip" style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: 'var(--font-size-xs)' }}>
                     {s.skateCode}
-                    <button type="button" onClick={() => toggleSkate(s)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--color-danger-text)', display: 'flex' }}>
+                    <button type="button" className="rental-selected-remove" aria-label={`إزالة ${s.skateCode} من التحديد`} onClick={() => toggleSkate(s)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--color-danger-text)', display: 'flex' }}>
                       <X size={12} />
                     </button>
                   </span>

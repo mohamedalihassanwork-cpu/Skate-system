@@ -137,13 +137,13 @@ interface SidebarProps {
   isDrawerClosing?: boolean
 }
 
-function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLogout, isMobile = false, hamburgerRef, isDrawerClosing = false }: SidebarProps) {
+function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLogout, isMobile = false, isDrawerClosing = false }: SidebarProps) {
   // M-017: ref for the drawer container — used by focus trap
   const drawerRef = useRef<HTMLDivElement>(null)
 
   // M-017: focus trap — runs whenever the mobile drawer opens
   useEffect(() => {
-    if (!mobileOpen) return
+    if (!mobileOpen || isDrawerClosing) return
     const drawer = drawerRef.current
     if (!drawer) return
 
@@ -151,22 +151,20 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
     // Focus the first focusable element when drawer opens
-    const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector))
+    const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector)).filter(element => element.getClientRects().length > 0)
     focusables[0]?.focus()
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault()
         onMobileClose()
-        // Restore focus to the hamburger button
-        requestAnimationFrame(() => hamburgerRef?.current?.focus())
         return
       }
 
       if (e.key !== 'Tab') return
 
       // Re-query on each Tab press in case DOM changed
-      const els = Array.from(drawer!.querySelectorAll<HTMLElement>(focusableSelector))
+      const els = Array.from(drawer!.querySelectorAll<HTMLElement>(focusableSelector)).filter(element => element.getClientRects().length > 0)
       if (els.length === 0) return
 
       const first = els[0]
@@ -187,9 +185,16 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       }
     }
 
+    function containFocus(event: FocusEvent) {
+      if (event.target instanceof Node && !drawer!.contains(event.target)) focusables[0]?.focus()
+    }
     document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [mobileOpen, onMobileClose, hamburgerRef])
+    document.addEventListener('focusin', containFocus)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('focusin', containFocus)
+    }
+  }, [mobileOpen, isDrawerClosing, onMobileClose])
   const { user } = useAuth()
 
   const NavItem = ({ icon: Icon, label, to, exact }: { icon: typeof Package; label: string; to: string; exact?: boolean }) => (
@@ -315,6 +320,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
           {/* M-017: aria-modal + role=dialog for screen readers; drawerRef for focus trap */}
           <div
             ref={drawerRef}
+            id="mobile-navigation"
             className={`sidebar-mobile-drawer${isDrawerClosing ? ' sidebar-mobile-drawer--closing' : ''}`}
             role="dialog"
             aria-modal="true"
@@ -737,11 +743,12 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
 interface TopbarProps {
   pageTitle?: string
   onMobileMenuOpen: () => void
+  mobileOpen: boolean
   /** M-017: ref forwarded to the hamburger button for focus restoration on drawer close */
   hamburgerRef: React.RefObject<HTMLButtonElement | null>
 }
 
-function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef }: TopbarProps) {
+function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef, mobileOpen }: TopbarProps) {
   const { user } = useAuth()
   const { pathname } = useLocation()
   const desktopTitle = pageTitle ?? (
@@ -763,7 +770,8 @@ function Topbar({ pageTitle, onMobileMenuOpen, hamburgerRef }: TopbarProps) {
           className="topbar-mobile-menu"
           onClick={onMobileMenuOpen}
           aria-label="فتح القائمة"
-          aria-expanded={false}
+          aria-expanded={mobileOpen}
+          aria-controls={mobileOpen ? "mobile-navigation" : undefined}
         >
           <Menu size={20} aria-hidden="true" />
         </button>
@@ -899,7 +907,7 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
   const previousPath = useRef(pathname)
 
   useEffect(() => {
-    if (previousPath.current !== pathname && window.matchMedia('(min-width: 1024px)').matches) {
+    if (previousPath.current !== pathname) {
       mainRef.current?.focus({ preventScroll: true })
     }
     previousPath.current = pathname
@@ -912,6 +920,13 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
   const [mobileOpen, setMobileOpen] = useState(false)
   // AN-006: true while the drawer exit animation is playing (300ms window).
   const [isDrawerClosing, setIsDrawerClosing] = useState(false)
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [mobileOpen])
 
   // M-017: ref to the hamburger button — passed to Topbar AND Sidebar so the
   // focus trap can restore focus when the drawer closes via any mechanism.
@@ -927,12 +942,16 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
   // Guard against double-triggering while the exit animation is already running.
   const handleMobileClose = () => {
     if (isDrawerClosing) return
+    const closingPath = previousPath.current
     setIsDrawerClosing(true)
     setTimeout(() => {
       setMobileOpen(false)
       setIsDrawerClosing(false)
-      requestAnimationFrame(() => hamburgerRef.current?.focus())
-    }, 300) // matches --transition-slow (drawer-slide-out duration)
+      requestAnimationFrame(() => {
+        if (previousPath.current !== closingPath) mainRef.current?.focus({ preventScroll: true })
+        else hamburgerRef.current?.focus()
+      })
+    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300) // matches drawer motion
   }
 
   // Close mobile drawer on resize to desktop (instant — no animation needed).
@@ -966,16 +985,17 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
           mobileOpen={mobileOpen}
           onMobileClose={handleMobileClose}
           onLogout={handleLogout}
-          hamburgerRef={hamburgerRef}
           isDrawerClosing={isDrawerClosing}
         />
         <div
           className="app-content"
+          inert={mobileOpen || undefined}
           style={{ marginRight: contentMargin }}
         >
           <Topbar
             pageTitle={pageTitle}
             onMobileMenuOpen={() => setMobileOpen(true)}
+            mobileOpen={mobileOpen}
             hamburgerRef={hamburgerRef}
           />
           <main id="main-content" ref={mainRef} tabIndex={-1} className="app-main" style={{ flex: 1 }}>

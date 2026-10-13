@@ -965,3 +965,22 @@ No new UI component or dependency was introduced. Existing APIs remain unchanged
 | NotificationBell | Desktop Escape/outside-click dismissal, bounded panel, readable count and visible select focus. Polling/sound behavior unchanged. |
 
 Legacy raw tables and the sale-details overlay remain existing implementation, not new shared alternatives. Their future migration is recorded in the [audit](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+
+## Phone/tablet refinements — 2026-10-12
+
+Existing component APIs are preserved; no duplicate UI component or dependency is added.
+
+| Component | Below-desktop behavior |
+|---|---|
+| Button/IconButton, FormFields, SearchBar, Pagination | Approved 44px targets, readable input text, growing fields and wrapping groups; focus/error/disabled semantics retained |
+| TagInput/Badge | Wrapping content and chips, nonoverlapping removal targets; approved readable semantic foregrounds |
+| Modal/ConfirmDialog | Existing topmost Escape, focus containment and trigger restoration now apply on phone/tablet; viewport-bounded scrolling; mobile nested dialogs retain body scroll lock |
+| Sale details/cancellation | Reuse Modal/ConfirmDialog below 1024px while preserving desktop wrapper/native paths; callbacks and payloads unchanged |
+| DataTable | Contained horizontal scrolling and readable rows; existing mobile card alternatives retained |
+| NotificationBell/Toast | Viewport-bound panels, reachable dismiss/sound controls, safe-area spacing and shared mobile export-error feedback |
+| App shell | Existing route title displayed below desktop, accurate drawer expanded state, width/focus/scroll containment; existing 768px switch retained |
+
+Arabic labels/label associations added to existing icon and legacy payment/inspection/filter controls are nonvisual metadata across widths. Desktop visual preservation is checked separately from these accessible-name corrections. Evidence: [Mobile/tablet audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md).
+
+Completion review (2026-10-13): existing nested phone/tablet sale confirmations layer the second backdrop above the parent dialog, including during dismissal. Collapsed tablet navigation uses 8px inner gutters for 48px-wide link targets while retaining the 64px sidebar.

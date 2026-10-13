@@ -110,8 +110,9 @@ export default function AuditLogsPage() {
         <div className="bg-slate-50 border-b p-4">
           <div className="flex flex-col md:flex-row gap-4 items-end audit-filters">
             <div className="space-y-1.5 flex-1 w-full">
-              <label className="text-sm font-medium text-slate-700">المستخدم</label>
+              <label htmlFor="audit-user" className="text-sm font-medium text-slate-700">المستخدم</label>
               <select
+                id="audit-user"
                 value={filters.userId}
                 onChange={(e: any) => { setFilters(f => ({ ...f, userId: e.target.value })); setPage(1) }}
                 className="w-full h-10 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -124,8 +125,9 @@ export default function AuditLogsPage() {
             </div>
 
             <div className="space-y-1.5 flex-1 w-full">
-              <label className="text-sm font-medium text-slate-700">نوع الكيان</label>
+              <label htmlFor="audit-entity" className="text-sm font-medium text-slate-700">نوع الكيان</label>
               <select
+                id="audit-entity"
                 value={filters.entityType}
                 onChange={(e: any) => { setFilters(f => ({ ...f, entityType: e.target.value })); setPage(1) }}
                 className="w-full h-10 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -144,8 +146,9 @@ export default function AuditLogsPage() {
             </div>
 
             <div className="space-y-1.5 flex-1 w-full">
-              <label className="text-sm font-medium text-slate-700">العملية</label>
+              <label htmlFor="audit-action" className="text-sm font-medium text-slate-700">العملية</label>
               <select
+                id="audit-action"
                 value={filters.action}
                 onChange={(e: any) => { setFilters(f => ({ ...f, action: e.target.value })); setPage(1) }}
                 className="w-full h-10 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -186,7 +189,7 @@ export default function AuditLogsPage() {
               <p>لا يوجد سجلات مطابقة للبحث</p>
             </div>
           ) : (
-            <div className="overflow-x-auto audit-table-scroll">
+            <div className="overflow-x-auto audit-table-scroll" role="region" aria-label="جدول سجل التدقيق" tabIndex={0}>
               <table className="w-full text-sm text-right audit-data-table">
                 <thead className="bg-slate-50 text-slate-600 font-semibold border-b">
                   <tr>

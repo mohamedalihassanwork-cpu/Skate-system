@@ -107,3 +107,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 - **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
 
 The original planned-only sections above are historical stubs. Implemented frontend coverage is listed here and in the central audit; implementation and backend verification status are governed by the current project state and phase records.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Product/category forms inherit shared phone/tablet field sizing, spacing and dialog behavior. The sales catalog/card layout adapts to the viewport. Product and stock handlers are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

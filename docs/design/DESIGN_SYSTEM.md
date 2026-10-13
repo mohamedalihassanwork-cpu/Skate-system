@@ -633,3 +633,12 @@ The owner-requested desktop audit preserves the existing visual identity and com
 - Existing shared dialogs retain their APIs and workflow, with desktop focus containment, focus restoration and a bounded body scroller. Rental dialogs retain their own error-recovery scroll target and pinned action area.
 
 See [the desktop audit](../quality/DESKTOP_UI_UX_AUDIT.md) for coverage, evidence, limitations and remaining legacy findings.
+
+
+## Phone/tablet refinements — 2026-10-12
+
+DEC-082 adds screen-only rules below 1024px in `mobile-shared.css`, `mobile-pages.css` and `mobile-modules.css`. The approved palette, Cairo, tokens, Lucide and component APIs remain authoritative. Desktop/print rules are excluded. Missing legacy semantic names map to the existing approved tokens in this media range; small semantic badge/panel text uses approved primary/secondary foregrounds for contrast.
+
+Retain the explicit 768px sidebar switch in sections 14/16: drawer below 768px, existing collapsible sidebar at 768–1023px. The broad tablet summary is clarified to match that implemented rule. Use 16px input text, at least 44px touch controls, wrapping groups, shrinkable grids and contained table scrolling. Phone sheets and tablet dialogs bound their content to the dynamic viewport and keep actions reachable; rental error-scroll targets are preserved.
+
+No dark theme or replacement design system was introduced. See [audit and verification](../quality/MOBILE_TABLET_UI_UX_AUDIT.md).

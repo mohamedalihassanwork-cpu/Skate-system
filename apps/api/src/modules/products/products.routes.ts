@@ -21,10 +21,12 @@ productsRouter.get('/categories', authenticate, requirePermission('products.view
 
 productsRouter.post('/categories', authenticate, requirePermission('products.manage'), async (req, res, next) => {
   try {
-    if (!req.body.name || !req.body.nameAr) {
+    if (!req.body.nameAr) {
       throw new ValidationError('Missing required fields')
     }
-    const category = await ProductsService.createCategory(req.body)
+    // English name is optional — default to empty string
+    const categoryData = { name: req.body.name ?? '', nameAr: req.body.nameAr }
+    const category = await ProductsService.createCategory(categoryData)
     res.status(201).json({ success: true, data: category })
   } catch (err: any) {
     next(err)
@@ -59,10 +61,12 @@ productsRouter.get('/', authenticate, requirePermission('products.view'), async 
 
 productsRouter.post('/', authenticate, requirePermission('products.manage'), async (req, res, next) => {
   try {
-    if (!req.body.name || !req.body.nameAr || !req.body.categoryId || req.body.price === undefined) {
+    if (!req.body.nameAr || !req.body.categoryId || req.body.price === undefined) {
       throw new ValidationError('Missing required fields')
     }
-    const product = await ProductsService.createProduct(req.body)
+    // English name is optional — default to empty string
+    const productData = { ...req.body, name: req.body.name ?? '' }
+    const product = await ProductsService.createProduct(productData)
     res.status(201).json({ success: true, data: product })
   } catch (err: any) {
     next(err)

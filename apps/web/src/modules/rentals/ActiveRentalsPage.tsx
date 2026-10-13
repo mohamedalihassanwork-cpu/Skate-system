@@ -145,7 +145,7 @@ function ActiveRentalCard({ rental, onViewDetail, onReturnItem }: ActiveRentalCa
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2px 6px' }}>
             {activeItems.length} نشط
           </span>
-          <button type="button" onClick={() => setExpanded(e => !e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 2 }}>
+          <button type="button" aria-label={expanded ? 'طي الاسكيتات' : 'عرض الاسكيتات'} aria-expanded={expanded} onClick={() => setExpanded(e => !e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 2 }}>
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>

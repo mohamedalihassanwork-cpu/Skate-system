@@ -159,3 +159,10 @@ refresh_tokens     — id, user_id FK, token_hash, expires_at, created_at
 Reviewed the user table, creation, role editing, password change, activation/deactivation, role cards and add/edit/delete/permission dialogs. Existing shared components and permission checks are retained. Desktop shared table, wrapping, action spacing and missing-token corrections apply; mobile cards and workflows are unchanged.
 
 See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for desktop-only scope, evidence and verification results. This audit does not change previous backend verification status.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+User cards, long names/emails, permission chips and actions wrap below desktop. Shared create/edit/password/permission dialogs inherit touch sizing, bounded scrolling and keyboard containment. Permission decisions are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

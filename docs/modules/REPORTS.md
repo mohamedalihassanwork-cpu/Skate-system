@@ -102,3 +102,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 Reviewed all 11 tabs, charts, date controls, exports and list/empty/loading/error states. Desktop report panes now use page scrolling, a sticky secondary navigation column, shrinkable charts and KPI cards, wrapping controls and readable operating-result contrast. The existing generic-list field-formatting heuristic and native export alerts remain outside this layout-only change.
 
 Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+All 11 report destinations remain visible in a wrapping phone/tablet navigation grid. Date/export controls, KPIs, financial panels and charts fit with document scrolling. Export failure feedback uses the shared Toast below desktop. Report data interpretation and export logic are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

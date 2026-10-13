@@ -1,0 +1,200 @@
+/* Phone/tablet corrections to existing page patterns. Desktop and print are
+   excluded. See docs/quality/MOBILE_TABLET_UI_UX_AUDIT.md. */
+@media screen and (max-width: 1023px) {
+  /* Dashboard: readable controls and cards within the tablet sidebar space. */
+  .dashboard-date-controls { min-width: 0; width: 100%; }
+  .dashboard-date-controls .btn { min-height: 44px; height: auto; font-size: var(--font-size-sm); }
+  .dashboard-date-controls .date-inputs { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .dashboard-date-controls .input {
+    min-width: 0; max-width: 100%; min-height: 44px;
+    font-size: var(--font-size-base); color: var(--color-text-primary); direction: ltr;
+  }
+  .dashboard-date-controls .input:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+  .dash-content, .dash-kpi-grid, .dash-grid-2, .dash-grid-2-equal { min-width: 0; }
+  .dash-content .dash-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-content .dash-grid-2, .dash-content .dash-grid-2-equal { grid-template-columns: minmax(0, 1fr); }
+  .dash-content .dash-summary-grid { grid-template-columns: minmax(0, 1fr); }
+  .dash-kpi-grid > *, .dash-grid-2 > *, .dash-grid-2-equal > * { min-width: 0; }
+  .dash-kpi-value, .dash-summary-row-value, .dash-status-count { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .dash-kpi-value { line-height: var(--line-height-tight); }
+  .dash-kpi-label, .dash-alert-detail, .dash-summary-column-title, .dash-table th { color: var(--color-text-secondary); }
+  .dash-summary-column-title { text-transform: none; letter-spacing: normal; }
+  .dash-summary-row { gap: var(--space-3); align-items: flex-start; }
+  .dash-summary-row > * { min-width: 0; }
+  .dash-section-header { align-items: flex-start; }
+  .dash-section-header > svg { flex-shrink: 0; }
+  .dash-section-title { overflow-wrap: anywhere; }
+  .dash-table { min-width: calc(var(--space-16) * 8); font-variant-numeric: tabular-nums; }
+  .dash-table td, .dash-table th { overflow-wrap: anywhere; }
+  .dash-table tbody tr { height: var(--space-12); }
+  .dash-content > .dash-section-full { margin-bottom: 0 !important; }
+
+  /* Reuse the existing single-column login presentation on tablets too. */
+  .login-page.login-page { min-height: 100dvh; flex-direction: column; background: var(--color-page-bg); }
+  .login-page .login-brand-panel { display: none; }
+  .login-page .login-form-panel {
+    flex: 1; min-width: 0; background: transparent; align-items: center;
+    padding: var(--space-6) var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+  }
+  .login-page .login-form-container {
+    min-width: 0; background: var(--color-white); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card); padding: var(--space-6);
+  }
+  .login-page .login-mobile-logo { display: flex; }
+  .login-page .login-footer { color: var(--color-text-secondary); }
+  .login-page .login-input, .login-page .login-submit { scroll-margin-block: var(--space-4); }
+
+  .app-main .page-header-text > .btn { width: 44px; flex: 0 0 44px; }
+  .app-main .page-header-text > div { min-width: 0; }
+  .mobile-page-actions { max-width: 100%; min-width: 0; flex-wrap: wrap; }
+
+  /* Customer, user and role content must retain full Arabic names/labels. */
+  .app-main .customer-card__header { align-items: flex-start; gap: var(--space-3); }
+  .app-main .customer-card__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .customer-card__header > .badge { flex-shrink: 0; }
+  .customer-card__phone, .customer-card__nid { overflow-wrap: anywhere; }
+  .app-main .customer-card__actions { flex-wrap: wrap; }
+  .profile-card { min-width: 0; }
+  .profile-info-value { min-width: 0; overflow-wrap: anywhere; }
+  .customer-history-table { min-width: calc(var(--space-16) * 8); font-variant-numeric: tabular-nums; }
+  .customer-history-table td, .customer-history-table th { overflow-wrap: anywhere; }
+  .customer-history-table td { height: var(--space-12); }
+  .customer-form-actions { flex-wrap: wrap; gap: var(--space-3); }
+  .user-card-identity { flex-wrap: wrap; }
+  .user-card-identity > div { min-width: 0; overflow-wrap: anywhere; }
+  .user-card-identity .user-card-email { white-space: normal !important; overflow: visible !important; overflow-wrap: anywhere; }
+  .user-card-actions > .btn[style*='--color-danger-text'],
+  .user-card-actions > .btn[style*='--color-success-text'] { color: var(--color-text-primary) !important; }
+  .user-card-actions > .btn { flex-basis: calc(50% - var(--space-2)) !important; }
+  .roles-card-header > div { min-width: 0; overflow-wrap: anywhere; }
+  .roles-card-header > div:last-child { gap: var(--space-2); }
+  .permission-chip { max-width: 100%; white-space: normal !important; overflow-wrap: anywhere; text-align: right; }
+
+  /* Inventory forms retain the shared fields and approved spacing. */
+  #create-skate-form, #edit-skate-form, #product-form, #category-form {
+    display: flex; flex-direction: column; gap: var(--space-4);
+  }
+  .skates-grid .card, .skate-card-inner { min-width: 0; }
+  .skate-card-inner { overflow-wrap: anywhere; }
+  .skate-card-inner > div:first-child { gap: var(--space-3); flex-wrap: wrap; }
+  .skate-card-inner > div:first-child > div { min-width: 0; }
+
+  /* Rental POS: one panel per step, complete labels and reachable actions. */
+  .page-container .step-indicator { max-width: 680px; margin-inline: auto; }
+  .rental-pos-container { width: 100%; min-width: 0; }
+  .rental-pos-container .rental-pos-step { padding: var(--space-4); min-width: 0; }
+  .rental-pos-container .rental-pos-step > .rental-pos-step { padding: 0; border: 0; background: transparent; }
+  .rental-pos-step .skate-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)); }
+  .rental-pos-step .skate-card { min-width: 0; }
+  .rental-pos-step .skate-card-code, .rental-pos-step .skate-card-type,
+  .rental-pos-step .customer-result-name { overflow-wrap: anywhere; }
+  .rental-pos-step .customer-result-name > svg { flex-shrink: 0; }
+  .rental-pos-step .customer-result-info { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .rental-pos-step .rental-search-input { min-height: 44px; font-size: var(--font-size-base); }
+  .rental-pos-step .customer-results { max-height: none; overflow: visible; }
+  .rental-pos-step .review-card { padding: var(--space-4); }
+  .rental-pos-step .review-section-title { text-transform: none; letter-spacing: normal; }
+  .rental-pos-step .review-row { align-items: flex-start; gap: var(--space-3); }
+  .rental-pos-step .review-label, .rental-pos-step .review-value { min-width: 0; overflow-wrap: anywhere; }
+  .rental-pos-step .review-value { text-align: right; }
+  .rental-pos-step .review-row--highlight { flex-wrap: wrap; }
+  .rental-pos-step .price-preview-rate { flex-wrap: wrap; }
+  .rental-pos-step .price-preview-amount, .rental-pos-step .price-preview-total { overflow-wrap: anywhere; }
+  .rental-pos-step .rental-pos-actions { flex-wrap: wrap; gap: var(--space-3); }
+  .rental-pos-actions .lucide-chevron-left, .rental-pos-actions .lucide-chevron-right { transform: scaleX(-1); }
+  .step-indicator .step-indicator-label { white-space: normal; overflow-wrap: anywhere; }
+  .rental-pos-refresh, .rental-selected-remove { min-width: 44px; min-height: 44px; }
+  .rental-selected-remove { align-items: center; justify-content: center; flex-shrink: 0; }
+  .rental-selected-chip { max-width: 100%; overflow-wrap: anywhere; }
+  .rental-selected-chip > span { min-width: 0; }
+
+  /* Active rentals and detail cards must fit a narrow phone gutter. */
+  .page-container .rental-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .rental-card { min-width: 0; }
+  .rental-card .rental-card-header { align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; }
+  .rental-card-header > div:first-child { min-width: 0; overflow-wrap: anywhere; flex: 1; }
+  .rental-card-header > div:last-child { flex-shrink: 0; flex-wrap: wrap; }
+  .rental-card-header button { min-width: 44px; min-height: 44px; }
+  .rental-card .active-rental-item { flex-wrap: wrap; gap: var(--space-3); }
+  .active-rental-item > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .active-rental-item > div:last-child { min-width: 0; flex-wrap: wrap; }
+  .rental-card .rental-card-footer { flex-wrap: wrap; gap: var(--space-2); }
+  .rental-detail-page .detail-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+  .rental-detail-page .detail-section { min-width: 0; padding: var(--space-4); }
+  .detail-section .detail-section-title { text-transform: none; letter-spacing: normal; }
+  .detail-section .detail-label { white-space: normal; }
+  .detail-section .detail-value { min-width: 0; overflow-wrap: anywhere; }
+  .detail-section .detail-value[dir='rtl'] { text-align: right; }
+  .rental-detail-items-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)) !important; }
+  .rental-detail-items-grid > *, .rental-detail-item-card { min-width: 0; }
+  .rental-item-header { flex-wrap: wrap; gap: var(--space-2); }
+  .rental-item-header > div { min-width: 0; flex-wrap: wrap; overflow-wrap: anywhere; }
+  .rental-item-facts { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .rental-item-facts > div { min-width: 0; overflow-wrap: anywhere; }
+  .rental-item-amount { flex-wrap: wrap; gap: var(--space-2); }
+  .rental-extend-fields { flex-wrap: wrap; }
+  .rental-extend-fields > div { flex-basis: 100%; min-width: 0; }
+  .rental-extend-fields input { width: 100% !important; min-height: 44px; font-size: var(--font-size-base) !important; }
+  #view-customer-profile { min-height: 44px; text-align: right; }
+  .invoice-section .invoice-title { overflow-wrap: anywhere; }
+  .invoice-title > svg { flex-shrink: 0; }
+  .invoice-section .invoice-row { gap: var(--space-3); flex-wrap: wrap; }
+  .invoice-section .invoice-label { min-width: 0; overflow-wrap: anywhere; }
+  .invoice-section .invoice-amount { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  /* One rental-content scroller preserves error scrolling and keeps actions visible. */
+  .modal-container .modal-body:has(> .rental-modal-content) {
+    display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden;
+  }
+  .modal-body > .rental-modal-content {
+    flex: 1 1 auto; min-height: 0; max-height: none !important;
+    overflow-y: auto !important; padding: var(--space-1) !important;
+  }
+  .modal-body > .rental-modal-actions { flex: 0 0 auto; }
+  .modal-body :is(.rental-modal-actions, .rental-damage-actions) { flex-wrap: wrap; gap: var(--space-3); }
+  .rental-modal-content { min-width: 0; overflow-wrap: anywhere; }
+  .rental-inspection-grid, .rental-item-summary { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .rental-modal-content select, .rental-damage-grid select { min-width: 0; min-height: 44px; font-size: var(--font-size-base) !important; }
+  .rental-maintenance-option { align-items: flex-start !important; }
+  .rental-maintenance-option > input { flex-shrink: 0; margin-block: var(--space-3); }
+  .rental-maintenance-option > label { min-height: 44px; display: flex; align-items: center; }
+  .finalize-item-breakdown, .finalize-payment-totals { flex-wrap: wrap; gap: var(--space-3); }
+  .finalize-item-breakdown > div { min-width: 0; overflow-wrap: anywhere; }
+  .rental-modal-content .btn { min-height: 44px !important; }
+  .finalize-payment-row > select { min-width: 0; }
+  .finalize-payment-row > .field-wrapper { flex: 0 1 7rem; min-width: 0; }
+  .finalize-payment-row input { width: 100% !important; }
+  .finalize-payment-row .field-label:empty { display: none; }
+  .finalize-payment-row > button { flex-shrink: 0; min-width: 44px; min-height: 44px; }
+}
+
+@media screen and (max-width: 639px) {
+  .dash-content .dash-kpi-grid { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-date-controls .date-inputs { width: 100%; }
+  .dashboard-date-controls .input { width: 100%; }
+  .profile-card .profile-info-row { flex-direction: column; gap: var(--space-1); }
+  .profile-card .profile-info-label { min-width: 0; }
+  .customer-form-actions > .btn { width: 100%; }
+  .mobile-page-actions { width: 100%; }
+  .mobile-page-actions > .btn { flex: 1 1 auto; }
+  .rental-card-header > div:first-child { flex-basis: 100%; }
+  .rental-pos-step .duration-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rental-pos-step .rental-pos-actions > .btn { flex: 1 1 100%; }
+  .rental-pos-step .review-row { flex-direction: column; gap: var(--space-1); }
+  .rental-pos-step .review-card { padding: var(--space-3); }
+  .rental-pos-step .create-customer-form { padding: var(--space-3); }
+  .rental-pos-step .create-customer-form > div:last-child { flex-wrap: wrap; }
+  .rental-pos-step .create-customer-form > div:last-child > .btn { flex: 1 1 100%; }
+  .rental-detail-page .detail-row { flex-direction: column; gap: var(--space-1); }
+  .rental-inspection-grid, .rental-item-summary, .rental-damage-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .modal-body :is(.rental-modal-actions, .rental-damage-actions) > .btn { width: 100%; }
+  .finalize-payment-row { display: grid !important; grid-template-columns: minmax(0, 1fr) 44px; align-items: end !important; }
+  .finalize-payment-row > select { grid-column: 1 / -1; width: 100%; }
+  .finalize-payment-row > .field-wrapper { grid-column: 1; }
+  .finalize-payment-row:not(:has(> button)) > .field-wrapper { grid-column: 1 / -1; }
+}
+
+@media screen and (max-width: 1023px) and (max-height: 600px) {
+  .login-page .login-form-panel { align-items: flex-start; padding-block: var(--space-4); }
+  .login-page .login-form-container { gap: var(--space-4); }
+}

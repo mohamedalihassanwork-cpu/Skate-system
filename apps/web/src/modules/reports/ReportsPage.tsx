@@ -11,8 +11,9 @@ import {
   Package
 } from 'lucide-react'
 import { format, subDays } from 'date-fns'
+import { useMobilePresentation } from '../../hooks/useMobilePresentation'
 
-import { Button, Input } from '../../components/ui'
+import { Button, Input, useToast } from '../../components/ui'
 import OverviewReport from './components/OverviewReport'
 import FinancialReport from './components/FinancialReport'
 import RevenueReport from './components/RevenueReport'
@@ -35,14 +36,21 @@ const REPORT_TABS = [
 ]
 
 export default function ReportsPage() {
+  const compactView = useMobilePresentation()
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('overview')
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'))
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [isExporting, setIsExporting] = useState(false)
 
+  const showExportMessage = (message: string, type: 'info' | 'error' = 'info') => {
+    if (compactView) showToast({ type, title: message })
+    else alert(message)
+  }
+
   const handleExport = async (fmt: 'csv' | 'excel' | 'pdf') => {
     if (activeTab === 'overview' || activeTab === 'financial') {
-      alert('لا يمكن تصدير نظرة عامة أو النتيجة التشغيلية بصيغة جدول، برجاء اختيار تقرير مفصل.')
+      showExportMessage('لا يمكن تصدير نظرة عامة أو النتيجة التشغيلية بصيغة جدول، برجاء اختيار تقرير مفصل.')
       return
     }
 
@@ -50,7 +58,7 @@ export default function ReportsPage() {
     try {
       const data = await fetchAllReportData(activeTab, startDate, endDate)
       if (data.length === 0) {
-        alert('لا توجد بيانات للتصدير')
+        showExportMessage('لا توجد بيانات للتصدير')
         return
       }
 
@@ -60,7 +68,7 @@ export default function ReportsPage() {
       else if (fmt === 'pdf') exportToPDF(data, filename, REPORT_TABS.find(t => t.id === activeTab)?.label || 'تقرير')
 
     } catch (e: any) {
-      alert('حدث خطأ أثناء التصدير: ' + e.message)
+      showExportMessage('حدث خطأ أثناء التصدير: ' + e.message, 'error')
     } finally {
       setIsExporting(false)
     }
@@ -87,6 +95,7 @@ export default function ReportsPage() {
               return (
                 <button
                   className="reports-navigation-button"
+                  aria-pressed={isActive}
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   style={{

@@ -121,7 +121,7 @@ export default function TreasuryPage() {
           
           {shift?.status === 'active' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+              <div className="treasury-summary" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
                 <div style={{ padding: 'var(--space-4)', backgroundColor: 'var(--color-page-bg)', borderRadius: 'var(--radius-lg)' }}>
                   <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-1)' }}>وقت الفتح</p>
                   <p style={{ fontWeight: 'var(--font-weight-semibold)' as any, margin: 0 }}>{new Date(shift.openedAt).toLocaleString('ar-EG')}</p>

@@ -432,7 +432,7 @@ export default function UsersPage() {
                   gap: 'var(--space-3)',
                 }}>
                   {/* User identity row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <div className="user-card-identity" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                     {/* Avatar */}
                     <div style={{
                       width: 40, height: 40, flexShrink: 0,
@@ -449,7 +449,7 @@ export default function UsersPage() {
                       <p style={{ margin: 0, fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-navy-800)', fontSize: 'var(--font-size-sm)' }}>
                         {user.name}
                       </p>
-                      <p style={{ margin: '2px 0 0', direction: 'ltr', textAlign: 'right', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <p className="user-card-email" style={{ margin: '2px 0 0', direction: 'ltr', textAlign: 'right', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {user.email}
                       </p>
                     </div>
@@ -469,7 +469,7 @@ export default function UsersPage() {
                   )}
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <div className="user-card-actions" style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                     <PermissionGate permission="users.edit">
                       <Button
                         id={`btn-edit-roles-mobile-${user.id}`}

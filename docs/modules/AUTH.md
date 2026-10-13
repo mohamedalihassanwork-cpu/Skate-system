@@ -125,3 +125,10 @@ apps/web/src/
 Reviewed the existing split login layout, form, error state and keyboard controls. Desktop brand-caption/footer text now uses approved readable text tokens. Authentication, login submission and the mobile view are unchanged. Shell desktop navigation gains route-specific titles and keyboard access to main content.
 
 Evidence and verification limits: [Desktop UI/UX audit](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Login uses its existing single-column card presentation through tablet widths, with viewport-aware height, readable controls and short-screen scrolling. Authentication handlers and credential behavior are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

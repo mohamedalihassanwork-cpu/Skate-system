@@ -100,7 +100,7 @@ export function ReturnRentalModal({ isOpen, onClose, item, onSuccess }: ReturnRe
         {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
 
         {/* Item summary */}
-        <div style={{ background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="rental-item-summary" style={{ background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 2 }}>الاسكيت</div>
             <div style={{ fontWeight: 'var(--font-weight-medium)' }}>{item.skate.skateCode} — مقاس {item.skate.size}</div>
@@ -120,7 +120,7 @@ export function ReturnRentalModal({ isOpen, onClose, item, onSuccess }: ReturnRe
         <div style={{ border: '1px solid var(--color-border)', padding: 16, borderRadius: 'var(--radius-md)' }}>
           <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', marginBottom: 12 }}>الفحص الفني</h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <div className="rental-inspection-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <ConditionSelect label="العجلات" value={wheelsCondition} onChange={setWheelsCondition} />
             <ConditionSelect label="الفرامل" value={brakeCondition} onChange={setBrakeCondition} />
             <ConditionSelect label="الأربطة" value={strapCondition} onChange={setStrapCondition} />
@@ -128,7 +128,7 @@ export function ReturnRentalModal({ isOpen, onClose, item, onSuccess }: ReturnRe
             <ConditionSelect label="الهيكل" value={bodyCondition} onChange={setBodyCondition} />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: 12, background: maintenanceRequired ? 'var(--color-danger-bg)' : 'var(--color-surface-raised)', borderRadius: 'var(--radius-md)' }}>
+          <div className="rental-maintenance-option" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: 12, background: maintenanceRequired ? 'var(--color-danger-bg)' : 'var(--color-surface-raised)', borderRadius: 'var(--radius-md)' }}>
             <input
               type="checkbox"
               id="maintenance-required"
@@ -187,6 +187,7 @@ function ConditionSelect({ label, value, onChange }: { label: string; value: str
     <div>
       <label style={{ display: 'block', fontSize: 'var(--font-size-xs)', marginBottom: 4, color: 'var(--color-text-secondary)' }}>{label}</label>
       <select
+        aria-label={label}
         value={value}
         onChange={e => onChange(e.target.value as ConditionValue)}
         style={{

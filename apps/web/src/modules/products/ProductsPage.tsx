@@ -73,7 +73,7 @@ export default function ProductsPage() {
 
   async function handleAddCategory(e: React.FormEvent) {
     e.preventDefault()
-    if (!newCatName || !newCatNameAr) return
+    if (!newCatNameAr) return
     try {
       await productsApi.createCategory({ name: newCatName, nameAr: newCatNameAr })
       showToast({ type: 'success', title: 'تمت إضافة الفئة بنجاح' })
@@ -238,7 +238,7 @@ export default function ProductsPage() {
           </p>
         </div>
         {canManage && (
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <div className="mobile-page-actions" style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <Button variant="secondary" onClick={() => setShowCategoryModal(true)}>
               <Plus size={16} aria-hidden="true" />
               فئة جديدة
@@ -301,7 +301,7 @@ export default function ProductsPage() {
         <form id="product-form" onSubmit={handleSaveProduct} noValidate>
           <div className="form-grid-2col">
             <Input id="nameAr" label="الاسم بالعربي *" required value={formData.nameAr} onChange={(e: any) => setFormData({ ...formData, nameAr: e.target.value })} />
-            <Input id="name" label="الاسم بالإنجليزي *" required value={formData.name} onChange={(e: any) => setFormData({ ...formData, name: e.target.value })} />
+            <Input id="name" label="الاسم بالإنجليزي" value={formData.name} onChange={(e: any) => setFormData({ ...formData, name: e.target.value })} />
           </div>
           
           <Select
@@ -335,7 +335,7 @@ export default function ProductsPage() {
       >
         <form id="category-form" onSubmit={handleAddCategory} noValidate>
           <Input id="newCatNameAr" label="اسم الفئة بالعربي *" placeholder="مثال: مشروبات" required value={newCatNameAr} onChange={(e: any) => setNewCatNameAr(e.target.value)} />
-          <Input id="newCatName" label="اسم الفئة بالإنجليزي *" placeholder="مثال: Beverages" required value={newCatName} onChange={(e: any) => setNewCatName(e.target.value)} />
+          <Input id="newCatName" label="اسم الفئة بالإنجليزي" placeholder="مثال: Beverages" value={newCatName} onChange={(e: any) => setNewCatName(e.target.value)} />
         </form>
       </Modal>
       <style>{`

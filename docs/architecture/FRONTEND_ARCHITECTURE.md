@@ -326,3 +326,10 @@ Every list/table must have an empty state (Arabic text, contextual icon).
 The desktop audit adds `apps/web/src/styles/desktop.css`, imported after `App.tsx` in `main.tsx`. It contains only screen media rules at or above 1024px. Component/page hooks preserve existing DOM below that breakpoint, and desktop-only interaction changes are guarded with `matchMedia`. Legacy semantic aliases live in `design-system.css` with the same screen/width guard. Existing API clients, routing, permissions and business state remain unchanged.
 
 `tests/desktop_ui_audit.py` provides isolated browser presentation coverage using synthetic intercepted API responses; it does not validate backend authorization, persistence or financial correctness. See [desktop audit evidence](../quality/DESKTOP_UI_UX_AUDIT.md).
+
+
+## Phone/tablet presentation layer — 2026-10-12
+
+`main.tsx` loads `mobile-shared.css`, `mobile-modules.css` and `mobile-pages.css` after the existing desktop sheet. Every new visual rule is screen-only and limited below 1024px. Shared components are reused; no dependencies, routes, API contracts, business state or backend enforcement changed. The existing sidebar switch remains 768px. `useMobilePresentation` observes the 1024px boundary for existing shared sale/detail/cancellation and report-feedback presentation; desktop paths are preserved.
+
+`tests/mobile_tablet_ui_audit.py` reuses isolated synthetic fixtures from the desktop harness for route/viewport, dialog/navigation, state, large-text and desktop preservation checks. This is frontend verification, not live database/financial verification. See [scope and results](../quality/MOBILE_TABLET_UI_UX_AUDIT.md).

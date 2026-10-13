@@ -1,3 +1,4 @@
+import { useMobilePresentation } from '../../hooks/useMobilePresentation'
 /**
  * KOSHK SKATE ERP — Dashboard Page
  *
@@ -119,6 +120,7 @@ function ChartTooltip({ active, payload, label }: any) {
 // Main Component
 // ---------------------------------------------------------------------------
 export default function DashboardPage() {
+  const compactView = useMobilePresentation()
   const { hasPermission } = useAuth()
   const canViewReports = hasPermission('reports.view')
   const navigate = useNavigate()
@@ -515,7 +517,7 @@ export default function DashboardPage() {
               <h2 className="dash-section-title">الحجوزات القريبة من الانتهاء</h2>
             </div>
             {endingSoon.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="mobile-table-scroll" role="region" aria-label="الإيجارات القريبة من الانتهاء" tabIndex={compactView ? 0 : undefined} style={{ overflowX: 'auto' }}>
                 <table className="dash-table">
                   <thead>
                     <tr>
@@ -757,7 +759,7 @@ export default function DashboardPage() {
               </div>
               {canViewReports ? (
                 recentSales.length > 0 ? (
-                  <div style={{ overflowX: 'auto' }}>
+                  <div className="mobile-table-scroll" role="region" aria-label="المبيعات الأخيرة" tabIndex={compactView ? 0 : undefined} style={{ overflowX: 'auto' }}>
                     <table className="dash-table">
                       <thead>
                         <tr>

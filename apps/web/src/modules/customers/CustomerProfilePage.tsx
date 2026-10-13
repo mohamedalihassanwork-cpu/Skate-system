@@ -1,3 +1,4 @@
+import { useMobilePresentation } from '../../hooks/useMobilePresentation'
 /**
  * KOSHK SKATE ERP — Customer Profile Page
  * Phase 04 — Customers Module
@@ -59,6 +60,7 @@ function InfoRow({ label, value, dir = 'rtl' }: {
 // ---------------------------------------------------------------------------
 
 export default function CustomerProfilePage() {
+  const compactView = useMobilePresentation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -238,7 +240,7 @@ export default function CustomerProfilePage() {
         {/* ── Page header ── */}
         <div className="page-header">
           <div className="page-header-text" style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/customers')} style={{ padding: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
+            <Button variant="ghost" size="sm" aria-label="العودة للعملاء" onClick={() => navigate('/customers')} style={{ padding: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
               <ArrowRight size={20} aria-hidden="true" />
             </Button>
             <div>
@@ -321,7 +323,7 @@ export default function CustomerProfilePage() {
           ) : rentals.length === 0 ? (
             <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>لا توجد إيجارات مسجلة لهذا العميل</p>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="mobile-table-scroll" role="region" aria-label="سجل إيجارات العميل" tabIndex={compactView ? 0 : undefined} style={{ overflowX: 'auto' }}>
               <table className="customer-history-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -408,7 +410,7 @@ export default function CustomerProfilePage() {
             rows={3}
           />
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
+        <div className="customer-form-actions" style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
           <Button variant="secondary" onClick={() => setShowEdit(false)}>إلغاء</Button>
           <Button variant="primary" loading={editSaving} onClick={handleEdit}>حفظ</Button>
         </div>

@@ -90,10 +90,11 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
           <strong>تنبيه:</strong> تم الإبلاغ عن وجود تلف بالاسكيت أثناء الفحص. يجب إكمال هذا التقرير لتسجيل الضرر.
         </Alert>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+        <div className="rental-damage-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 'var(--font-size-xs)', marginBottom: 4 }}>نوع الضرر</label>
             <select
+              aria-label="نوع الضرر"
               value={damageType}
               onChange={e => setDamageType(e.target.value as any)}
               style={{
@@ -117,6 +118,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
           <div>
             <label style={{ display: 'block', fontSize: 'var(--font-size-xs)', marginBottom: 4 }}>مدى الضرر</label>
             <select
+              aria-label="مدى الضرر"
               value={severity}
               onChange={e => setSeverity(e.target.value as any)}
               style={{
@@ -144,7 +146,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
           required
         />
 
-        <div style={{ marginTop: 16, marginBottom: 16, display: 'grid', gridTemplateColumns: customerCharge > 0 ? '1fr 1fr' : '1fr', gap: 12 }}>
+        <div className="rental-damage-grid" style={{ marginTop: 16, marginBottom: 16, display: 'grid', gridTemplateColumns: customerCharge > 0 ? '1fr 1fr' : '1fr', gap: 12 }}>
           <Input
             id="customer-charge"
             type="number"
@@ -168,7 +170,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: maintenanceRequired ? 'var(--color-danger-bg)' : 'var(--color-surface-raised)', borderRadius: 'var(--radius-md)' }}>
+        <div className="rental-maintenance-option" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: maintenanceRequired ? 'var(--color-danger-bg)' : 'var(--color-surface-raised)', borderRadius: 'var(--radius-md)' }}>
           <input
             type="checkbox"
             id="damage-maintenance-required"
@@ -182,7 +184,7 @@ export function CreateDamageReportModal({ isOpen, onClose, rental, inspectionId,
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+      <div className="rental-damage-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
         <Button variant="ghost" onClick={onClose} disabled={loading}>إلغاء وتخطي التقرير</Button>
         <Button
           variant="primary"

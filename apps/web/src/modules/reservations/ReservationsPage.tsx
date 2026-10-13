@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Badge,
   Button,
+  ConfirmDialog,
   Alert,
   PageLoader,
   Select,
@@ -19,6 +20,7 @@ import {
 } from './reservations.service'
 import { PermissionGate } from '../../components/PermissionGate'
 import ReservationModal from './ReservationModal'
+import { useMobilePresentation } from '../../hooks/useMobilePresentation'
 
 function ReservationStatusBadge({ status }: { status: ReservationStatus }) {
   const statusToBadge: Record<ReservationStatus, BadgeStatus> = {
@@ -39,6 +41,9 @@ function ReservationStatusBadge({ status }: { status: ReservationStatus }) {
 export function ReservationsPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const [cancelReservationId, setCancelReservationId] = useState<number | null>(null)
+  const clearPendingCancellation = useCallback(() => setCancelReservationId(null), [])
+  const compactView = useMobilePresentation(clearPendingCancellation)
 
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,7 +74,15 @@ export function ReservationsPage() {
   useEffect(() => { load() }, [load])
 
   const handleCancel = async (id: number) => {
+    if (compactView) {
+      setCancelReservationId(id)
+      return
+    }
     if (!window.confirm('هل أنت متأكد من إلغاء الحجز؟')) return
+    await cancelReservation(id)
+  }
+
+  const cancelReservation = async (id: number) => {
     try {
       await reservationsService.cancelReservation(id)
       showToast({ type: 'success', title: 'تم إلغاء الحجز بنجاح' })
@@ -160,6 +173,7 @@ export function ReservationsPage() {
       <div className="filters-row">
         <Select
           id="statusFilter"
+          aria-label="تصفية حسب الحالة"
           label=""
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
@@ -192,6 +206,22 @@ export function ReservationsPage() {
           onClose={() => setModalOpen(false)}
           onSaved={load}
           existingReservation={editingReservation}
+        />
+      )}
+
+      {compactView && cancelReservationId !== null && (
+        <ConfirmDialog
+          isOpen={true}
+          title="إلغاء الحجز"
+          description="هل أنت متأكد من إلغاء الحجز؟"
+          confirmLabel="إلغاء الحجز"
+          cancelLabel="تراجع"
+          onCancel={() => setCancelReservationId(null)}
+          onConfirm={() => {
+            const id = cancelReservationId
+            setCancelReservationId(null)
+            void cancelReservation(id)
+          }}
         />
       )}
     </div>

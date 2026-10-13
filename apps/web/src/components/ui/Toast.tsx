@@ -162,6 +162,7 @@ function ToastContainer({
   return (
     <>
       <div
+        className="toast-container"
         role="region"
         aria-label="الإشعارات"
         aria-live="polite"

@@ -121,7 +121,7 @@ export default function RentalsPage() {
           <h1 className="page-header-title">الإيجارات</h1>
           <p className="page-header-subtitle">{total} إيجار إجمالاً</p>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <div className="mobile-page-actions" style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <Button
             id="go-active-rentals"
             variant="secondary"

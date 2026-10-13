@@ -96,3 +96,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Phone/tablet return and finalization dialogs retain the existing rental-content error-scroll target as their sole content scroller, with actions outside it. Inspection fields stack on phones and shared dialog focus handling applies. Return/finalization handlers are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

@@ -95,3 +95,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 ---
 
 *Last updated: 2026-09-09*
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Expense forms and list rows fit phone/tablet layouts with shared control sizing and wrapped actions. Expense recording, categories and treasury effects are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

@@ -375,6 +375,7 @@ export default function SalesPOSPage() {
                   <span style={{ fontWeight: 'var(--font-weight-semibold)' as any, fontSize: 'var(--font-size-sm)', color: 'var(--color-navy-800)' }}>{item.nameAr}</span>
                   <span style={{ fontWeight: 'var(--font-weight-bold)' as any, color: 'var(--color-navy-800)', flexShrink: 0 }} dir="ltr">{item.price * item.cartQuantity} ج.م</span>
                   <button
+                    aria-label={`حذف ${item.nameAr} من السلة`}
                     onClick={() => removeFromCart(item.id)} 
                     style={{
                       position: 'absolute', top: 'var(--space-3)', left: 'var(--space-3)',
@@ -394,9 +395,9 @@ export default function SalesPOSPage() {
                     borderRadius: 'var(--radius-base)',
                     padding: '2px',
                   }}>
-                    <button onClick={() => updateCartQuantity(item.id, -1)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--radius-sm)' }}><Minus size={14} /></button>
+                    <button aria-label={`تقليل كمية ${item.nameAr}`} onClick={() => updateCartQuantity(item.id, -1)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--radius-sm)' }}><Minus size={14} /></button>
                     <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)' as any, width: '32px', textAlign: 'center', color: 'var(--color-navy-800)' }}>{item.cartQuantity}</span>
-                    <button onClick={() => updateCartQuantity(item.id, 1)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--radius-sm)' }}><Plus size={14} /></button>
+                    <button aria-label={`زيادة كمية ${item.nameAr}`} onClick={() => updateCartQuantity(item.id, 1)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--radius-sm)' }}><Plus size={14} /></button>
                   </div>
                   <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-medium)' as any, color: 'var(--color-text-muted)' }}>{item.price} ج.م / وحدة</span>
                 </div>
@@ -432,6 +433,7 @@ export default function SalesPOSPage() {
                   {payments.map((p, idx) => (
                     <div key={idx} className="sales-pos-payment-row" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                       <select 
+                        aria-label={`طريقة دفع الدفعة ${idx + 1}`}
                         className="field-control" 
                         style={{ flex: 1, height: '36px', fontSize: 'var(--font-size-sm)' }}
                         value={p.methodId} 
@@ -440,6 +442,7 @@ export default function SalesPOSPage() {
                         {paymentMethods.map(pm => <option key={pm.id} value={pm.id}>{pm.name}</option>)}
                       </select>
                       <input 
+                        aria-label={`مبلغ الدفعة ${idx + 1}`}
                         type="number" 
                         min="0" 
                         step="0.01" 
@@ -450,7 +453,7 @@ export default function SalesPOSPage() {
                         style={{ width: '96px', height: '36px', fontSize: 'var(--font-size-sm)', fontFamily: 'monospace' }}
                         dir="ltr"
                       />
-                      <button onClick={() => removePaymentRow(idx)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--radius-full)' }}>
+                      <button aria-label={`حذف الدفعة ${idx + 1}`} onClick={() => removePaymentRow(idx)} style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 'var(--radius-full)' }}>
                         <X size={16}/>
                       </button>
                     </div>

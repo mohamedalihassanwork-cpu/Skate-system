@@ -1,0 +1,171 @@
+/* Phone/tablet corrections to existing shared patterns. Desktop and print are
+   intentionally excluded. See docs/quality/MOBILE_TABLET_UI_UX_AUDIT.md. */
+@media screen and (max-width: 1023px) {
+  :root {
+    --color-primary: var(--color-navy-800);
+    --color-primary-rgb: 25, 39, 68;
+    --color-primary-subtle: var(--color-navy-50);
+    --color-surface: var(--color-white);
+    --color-surface-raised: var(--color-page-bg);
+    --color-input-bg: var(--color-white);
+    --color-border-subtle: var(--color-border);
+    --color-gray-50: var(--color-page-bg);
+    --color-danger: var(--color-danger-500);
+    --color-danger-50: var(--color-danger-bg);
+    --color-danger-100: var(--color-danger-bg);
+    --color-danger-200: var(--color-danger-bg);
+    --color-danger-600: var(--color-danger-text);
+    --color-danger-700: var(--color-danger-text);
+    --color-danger-800: var(--color-danger-text);
+    --color-danger-border: var(--color-danger-500);
+    --color-warning-50: var(--color-warning-bg);
+    --color-warning-200: var(--color-warning-bg);
+    --color-warning-600: var(--color-warning-text);
+    --color-warning-700: var(--color-warning-text);
+    --color-warning-border: var(--color-warning-500);
+    --color-success-600: var(--color-success-text);
+    --color-info-600: var(--color-info-text);
+    --color-info-border: var(--color-info-500);
+    --font-family: var(--font-family-base);
+    --font-family-mono: var(--font-family-base);
+    --surface-sunken: var(--color-page-bg);
+    --text-strong: var(--color-text-primary);
+    --text-subtle: var(--color-text-secondary);
+  }
+
+  .app-shell, .app-shell .app-content { min-height: 100dvh; }
+  .app-main, .app-main .page-container { min-width: 0; width: 100%; }
+  .app-main .page-container { padding: var(--space-4); }
+  .app-main .page-header { align-items: flex-start; gap: var(--space-3); }
+  .app-main .page-header-text { flex-basis: calc(var(--space-16) * 4); min-width: min(100%, calc(var(--space-16) * 4)); }
+  .app-main .page-header-title { overflow-wrap: anywhere; line-height: var(--line-height-tight); }
+  .app-main .page-header-subtitle { color: var(--color-text-secondary); }
+  .page-header-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; max-width: 100%; }
+  .app-main .filters-row { align-items: flex-end; }
+  .filters-row > * { min-width: 0; max-width: 100%; }
+  .filters-row > .field-control, .filters-row > .field-wrapper { flex: 1 1 calc(var(--space-16) * 3); width: auto; }
+  .card, .field-wrapper, .form-grid-2col > * { min-width: 0; }
+  .form-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* 44px is the approved web design-system target, including legacy controls. */
+  body button, body .btn, body .icon-btn { min-width: 44px; min-height: 44px; touch-action: manipulation; }
+  body .btn { height: auto; white-space: normal; overflow-wrap: anywhere; }
+  body .icon-btn { flex-shrink: 0; }
+  body :is(input:not([type='checkbox']):not([type='radio']):not([type='hidden']), select, textarea) {
+    min-width: 0; max-width: 100%; min-height: 44px; font-size: var(--font-size-base) !important;
+  }
+  body .field-control, body .form-input, body .form-select, body .form-textarea {
+    width: 100%; height: auto; padding: var(--space-2) var(--space-3);
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-base);
+    color: var(--color-text-primary); background-color: var(--color-white); text-align: start;
+  }
+  body select.field-control { padding-inline-end: var(--space-10); }
+  body textarea.field-control, body .form-textarea { height: auto; min-height: var(--space-20); }
+  body .field-control.field-error { border-color: var(--color-danger-500); }
+  body .field-control:focus { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+  body .field-control:disabled { background-color: var(--color-neutral-bg); }
+  body .field-message--helper, body .tag-input-message--helper { color: var(--color-text-secondary); }
+  body .searchbar { min-width: 0; max-width: 100%; height: auto; min-height: 44px; padding-inline-end: var(--space-1); }
+  body .searchbar-clear { width: 44px; height: 44px; flex-shrink: 0; }
+  body .pagination { gap: var(--space-2); }
+  body .tag-chip { height: auto; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; }
+  body .tag-chip-remove { width: 44px; flex-shrink: 0; }
+  body .tag-input-field { flex-basis: var(--space-20); }
+  body .tag-input-box { gap: var(--space-2); }
+
+  /* Retain table semantics and horizontal access without widening the page. */
+  body .table-wrapper { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+  body .ds-table { min-width: calc(var(--space-16) * 9); }
+  body .ds-table :is(th, td) { font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+  body .ds-table td:not([colspan]) { min-width: calc(var(--space-16) * 2); }
+  body .ds-table:has(.empty-state) { min-width: 0; }
+  body .ds-table:has(.empty-state) thead { display: none; }
+  body .ds-table td { height: calc(var(--space-12) + var(--space-2)); overflow-wrap: anywhere; }
+  body .ds-table th { color: var(--color-text-secondary); }
+  body .badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  body .badge[data-variant='success'], body .badge[data-variant='danger'] { color: var(--color-text-primary) !important; }
+
+  /* Existing shared dialog: one bounded body, persistent header/footer. */
+  body .modal-container {
+    display: flex; flex-direction: column; overflow: hidden;
+    max-height: calc(100dvh - var(--space-8) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .modal-container :is(.modal-header, .modal-footer, .modal-divider) { flex-shrink: 0; }
+  .modal-container .modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .modal-container .modal-title { min-width: 0; overflow-wrap: anywhere; }
+  .modal-container .modal-footer { flex-wrap: wrap; }
+  /* The existing sale-detail confirmation must also shield its parent dialog. */
+  .modal-container ~ .modal-backdrop { z-index: calc(var(--z-modal) + 1); }
+  .modal-container ~ .modal-container { z-index: calc(var(--z-modal) + 2); }
+  .modal-container ~ .modal-backdrop--closing { pointer-events: auto; }
+  .app-main :is(input, select, textarea, button, a, [tabindex]) { scroll-margin-block: calc(var(--header-height) + var(--space-4)); }
+  .modal-body :is(input, select, textarea, button, [tabindex]) { scroll-margin-block: var(--space-4); }
+
+  /* Preserve sidebar breakpoint; make both existing variants operable by touch. */
+  .app-shell .sidebar-nav { min-height: 0; gap: var(--space-2); }
+  .app-shell .sidebar--collapsed .sidebar-nav { padding-inline: var(--space-2); }
+  .app-shell .nav-item { flex-shrink: 0; }
+  .app-shell .sidebar-section-label { font-size: var(--font-size-xs); color: var(--color-navy-200); letter-spacing: normal; }
+  .app-shell .sidebar-collapse-btn { min-width: 44px; min-height: 44px; }
+  .app-shell .sidebar-user-role, .app-shell .sidebar-collapse-btn { color: var(--color-navy-200); }
+  .app-shell .sidebar-header { padding-inline: var(--space-3); gap: var(--space-2); }
+  .app-shell .sidebar--collapsed .sidebar-header { padding-inline: var(--space-2); }
+  .app-shell .topbar { padding-inline: var(--space-4); gap: var(--space-2); }
+  .app-shell .topbar-title { min-width: 0; overflow-wrap: anywhere; font-size: var(--font-size-base); }
+  .app-shell .topbar-role-badge { white-space: normal; max-width: calc(var(--space-16) * 2); }
+  .app-shell .topbar-title { min-width: min(5em, 30vw); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-shell .topbar-actions { gap: var(--space-2); min-width: 44px; flex-shrink: 1; }
+  .app-shell .topbar-role-badge { min-width: 0; max-width: 28vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-shell .sidebar:not(.sidebar--collapsed) .nav-item-label { min-width: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .app-shell .sidebar:not(.sidebar--collapsed) .sidebar-brand { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  .app-shell .sidebar:not(.sidebar--collapsed) .sidebar-header { height: auto; min-height: var(--header-height); }
+  .app-shell .topbar-current-title { display: none; }
+  .app-shell .topbar-desktop-title { display: block; }
+  .app-shell .desktop-skip-link {
+    display: block; position: fixed; inset-block-start: var(--space-3); inset-inline-start: var(--space-4);
+    transform: translateY(-200%); z-index: var(--z-toast); padding: var(--space-3) var(--space-4);
+    background: var(--color-white); color: var(--color-navy-800); border-radius: var(--radius-base); box-shadow: var(--shadow-md);
+  }
+  .app-shell .desktop-skip-link:focus { transform: translateY(0); }
+  .app-main:focus { outline: none; }
+
+  body .notification-panel {
+    width: min(320px, calc(100vw - var(--space-8))) !important;
+    max-height: calc(100dvh - var(--header-height) - var(--space-8) - env(safe-area-inset-top, 0px)) !important;
+    overscroll-behavior: contain; overflow-wrap: anywhere;
+  }
+  .notification-panel > div:first-child { flex-wrap: wrap; gap: var(--space-2); }
+  .notification-panel select:focus-visible { outline: 2px solid var(--color-border-focus) !important; outline-offset: 2px; }
+  body .notification-count { background-color: var(--color-navy-800) !important; font-size: var(--font-size-xs) !important; }
+  .notification-panel [style*='--color-danger-700'] { color: var(--color-text-primary) !important; }
+  body .toast-container { bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)) !important; }
+  body .toast-dismiss { opacity: 1; }
+  body .toast-item { overflow-wrap: anywhere; gap: var(--space-2); padding: var(--space-3); }
+}
+
+@media screen and (max-width: 767px) {
+  .sidebar-mobile-drawer .sidebar { width: 100%; }
+  .sidebar-mobile-drawer .sidebar-header { padding-inline-end: calc(44px + var(--space-6)); }
+  .sidebar-mobile-drawer .sidebar-brand { white-space: normal; overflow-wrap: anywhere; }
+  .sidebar-mobile-drawer .sidebar-mobile-close { top: calc(var(--space-3) + env(safe-area-inset-top, 0px)); }
+  body .notification-panel {
+    position: fixed !important; top: calc(var(--header-height) + env(safe-area-inset-top, 0px)) !important;
+    inset-inline: var(--space-4); width: auto !important;
+  }
+}
+
+@media screen and (max-width: 639px) {
+  .app-main .page-header-text, .app-main .page-header-actions { width: 100%; flex-basis: auto; }
+  .page-header-actions > .btn { flex: 1 1 auto; }
+  .form-grid-2col { grid-template-columns: minmax(0, 1fr); }
+  .app-main .filters-row { align-items: stretch; }
+  .filters-row > .field-control, .filters-row > .field-wrapper { flex: 0 0 auto; width: 100%; }
+  body .modal-container {
+    max-width: 100% !important; max-height: calc(100dvh - var(--space-4) - env(safe-area-inset-top, 0px));
+  }
+  .modal-container .modal-header { padding: var(--space-3) var(--space-4); gap: var(--space-2); }
+}
+
+@media screen and (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

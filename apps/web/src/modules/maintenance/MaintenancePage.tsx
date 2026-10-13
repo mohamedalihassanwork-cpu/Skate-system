@@ -142,6 +142,7 @@ export default function MaintenancePage() {
       <div className="filters-row">
         <Select
           id="statusFilter"
+          aria-label="تصفية حسب الحالة"
           label=""
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}

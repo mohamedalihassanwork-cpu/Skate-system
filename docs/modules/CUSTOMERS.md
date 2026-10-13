@@ -168,3 +168,12 @@ See `docs/phases/PHASE_04_CUSTOMERS_MODULE.md` for full test matrix.
 - **Changes:** The profile history table now follows desktop row spacing and header emphasis. Long profile values can shrink and wrap. The list continues to use the shared DataTable, SearchBar, IconButton, Modal and ConfirmDialog.
 - **Boundary:** All new visual rules use `@media screen and (min-width: 1024px)`. Presentation below 1024px, API requests, permissions, validation, financial calculations and workflows are preserved.
 - **Verification:** See the central report for the actual build, lint, synthetic-browser and below-desktop regression results. This audit does not claim new live financial or database verification.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Customer cards, filters, profile label/value rows, history tables and form actions adapt to phone/tablet widths. Long values wrap and icon back controls retain their intended size. Customer operations are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+Completion review (2026-10-13): the existing profile-history scroller has an Arabic region name and accepts keyboard focus below desktop; desktop tab order is unchanged.

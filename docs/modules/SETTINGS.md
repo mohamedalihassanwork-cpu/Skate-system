@@ -159,3 +159,10 @@ Per `docs/00-governance/DEFINITION_OF_DONE.md`:
 Reviewed all five settings across pricing, duration, printing and notification sections, plus dirty, view-only, validation and error states. Existing shared form controls, save diff, validation and permissions are retained. Desktop shared header action alignment and content wrapping corrections apply; the 800px form measure and mobile rules remain unchanged.
 
 See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for desktop-only scope, evidence and verification results. This audit does not change previous backend verification status.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Setting section text, dirty/view-only notices and tag chips wrap below desktop. Controls inherit approved touch sizing and growing field heights. Changed-only saves and permissions are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

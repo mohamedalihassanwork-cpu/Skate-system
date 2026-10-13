@@ -102,3 +102,10 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 Reviewed user/entity/action filters, table columns, loading/empty/error states and pagination. Desktop gutters, header hierarchy, filter layout, focus outlines and table spacing now follow the existing design tokens. API filters, translation maps and pagination logic are unchanged.
 
 Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Phone/tablet audit filters use a labelled responsive grid. The existing table has readable token-based styling and contained horizontal scrolling; pagination wraps. Audit data/filter logic is unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.

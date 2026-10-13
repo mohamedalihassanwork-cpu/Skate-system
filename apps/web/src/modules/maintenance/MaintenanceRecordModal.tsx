@@ -177,7 +177,7 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
       onClose={onClose}
       size="lg"
       footer={
-        <div className="flex justify-between w-full">
+        <div className="flex justify-between w-full maintenance-actions">
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             إغلاق
           </Button>
@@ -300,6 +300,7 @@ export default function MaintenanceRecordModal({ recordId, onClose, onSave }: Ma
                           onClick={() => handleRemovePart(part.id)}
                           disabled={saving}
                           title="حذف"
+                          aria-label={`حذف ${part.partName}`}
                         >
                           <Trash2 size={16} />
                         </button>

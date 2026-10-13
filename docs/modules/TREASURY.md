@@ -102,3 +102,12 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 Reviewed active/inactive shifts, opening/closing forms, petty-expense entry and the expense list. Desktop close-shift fields and action wrap without squeezing the native date/time input; opening controls, expense headers and long descriptions remain contained. Shift, expense, amount and permission behavior is unchanged. The current page also uses Phase 12 shift/expense functionality.
 
 Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Shift summary/open/close controls and expense rows stack or wrap below desktop, including native datetime input clearance. Treasury calculations and operations are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+Completion review (2026-10-13): mobile close-shift headings/captions and expense amounts use approved readable foreground tokens. Financial values, validation and submit handlers are unchanged.

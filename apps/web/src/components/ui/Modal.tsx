@@ -49,6 +49,9 @@ const SIZE_WIDTHS: Record<ModalSize, string> = {
 type ModalState = 'hidden' | 'visible' | 'closing'
 
 // Must match the CSS token values used in the exit keyframes.
+let mobileScrollLocks = 0
+let mobilePreviousOverflow = ''
+
 const MODAL_EXIT_MS = 300   // --transition-slow: modal-exit / modal-sheet-exit
 // (Backdrop uses --transition-base, 200ms, handled purely in CSS via animation duration)
 
@@ -85,7 +88,8 @@ export function Modal({
   // exit animation completes. Cleanup cancels the timer if isOpen flips back.
   useEffect(() => {
     if (modalState !== 'closing') return
-    const timer = setTimeout(() => setModalState('hidden'), MODAL_EXIT_MS)
+    const mobileReducedMotion = window.matchMedia('(max-width: 1023px) and (prefers-reduced-motion: reduce)').matches
+    const timer = setTimeout(() => setModalState('hidden'), mobileReducedMotion ? 0 : MODAL_EXIT_MS)
     return () => clearTimeout(timer)
   }, [modalState])
 
@@ -97,7 +101,7 @@ export function Modal({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         const dialogs = document.querySelectorAll('.modal-container')
-        if (window.matchMedia('(min-width: 1024px)').matches && dialogs[dialogs.length - 1] !== dialogRef.current) return
+        if (dialogs[dialogs.length - 1] !== dialogRef.current) return
         onClose()
       }
     }
@@ -105,16 +109,7 @@ export function Modal({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [modalState, onClose])
 
-  // Focus first focusable element when modal opens (not during closing animation).
-  useEffect(() => {
-    if (!isOpen || isClosing || window.matchMedia('(min-width: 1024px)').matches) return
-    const focusable = dialogRef.current?.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    )
-    focusable?.focus()
-  }, [isOpen, isClosing])
-
-  // Desktop keyboard containment; preserve the existing mobile interaction path.
+  // The existing desktop focus lifecycle also protects phone/tablet dialogs.
   const isRendered = modalState !== 'hidden'
   useEffect(() => {
     if (!isRendered) return
@@ -129,10 +124,10 @@ export function Modal({
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )).filter(element => element.getClientRects().length > 0)
     const frame = requestAnimationFrame(() => {
-      if (isTopmost() && window.matchMedia('(min-width: 1024px)').matches) (focusables()[0] ?? dialog).focus()
+      if (isTopmost()) (focusables()[0] ?? dialog).focus()
     })
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab' || !isTopmost() || !window.matchMedia('(min-width: 1024px)').matches) return
+      if (event.key !== 'Tab' || !isTopmost()) return
       const controls = focusables()
       const first = controls[0]
       const last = controls[controls.length - 1]
@@ -144,7 +139,7 @@ export function Modal({
       }
     }
     const onFocusIn = (event: FocusEvent) => {
-      if (isTopmost() && window.matchMedia('(min-width: 1024px)').matches && event.target instanceof Node && !dialog.contains(event.target)) {
+      if (isTopmost() && event.target instanceof Node && !dialog.contains(event.target)) {
         (focusables()[0] ?? dialog).focus()
       }
     }
@@ -154,7 +149,7 @@ export function Modal({
       cancelAnimationFrame(frame)
       document.removeEventListener('keydown', onKeyDown)
       document.removeEventListener('focusin', onFocusIn)
-      if (origin?.isConnected && window.matchMedia('(min-width: 1024px)').matches &&
+      if (origin?.isConnected &&
           (dialog.contains(document.activeElement) || document.activeElement === document.body)) origin.focus()
     }
   }, [isRendered])
@@ -162,6 +157,15 @@ export function Modal({
   // Scroll lock — maintained throughout the animation, released only on 'hidden'.
   useEffect(() => {
     if (modalState === 'hidden') return
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      if (mobileScrollLocks === 0) mobilePreviousOverflow = document.body.style.overflow
+      mobileScrollLocks += 1
+      document.body.style.overflow = 'hidden'
+      return () => {
+        mobileScrollLocks -= 1
+        if (mobileScrollLocks === 0) document.body.style.overflow = mobilePreviousOverflow
+      }
+    }
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [modalState])

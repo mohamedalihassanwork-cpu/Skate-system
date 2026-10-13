@@ -102,3 +102,12 @@ To be defined during implementation phase. Reference `docs/00-governance/DEFINIT
 Reviewed the list and detail, collection and waiver dialog tabs. Shared desktop table/focus/wrapping improvements and token aliases restore selected-tab and financial-summary emphasis. Charge calculations, collection, waiver, permissions and API calls are unchanged.
 
 Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.
+
+
+## Phone/tablet presentation — 2026-10-12
+
+Damage tabs, details, summaries and actions wrap below desktop; payment controls are touch-sized and labelled. Charge, waiver and settlement handlers are unchanged.
+
+Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+Completion review (2026-10-13): details/collection/waiver controls expose selected state; mobile summary foregrounds use approved readable tokens. All three tabs were exercised without payment or waiver submissions.

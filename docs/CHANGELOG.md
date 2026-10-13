@@ -2,9 +2,35 @@
 
 **Format:** Meaningful changes only. Not every trivial edit.
 
+## [2026-10-13] — CR: Products Optional English Names + Expenses Fix + Reservations Customer Search
+
+**Type:** BUG FIX
+
+### 1. Products — Optional English Names (frontend + backend)
+
+**Root cause:** Both the product-category form and the product form enforced `required` HTML attributes and frontend guard checks (`if (!newCatName || !newCatNameAr) return`) for the English name field. The backend route validation also required `name` (`if (!req.body.name || ...)`). Arabic name is the only mandatory name in this Arabic-first ERP.
+
+**Files changed:**
+- `apps/web/src/modules/products/ProductsPage.tsx` — Removed `required` from English name inputs; removed guard blocking submission when English name is empty.
+- `apps/api/src/modules/products/products.routes.ts` — Backend category creation now only requires `nameAr`; product creation now only requires `nameAr`, `categoryId`, and `price`. English `name` defaults to `''` when omitted.
+
+### 2. Expenses — Registration Failure (seed + idempotent fix)
+
+**Root cause:** The expense service (`expenses.service.ts`) queries `treasury_accounts WHERE is_cash_drawer = true` to find the cash drawer for deducting the expense. The seed script created all treasury accounts with `isCashDrawer` defaulting to `false` — no account was ever marked as the cash drawer, triggering `BusinessRuleError('NO_CASH_DRAWER')` on every expense registration attempt.
+
+**Files changed:**
+- `apps/api/src/db/seed.ts` — 'Main Cash' treasury account now seeded with `isCashDrawer: true`. Added idempotent fix: if 'Main Cash' already exists with `isCashDrawer=false` (from old seed), it is updated to `true` on re-seed. Run `npm run db:seed` in `apps/api` to apply the fix to an existing database.
+
+### 3. Reservations — Customer Search and Creation
+
+**Root cause:** `ReservationModal.tsx` used a raw `<Input type="number">` field for customer ID, requiring users to know and type the customer's internal numeric ID. The Rentals page (`RentalPOSPage.tsx`) already implements a full customer search-and-create picker — that pattern was not replicated in reservations.
+
+**Files changed:**
+- `apps/web/src/modules/reservations/ReservationModal.tsx` — Added inline `CustomerPicker` component (search by name/phone/national ID, create new customer via `PermissionGate("customers.create")`). Customer ID input replaced; selected customer is used for the reservation payload. Editing an existing reservation still shows a read-only customer info panel (customer cannot be changed during edit — per existing business rule). All existing validation, permissions, and skate/time fields unchanged.
+
 ---
 
-## [2026-10-11] — Desktop UI/UX audit and improvement
+
 
 **Type:** UI FIX + VERIFICATION + DOCUMENTATION
 

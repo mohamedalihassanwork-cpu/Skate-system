@@ -18,6 +18,9 @@ import { PrintProvider } from './contexts/PrintContext'
 import './styles/index.css'
 import App from './App.tsx'
 import './styles/desktop.css'
+import './styles/mobile-shared.css'
+import './styles/mobile-modules.css'
+import './styles/mobile-pages.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

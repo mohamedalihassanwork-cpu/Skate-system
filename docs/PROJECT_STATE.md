@@ -1,8 +1,8 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 5.5
-**Last updated:** 2026-10-12 — Desktop UI/UX audit (isolated browser verification; business phase status unchanged).
-**Updated by:** AI Agent — Desktop UI/UX audit
+**Version:** 5.7
+**Last updated:** 2026-10-13 — CR: Products optional English names + Expenses NO_CASH_DRAWER fix + Reservations customer search (3 bug fixes). Both builds PASS, zero TS errors.
+**Updated by:** AI Agent — Change Request Implementation
 
 ---
 

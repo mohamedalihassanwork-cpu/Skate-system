@@ -533,7 +533,7 @@ export default function CustomersPage() {
             rows={3}
           />
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
+        <div className="customer-form-actions" style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
           <Button variant="secondary" onClick={() => setShowCreateModal(false)}>إلغاء</Button>
           <Button variant="primary" loading={createSaving} onClick={handleCreate}>إضافة</Button>
         </div>
@@ -574,7 +574,7 @@ export default function CustomersPage() {
             rows={3}
           />
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
+        <div className="customer-form-actions" style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
           <Button variant="secondary" onClick={() => setEditTarget(null)}>إلغاء</Button>
           <Button variant="primary" loading={editSaving} onClick={handleEdit}>حفظ</Button>
         </div>

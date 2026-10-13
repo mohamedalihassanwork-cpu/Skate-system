@@ -123,8 +123,9 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
     <Modal isOpen={isOpen} onClose={onClose} title={`تقرير الضرر #${report.id}`} size="base">
       {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 16, borderBottom: '1px solid var(--color-border)' }}>
+      <div className="damage-tabs" style={{ display: 'flex', gap: 16, marginBottom: 16, borderBottom: '1px solid var(--color-border)' }}>
         <button
+          aria-pressed={activeTab === 'details'}
           onClick={() => setActiveTab('details')}
           style={{
             background: 'none', border: 'none', padding: '8px 16px', cursor: 'pointer',
@@ -138,6 +139,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
         {remaining > 0 && (
           <PermissionGate permission="damage.collect_charge">
             <button
+              aria-pressed={activeTab === 'pay'}
               onClick={() => setActiveTab('pay')}
               style={{
                 background: 'none', border: 'none', padding: '8px 16px', cursor: 'pointer',
@@ -153,6 +155,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
         {remaining > 0 && (
           <PermissionGate permission="waivers.approve">
             <button
+              aria-pressed={activeTab === 'waive'}
               onClick={() => setActiveTab('waive')}
               style={{
                 background: 'none', border: 'none', padding: '8px 16px', cursor: 'pointer',
@@ -168,8 +171,8 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
       </div>
 
       {activeTab === 'details' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="damage-details" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="damage-details-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>الاسكيت</span>
               <div style={{ fontWeight: 'var(--font-weight-medium)' }} dir="ltr" className="text-right">{report.skateCode}</div>
@@ -219,7 +222,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
             </div>
           </div>
 
-          <div style={{ background: 'var(--color-surface-raised)', padding: 16, borderRadius: 'var(--radius-md)' }}>
+          <div className="damage-summary" style={{ background: 'var(--color-surface-raised)', padding: 16, borderRadius: 'var(--radius-md)' }}>
             <h4 style={{ fontSize: 'var(--font-size-sm)', margin: '0 0 12px 0' }}>الملخص المالي</h4>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span>الغرامة المقررة:</span>
@@ -261,8 +264,10 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
           />
 
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--font-size-xs)', marginBottom: 4 }}>طريقة الدفع</label>
+            <label htmlFor="damage-payment-method" style={{ display: 'block', fontSize: 'var(--font-size-xs)', marginBottom: 4 }}>طريقة الدفع</label>
             <select
+              id="damage-payment-method"
+              className="damage-payment-method"
               value={paymentMethodId}
               onChange={e => setPaymentMethodId(parseInt(e.target.value, 10))}
               style={{
@@ -280,7 +285,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
             </select>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+          <div className="damage-dialog-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
             <Button variant="primary" onClick={handlePay} loading={loading}>
               <CheckCircle size={16} style={{ marginInlineEnd: 6 }} /> تأكيد التحصيل
             </Button>
@@ -314,7 +319,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
             required
           />
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+          <div className="damage-dialog-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
             <Button variant="primary" onClick={handleWaive} loading={loading} style={{ background: 'var(--color-warning-text)', color: 'white', border: 'none' }}>
               <AlertCircle size={16} style={{ marginInlineEnd: 6 }} /> تأكيد الإعفاء
             </Button>
@@ -322,7 +327,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
+      <div className="damage-dialog-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
         <Button variant="ghost" onClick={onClose} disabled={loading}>إغلاق</Button>
       </div>
     </Modal>

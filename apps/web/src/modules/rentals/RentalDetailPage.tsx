@@ -74,7 +74,7 @@ function RentalItemCard({ item, isRentalActive, onReturn, onExtend }: ItemCardPr
   const isActive = item.status === 'active'
 
   return (
-    <div style={{
+    <div className="rental-detail-item-card" style={{
       background: 'var(--color-surface)',
       border: `1px solid ${opStatus === 'overdue' ? 'var(--color-danger-text)' : opStatus === 'ending_soon' ? 'var(--color-warning-text)' : 'var(--color-border)'}`,
       borderRadius: 'var(--radius-md)',
@@ -104,7 +104,7 @@ function RentalItemCard({ item, isRentalActive, onReturn, onExtend }: ItemCardPr
 
       {/* Item body */}
       <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+        <div className="rental-item-facts" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
           <div>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>بداية</div>
             <div style={{ fontSize: 'var(--font-size-sm)', direction: 'ltr' }}>{formatDateTime(item.startedAt)}</div>
@@ -136,7 +136,7 @@ function RentalItemCard({ item, isRentalActive, onReturn, onExtend }: ItemCardPr
         </div>
 
         {/* Amount */}
-        <div style={{
+        <div className="rental-item-amount" style={{
           display: 'flex', justifyContent: 'space-between',
           marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-subtle)',
         }}>
@@ -200,13 +200,14 @@ function ExtendItemInline({ item, onDone, onCancel }: { item: RentalItemDTO; onD
         تمديد اسكيت {item.skate.skateCode}
       </div>
       {error && <Alert variant="danger" style={{ marginBottom: 8 }}>{error}</Alert>}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+      <div className="rental-extend-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
         <div>
           <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>
             مدة التمديد (دقائق)
           </label>
           <input
             type="number"
+            aria-label="مدة التمديد بالدقائق"
             min={1}
             value={minutes}
             onChange={e => setMinutes(e.target.value)}
@@ -275,7 +276,7 @@ export default function RentalDetailPage() {
 
   if (loading) return <PageLoader />
   if (error || !rental) return (
-    <div className="page-container">
+    <div className="page-container rental-detail-page">
       <Alert variant="danger">{error ?? 'تعذر تحميل الإيجار'}</Alert>
       <Button variant="ghost" onClick={() => navigate('/rentals')} style={{ marginTop: 16 }}>
         <ArrowRight size={16} /> العودة للقائمة
@@ -289,11 +290,11 @@ export default function RentalDetailPage() {
   const allItemsReturned = activeItems.length === 0 && isActive
 
   return (
-    <div className="page-container">
+    <div className="page-container rental-detail-page">
       {/* Header */}
       <div className="page-header">
         <div className="page-header-text" style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
-          <Button id="back-to-rentals" variant="ghost" onClick={() => navigate(-1)} style={{ padding: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
+          <Button id="back-to-rentals" aria-label="العودة للإيجارات" variant="ghost" onClick={() => navigate(-1)} style={{ padding: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
             <ArrowRight size={20} aria-hidden="true" />
           </Button>
           <div>
@@ -311,8 +312,8 @@ export default function RentalDetailPage() {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="ghost" size="sm" onClick={() => fetchRental(true)}>
+        <div className="mobile-page-actions" style={{ display: 'flex', gap: 8 }}>
+          <Button variant="ghost" size="sm" aria-label="تحديث الإيجار" onClick={() => fetchRental(true)}>
             <RefreshCw size={16} />
           </Button>
           {/* Finalize button when all items are returned but rental still active */}
@@ -402,7 +403,7 @@ export default function RentalDetailPage() {
         <h2 style={{ fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-bold)', marginBottom: 'var(--space-3)' }}>
           الاسكيتات ({rental.items.length})
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-3)' }}>
+        <div className="rental-detail-items-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-3)' }}>
           {rental.items.map(item => (
             <div key={item.id}>
               <RentalItemCard
