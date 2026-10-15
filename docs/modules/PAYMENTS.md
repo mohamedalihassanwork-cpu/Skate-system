@@ -74,3 +74,9 @@ Scope, source coverage, verification results and live-testing limits are recorde
 ## Verification update — 2026-10-15
 
 The scoped recorded-balance feature is IMPLEMENTED / TESTED / VERIFIED: 35 focused API tests, 96 synthetic UI checks across 17 cases, API/web builds and frontend lint pass. See [actual evidence and retained limits](../quality/TREASURY_AVAILABLE_BALANCE.md#9-implemented-changes-and-verified-results), including the test-only schema alignment and unresolved existing migration defect. No physical-cash or electronic-settlement claim.
+
+## Independent sub-treasury proposal — 2026-10-15
+
+[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) records current routing and all six financial producers. Proposed assigned-cash routing, acting-cashier refund funding, locked shift checks and exact close/transfer money require the documented decisions before implementation. Current electronics mappings, source history and uncollected exclusions remain authoritative. No code or permission is changed in this documentation stage.
+
+Clarification of earlier wording: the scoped sales atomic-balance fix is already implemented (not a remaining current lost-update finding); App Treasury access already admits treasury.view OR shifts.manage. Earlier future-tense verification wording describes that prior plan; its actual results are in the verification update above.

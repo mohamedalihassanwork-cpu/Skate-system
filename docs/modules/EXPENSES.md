@@ -1,101 +1,30 @@
-﻿# Module: Expenses
+# Module: Expenses
 
-**Status:** PLANNED / NOT IMPLEMENTED
-**Last updated:** 2026-09-09
+**Status:** IMPLEMENTED; verification remains partial. Sub-treasury routing/access proposal PENDING owner decisions.
+**Last updated:** 2026-10-15 — current-state reconciliation for CR-SUB-TREASURY-2026-10-15.
 
----
+## Current implementation
 
-## Purpose
+Ordinary expenses are implemented in `apps/api/src/modules/expenses/`, `apps/api/src/db/schema/treasury.ts`, and the web Treasury page. The previous PLANNED/NOT IMPLEMENTED stub was stale.
 
-Records business operating expenses and links them to the treasury.
+`recordExpense()` requires the acting user's active shift, creates the expense, selects the first account with `is_cash_drawer=true`, creates an expense outflow, applies an atomic balance decrement and calls the audit helper in one transaction. The shift lookup is not locked; no sufficient-funds guard exists. Account selection is global, not cashier-owned. Category ID is optional; the current expense schema has amount, description, cashier, shift and created time. Receipt upload, arbitrary payment-account selection and category administration are not implemented by this service.
 
----
+| Route | Current permission and scope |
+|---|---|
+| POST /api/v1/expenses | expenses.create; acting user requires an active shift |
+| GET /api/v1/expenses | expenses.view; all expenses, no ownership/shift filter |
 
-## Current Status
+Cashier receives both permissions in seed. Treasury's current-shift captions do not establish server filtering. System maintenance payments use their separate method/account flow; they are not ordinary expense rows.
 
-All components PLANNED — No implementation exists.
+## Proposed sub-treasury integration
 
----
+[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) proposes acting-cashier drawer routing, shared shift serialization, nonnegative drawer funds and own/all history scopes. These business changes require ST-01/02/04/05 approval. Merely adding more cash accounts while retaining LIMIT 1 would route money incorrectly.
 
-## Business Rules
+Preserve expense source linkage and atomic ledger deltas. New/touched financial audit must be awaited and transaction-critical. Historical expense and movement rows remain unchanged; no receipt or other unrelated expense feature is added.
 
-- Every expense deducts from the treasury account atomically
-- Expense linked to category and payment source
-- Receipt/attachment supported
-- Administrator can add/edit categories
+## Verification
 
----
-
-## Frontend
-
-**Target location:** `apps/web/src/modules/` (path TBD during implementation)
-
----
-
-## Backend
-
-**Target location:** `apps/api/src/modules/` (path TBD during implementation)
-
----
-
-## Database
-
-See `docs/architecture/DATABASE_ARCHITECTURE.md` for relevant tables.
-
----
-
-## APIs
-
-See `docs/architecture/API_ARCHITECTURE.md` for relevant routes.
-
----
-
-## Permissions
-
-To be defined during implementation phase.
-
----
-
-## Related Modules
-
-To be documented during implementation.
-
----
-
-## Tests
-
-**Target location:** `tests/` (TBD during implementation)
-
-See `docs/quality/TEST_MATRIX.md` for relevant test cases.
-
----
-
-## Known Issues
-
-*None — not yet implemented.*
-
----
-
-## Known Technical Debt
-
-*None — not yet implemented.*
-
----
-
-## Future Work
-
-To be defined during or after implementation.
-
----
-
-## Verification Requirements
-
-To be defined during implementation phase. Reference `docs/00-governance/DEFINITION_OF_DONE.md`.
-
----
-
-*Last updated: 2026-09-09*
-
+Existing Treasury tests cover real expense deduction/audit in the shared-account baseline; they do not verify cashier drawer routing. New two-cashier, balance sufficiency, close-versus-expense, rollback and direct ownership tests are required after approval. No financial tests or database writes were performed for this documentation correction.
 
 ## Phone/tablet presentation — 2026-10-12
 

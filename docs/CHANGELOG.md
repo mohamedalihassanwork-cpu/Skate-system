@@ -1258,3 +1258,10 @@ Stage 1: COMPLETE — awaiting owner review and approval to begin Stage 2 (Imple
 ---
 
 *Future entries will appear above as implementation progresses.*
+
+## [2026-10-15] — Sub-treasury and daily closing proposal (independent CR)
+
+- Documented current shared-account ledger, cashier shifts, financial producers, permission/audit/concurrency gaps and migration prerequisites.
+- Added [CR-SUB-TREASURY-2026-10-15](decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) with explicit PENDING owner choices, closing/pending/confirmed distinctions, conditional discrepancy rules, transaction design, cutover and verification plan.
+- Reconciled stale Cashier Shifts/Expenses implementation docs and added scoped current-versus-proposed navigation/architecture notes.
+- Documentation only: no financial feature implementation, database change, tests/builds or physical verification claimed. Unrelated rental/audit work remains outside this change.

@@ -90,3 +90,9 @@ Completion review (2026-10-13): mobile close-shift headings/captions and expense
 ## Verification update — 2026-10-15
 
 The scoped recorded-balance feature is IMPLEMENTED / TESTED / VERIFIED: 35 focused API tests, 96 synthetic UI checks across 17 cases, API/web builds and frontend lint pass. See [actual evidence and retained limits](../quality/TREASURY_AVAILABLE_BALANCE.md#9-implemented-changes-and-verified-results), including the test-only schema alignment and unresolved existing migration defect. No physical-cash or electronic-settlement claim.
+
+## Independent sub-treasury request — 2026-10-15
+
+**PROPOSED / owner decisions PENDING; NOT IMPLEMENTED.** [CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) investigates assigned cash drawers, daily closing and manager-confirmed handovers. Current accounts remain globally mapped and current closing still posts no transfer. Proposed pending/rejected handovers have no ledger effect; only accepted settlement creates paired movements, with separately authorized variance adjustments if ST-03 is approved.
+
+The proposal includes explicit decisions on cash/electronics, float/carryover, discrepancies, refunds, permissions and historical cutover. It does not reuse earlier UI or recorded-balance authorization to approve those policies. Existing behavior/results above remain the baseline, not proof of the proposed feature.

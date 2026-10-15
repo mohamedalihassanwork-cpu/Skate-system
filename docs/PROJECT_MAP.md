@@ -701,3 +701,18 @@ The completion review also adds `tests/mobile_operational_checks.py`: isolated n
 | `docs/quality/TREASURY_AVAILABLE_BALANCE.md` | Current model, findings, owner decisions, verification and limits |
 
 Actual accounts/movements live in `apps/api/src/db/schema/payments.ts`; shifts/expenses live in `schema/treasury.ts`. There is no separate backend treasury directory or implemented transfer workflow. This entry supersedes the stale PLANNED Treasury/Payments navigation above for these paths only.
+
+## Independent sub-treasury request — current navigation (2026-10-15)
+
+[CR-SUB-TREASURY-2026-10-15](decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) is a PROPOSED specification, not implemented routes/tables. It contains investigation, owner decision sheet, architecture, workflow, migration and verification plan.
+
+| Implemented area | Actual path |
+|---|---|
+| Accounts/methods/ledger | apps/api/src/db/schema/payments.ts; modules/payments/ |
+| Shift/expense schema | apps/api/src/db/schema/treasury.ts |
+| Shift/expense APIs | apps/api/src/modules/shifts/; modules/expenses/ |
+| Treasury/current shifts/expenses UI | apps/web/src/modules/treasury/ |
+| Reports/audit | apps/api/src/modules/reports/; modules/audit/ |
+| Current financial regression tests | apps/api/src/tests/treasury.test.ts; sales-balance.test.ts; maintenance-payments.test.ts |
+
+These paths supersede stale PLANNED Treasury/Payments/Shifts/Expenses navigation above. Proposed assignment/handover/funding/transfer routes and tables do not exist yet. No separate shift page or backend treasury module should be inferred from the target tree.

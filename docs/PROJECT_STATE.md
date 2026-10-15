@@ -371,3 +371,15 @@ Verification: 35/35 focused API integration tests pass; Arabic RTL UI checks pas
 Test-environment limitation: legacy koshk_skate_test schema lacked multi-skate rental fields. Only that test schema was aligned through 15 non-destructive DDL statements; all 159 historical rental row values, financial counts/totals and migration journal were verified unchanged. Existing migration 0020 is absent from the journal, duplicates started_at and omits a required late-fee item field; production/fresh-database migration repair is outside this CR.
 
 Pending: initial funding/history corrections, electronic settlement/holds, reconciliation approval/posting, transfer workflow and inactive-account spendability (TAB-OWNER-001–005). Existing OWNER-001/002 and F-002 remain open. No deployment or claim of physically verified cash.
+
+## Independent CR: sub-treasury and daily closing — 2026-10-15
+
+**Current CR status:** DOCUMENTED / PROPOSED; owner decisions ST-01–06 PENDING; financial feature NOT IMPLEMENTED. This entry supersedes the stale Active Work / Recommended Next Action fields above for this independent request only.
+
+The [approval-ready specification](decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) records shared global accounts, existing cash-count shifts, absent handover/transfer workflow, expense LIMIT 1 routing, original-account refunds, shift concurrency/access gaps and nonblocking audit. Cashier Shifts/Expenses module stubs were reconciled against code. Proposed assigned cash accounts reuse the ledger and require separate closing, pending declaration and confirmed transfer states.
+
+Pending owner choices: payment scope/assignment; funded float/full handover/next session; explicit variance adjustment or hold; refund funding; own/all roles and no self-confirmation; forward-only historical cutover and prerequisite migration repair. Existing OWNER-001/002 are not globally resolved. No runtime code, schema, permission grant or historical money changed.
+
+Verification this stage: source/document/test inspection only; builds, DB integration and browser behavior tests not run. Existing 0020 migration defect remains a prerequisite. No physical reconciliation or production claim.
+
+Git baseline was a0f157f on master. Existing rental-receipt/audit-filter changes are preserved separately; delivery reports the documentation commit and push status. The feature remains incomplete until approved implementation, migration, verification, documentation and Git requirements are satisfied.

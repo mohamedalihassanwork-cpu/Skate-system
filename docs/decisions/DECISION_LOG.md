@@ -1872,3 +1872,34 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 **Pending owner decisions:** TAB-OWNER-001 initial funds/imports/history correction; TAB-OWNER-002 electronic clearing/settlement/fees/holds; TAB-OWNER-003 reconciliation review/adjustment posting; TAB-OWNER-004 transfer workflow/paired references/permissions; TAB-OWNER-005 restrictions/spendability. Existing OWNER-001 payment consolidation and OWNER-002 audit-failure policy remain pending. Questions and boundaries are in the linked investigation. These unknown behaviors are unapproved and not implemented; they do not block the scoped summary and atomic sales fix.
 
 **Implementation commit:** The logical feature commit named `fix(treasury): show recorded available balances` containing this record; exact hash/push status reported at delivery. Verified scope: 35 API tests, 96 UI checks, builds/lint. No physical-cash, settlement, reconciliation or deployment claim.
+
+## CR-SUB-TREASURY-2026-10-15
+
+**Date:** 2026-10-15
+**Type:** CHANGE REQUEST
+**Status:** PROPOSED — owner decisions PENDING
+**Title:** Sub-Treasury Management and Cashier Daily Closing
+
+**Description:** Independent owner request for separate cashier funds, immutable daily closing, pending handover and manager-confirmed transfer. [Complete investigation, decision sheet and conditional specification](SUB_TREASURY_DAILY_CLOSING_CR.md).
+
+**Business Rule Impact:** Retain DEC-071–074 cash-only counts and permitted own closing with variance. Closing is not receipt. ST-01–06 require approval for assigned cash routing, full handover/funded opening/new-session policy, discrepancy settlement versus hold, cash refund source, own/all scopes/actor separation and historical cutover. Proposed choices do not supersede earlier decisions until approved.
+
+**Affected Modules:** Treasury/Payments, Shifts, Rentals finalization, Sales/refunds, Expenses, Damage collections, system Maintenance payment, Users/Permissions, Audit, Reports. Reservations/external maintenance and unrelated rental/UI work retain behavior.
+
+**Database Impact:** Proposed additive assignment/account/shift metadata, closing/handover attempts, funding/transfer and variance records, movement types/links and uniqueness constraints; prerequisite migration repair. Preserve old money/history/null references. None applied.
+
+**API Impact:** Proposed own/all Treasury and handover/funding/assignment routes; validated shift close/open contract and server routing. No endpoint changed in this documentation stage.
+
+**UI Impact:** Proposed Arabic RTL cashier balance/movements/closing and manager queue/detail/history using inherited components. No UI implementation yet.
+
+**Permission Impact:** Proposed ST-05 own/all migration and new assignment/funding/confirmation/reconciliation rights; no same-actor confirmation. Current Administrator uses DB permissions, not a bypass. No grant changed.
+
+**Audit Log Impact:** Yes: persistent actor/time/reason and transaction-critical records for affected financial actions. Global OWNER-002 nonfinancial policy remains pending; OWNER-001 broader consolidation remains unresolved.
+
+**Risk:** HIGH — funds, access, concurrency and migration/history.
+
+**Conflicts requiring decision:** Global method-to-account reuse versus assigned cash routing (ST-01); current opening counts/immediate reopen versus ledger-backed funding/frozen close (ST-02); missing variance/rejection policy (ST-03); original-account cash refund versus isolated current drawer (ST-04); current all-user history versus cashier separation (ST-05); undefined live/history cutover and defective 0020 migration (ST-06). Cashier/expense stale PLANNED docs are documentation errors corrected without changing behavior.
+
+**Approved by:** Owner request authorizes objectives and investigation. No owner approval of ST-01–06 recommendations has been received. No approval inferred from earlier change requests.
+
+**Implementation commit:** NONE. This documentation-only proposal does not implement the feature; exact documentation commit/push status is reported at delivery.

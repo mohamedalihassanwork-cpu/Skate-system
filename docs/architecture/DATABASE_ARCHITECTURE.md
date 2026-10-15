@@ -567,3 +567,11 @@ Initial seed data should include:
 The implemented `schema/payments.ts` uses `treasury_accounts.balance DECIMAL(12,2)` (stored balance), `is_cash_drawer`, payment-method account mappings and signed `treasury_movements`. The new summary computes movement net per account in one consistent SQL read and compares it with the stored value; it neither reconstructs opening money nor rewrites history. Totals are aggregated as integer piastres and returned as decimal strings. No development/production schema change was needed.
 
 The isolated test database required schema-only alignment to existing multi-skate source for rental-flow verification. The existing 0020 migration/journal mismatch remains unresolved for general deployment. See [verification limits](../quality/TREASURY_AVAILABLE_BALANCE.md).
+
+## Sub-treasury proposal and current schema reconciliation — 2026-10-15
+
+Current account/ledger schema is `apps/api/src/db/schema/payments.ts`; shifts/expenses are `schema/treasury.ts`. There is no implemented shift_treasury_snapshots, sub-account assignment, handover or transfer table. Earlier diagrams/target columns are not evidence that these exist.
+
+[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) specifies proposed additive account metadata, assignments, closing/attempts, funding, transfer legs, variance approvals and uniqueness controls, conditional on owner decisions. No schema is approved/generated/applied in this stage. Preserve legacy financial rows and nullable references; do not infer historical custody or turn opening counts into funds.
+
+Migration prerequisite: 0020 is unjournalled, duplicates started_at, omits late_fee_records.rental_item_id and includes historical backfills. Fresh/already-upgraded paths need reviewed repair; test-only alignment is not migration proof. Existing verify-migrations.ts drops its selected database without a target guard and must not be run blindly. See CR sections 7–9 for safe migration and verification requirements.
