@@ -1,6 +1,6 @@
 ﻿# Module: Sales POS
 
-**Status:** PLANNED / NOT IMPLEMENTED
+**Status:** IMPLEMENTED — scoped Treasury balance regression VERIFIED (2026-10-15)
 **Last updated:** 2026-09-09
 
 ---
@@ -13,7 +13,7 @@ Separate POS for selling products and spare parts, intentionally distinct from t
 
 ## Current Status
 
-All components PLANNED — No implementation exists.
+Sales POS and its API are implemented. Historical target sections below are not implementation-status evidence; current Treasury integration is documented in the 2026-10-15 section.
 
 ---
 
@@ -115,3 +115,9 @@ The original planned-only sections above are historical stubs. Implemented front
 Phone/tablet catalog, categories and cart use document scrolling; product names and split-payment rows wrap. Sale details use the existing shared Modal below 1024px; sales cancellation uses the shared ConfirmDialog there. Desktop wrappers/confirmation paths and business handlers are preserved.
 
 Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+## Treasury balance integrity — 2026-10-15
+
+CR-TREASURY-AVAILABLE-2026-10-15 corrects `apps/api/src/modules/sales/sales.service.ts` account updates. Collections now use SQL `balance = balance + amount`; cancellation refunds use `balance = balance - amount`, inside the existing transaction. This prevents stale read/absolute write lost updates. Existing payment mapping, source-linked append-only movements, refund rules, stock handling and audit events are preserved.
+
+`src/tests/sales-balance.test.ts` reproduced concurrent collection/refund failures before the fix (2 fail / 3 pass), then passed all 5 after the fix. The combined scoped Treasury/sales/maintenance suite passes 35 tests. No historical account repair or financial-policy change is included. See [Treasury investigation](../quality/TREASURY_AVAILABLE_BALANCE.md).

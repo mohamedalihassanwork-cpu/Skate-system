@@ -35,6 +35,17 @@ export function formatCurrency(
     return `\u2014 ${EGP_SYMBOL}`
   }
 
+  // Exact server monetary strings can exceed Number's safe cent precision.
+  // Keep their two decimals intact when the caller explicitly requests two.
+  if (typeof amount === 'string' && options?.decimals === 2) {
+    const exact = /^(-?)(\d+)\.(\d{2})$/.exec(amount)
+    if (exact) {
+      const integer = exact[2].replace(/^0+(?=\d)/, '')
+      const sign = exact[1] && (integer !== '0' || exact[3] !== '00') ? '-' : ''
+      return `${sign}${integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${exact[3]} ${EGP_SYMBOL}`
+    }
+  }
+
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
 
   if (!isFinite(num)) {

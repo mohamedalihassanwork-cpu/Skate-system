@@ -41,4 +41,20 @@ router.get(
   },
 )
 
+// Current recorded funds, independent of cashier shifts.
+router.get(
+  '/treasury-summary',
+  authenticate,
+  requirePermission('treasury.view'),
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.setHeader('Cache-Control', 'no-store')
+      const data = await paymentsSvc.getTreasurySummary()
+      res.json({ success: true, data })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
 export default router

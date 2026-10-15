@@ -1839,3 +1839,36 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 **Plan and evidence:** [Mobile/tablet audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md).
 
 **DEC-082 completion review (2026-10-13):** Reconfirmed by the current owner request. Correct existing nested-dialog layering and collapsed-tablet targets; add nonvisual Arabic names/selected states, keyboard access to existing mobile table scrollers and approved semantic foreground corrections. These preserve existing patterns, desktop presentation and business handlers. Verification uses the completed desktop commit `cb5bec7` as an isolated baseline.
+
+
+## CR-TREASURY-AVAILABLE-2026-10-15
+
+**Date:** 2026-10-15
+**Type:** CHANGE REQUEST
+**Status:** IMPLEMENTED / TESTED / VERIFIED — documentation preceded implementation; scoped results in the linked report.
+
+**Title:** Treasury — current available balance from recorded financial movements.
+
+**Description:** The owner's request authorizes a clear current recorded-funds balance, account/cash/noncash breakdowns, exclusion of uncollected amounts and reliable existing transaction updates. Add a read-only ledger summary, expose stored-balance differences, and correct sales creation/refund account writes that can lose concurrent changes. See the [investigation, scoped plan and verification record](../quality/TREASURY_AVAILABLE_BALANCE.md).
+
+**Business Rule Impact:** Preserve the existing model. Recorded account balance equals committed inflows minus outflows; sum each account once using exact decimals/integer piastres. Include/flag inactive accounts without asserting settlement or fund accessibility. Exclude invoice totals, estimates, unpaid charges, pre-finalization fee fields, shift opening/count/variance and uncommitted transactions as independent fund sources. Preserve existing refunds and append-only history. Equal recorded transfer legs net to zero, but no transfer workflow is introduced. Stored-balance drift is not inferred opening money.
+
+**Affected Modules:** Treasury/Payments (read API/UI), Sales (atomic stored-balance increments/decrements), App Treasury route/navigation visibility. Rental, damage, expense, maintenance and shift flows are investigated and included in relevant regression checks; their financial policies remain unchanged.
+
+**Database Impact:** No migration/history rewrite. One consistent account/ledger aggregate query; sales writes use atomic SQL `balance +/- amount` inside existing transactions.
+
+**API Impact:** Add `GET /api/v1/payments/treasury-summary`: exact decimal-string account/cash/noncash/total balances, account flags, stored-balance diagnostics and read time. Preserve existing methods/account-list contracts.
+
+**UI Impact:** Prominent **الرصيد المتاح المسجل**, breakdowns, inactive/difference visibility, last successful read time and refresh on entry/focus/manual/expense success. Independent summary/shift/expense state. Inherit existing Arabic RTL design tokens and shared components with intentional desktop/phone/tablet layouts. Explain recorded funds versus physically verified cash/electronic settlement.
+
+**Permission Impact:** Existing backend authentication and `treasury.view` protect summary. Route/navigation allow existing `treasury.view` OR `shifts.manage`, preserving shift-only access. Summary only with `treasury.view`; shift controls with `shifts.manage`; expense reads/create controls follow `expenses.view`/`expenses.create` independently. No permission grants or source-operation authorization changes.
+
+**Audit Log Impact:** Preserve existing source movements and sales audit events/transaction boundaries. Summary reads are not financial events. No new audit-failure policy or historical correction.
+
+**Risk:** HIGH — financial correctness/concurrency. Focused financial/API regression and responsive UI verification required.
+
+**Approved by:** Project owner through the explicit Treasury — Actual Available Balance request in this session. Approval covers this scoped existing-model display and directly related integrity fixes, not missing financial policies.
+
+**Pending owner decisions:** TAB-OWNER-001 initial funds/imports/history correction; TAB-OWNER-002 electronic clearing/settlement/fees/holds; TAB-OWNER-003 reconciliation review/adjustment posting; TAB-OWNER-004 transfer workflow/paired references/permissions; TAB-OWNER-005 restrictions/spendability. Existing OWNER-001 payment consolidation and OWNER-002 audit-failure policy remain pending. Questions and boundaries are in the linked investigation. These unknown behaviors are unapproved and not implemented; they do not block the scoped summary and atomic sales fix.
+
+**Implementation commit:** The logical feature commit named `fix(treasury): show recorded available balances` containing this record; exact hash/push status reported at delivery. Verified scope: 35 API tests, 96 UI checks, builds/lint. No physical-cash, settlement, reconciliation or deployment claim.

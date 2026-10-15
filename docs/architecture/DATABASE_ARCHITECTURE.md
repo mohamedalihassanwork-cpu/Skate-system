@@ -561,3 +561,9 @@ Initial seed data should include:
 ---
 
 *Last updated: 2026-09-09 (Phase 01 final gate)*
+
+## Current Treasury read model — 2026-10-15
+
+The implemented `schema/payments.ts` uses `treasury_accounts.balance DECIMAL(12,2)` (stored balance), `is_cash_drawer`, payment-method account mappings and signed `treasury_movements`. The new summary computes movement net per account in one consistent SQL read and compares it with the stored value; it neither reconstructs opening money nor rewrites history. Totals are aggregated as integer piastres and returned as decimal strings. No development/production schema change was needed.
+
+The isolated test database required schema-only alignment to existing multi-skate source for rental-flow verification. The existing 0020 migration/journal mismatch remains unresolved for general deployment. See [verification limits](../quality/TREASURY_AVAILABLE_BALANCE.md).

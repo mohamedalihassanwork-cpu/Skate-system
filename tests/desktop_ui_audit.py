@@ -32,6 +32,23 @@ PAYMENTS = [dict(id=1,name='cash',nameAr='نقدي',isActive=True,type='cash',tr
 AUDIT = dict(id=1, userId=1, userName=USER['name'], action='CREATE', entityType='rental', entityId='1', changes={'new': {'description':'تفاصيل اصطناعية طويلة لمراجعة السجل'}}, ipAddress='127.0.0.1', userAgent='Desktop audit fixture', createdAt=NOW)
 ROUTES = ['/login','/','/users','/roles','/skates','/customers','/customers/1','/rentals','/rentals/new','/rentals/active','/rentals/1','/products','/sales-pos','/sales','/reservations','/damages','/treasury','/maintenance','/reports','/settings','/audit-logs']
 
+
+TREASURY_SUMMARY = dict(
+    asOf=NOW, currency='EGP', totalBalance='1469.12', cashBalance='1234.56',
+    nonCashBalance='234.56', hasDiscrepancies=True,
+    accounts=[
+        dict(id=1, name='cash', nameAr='الخزينة النقدية التجريبية', isActive=True,
+             isCashDrawer=True, balance='1234.56', storedBalance='1200.00',
+             difference='-34.56', movementCount=7),
+        dict(id=2, name='card', nameAr='حساب البطاقات التجريبي', isActive=True,
+             isCashDrawer=False, balance='250.25', storedBalance='250.25',
+             difference='0.00', movementCount=3),
+        dict(id=3, name='inactive-wallet', nameAr='المحفظة غير النشطة التجريبية',
+             isActive=False, isCashDrawer=False, balance='-15.69',
+             storedBalance='-15.69', difference='0.00', movementCount=2),
+    ],
+)
+
 def wrapped(data): return dict(success=True, data=data)
 def paged(data): return dict(success=True, data=data, pagination=dict(page=1,perPage=20,limit=20,total=len(data),totalPages=1))
 
@@ -69,6 +86,7 @@ def fixture(path, query, empty=False):
     if path=='/shifts/current': return SHIFT
     if path=='/expenses': return wrapped(rows([EXPENSE]))
     if path=='/payments/methods': return wrapped(PAYMENTS)
+    if path=='/payments/treasury-summary': return wrapped(dict(TREASURY_SUMMARY, accounts=[], totalBalance='0.00', cashBalance='0.00', nonCashBalance='0.00', hasDiscrepancies=False) if empty else TREASURY_SUMMARY)
     if path=='/audit-logs': return dict(data=rows([AUDIT]),meta=dict(total=1,page=1,limit=20,totalPages=1))
     if path=='/dashboard/kpis': return wrapped(dict(kpis=dict(revenue=1250,expenses=350,operatingResult=900,collectedLateFees=20,waivedLateFees=0,damageCharges=100,activeRentals=1,lateRentals=0,rentalsPeriod=12,totalSkates=8,skatesByStatus=dict(available=2,rented=2,maintenance=2,reserved=2),endingSoonRentals=[],recentSales=[dict(id=1,customerName=CUSTOMER['name'],totalAmount=75,status='completed',createdAt=NOW,itemName=PRODUCTS[0]['nameAr'])]),charts=dict(revenueOverTime=[dict(date='2026-10-10',total=400),dict(date='2026-10-11',total=850)],expenses=[dict(date='2026-10-11',total=350)],rentalVolume=[dict(date='2026-10-11',count=12)],mostRentedSkates=[dict(skateCode='SK-002',count=8)],skatePerformance=[dict(skateCode='SK-002',revenue=400)])))
     if path=='/reports/overview': return wrapped(dict(totalRevenue=1250,totalExpenses=350,totalRentals=12,activeRentals=1,lateRentals=0,totalDamages=1,activeMaintenance=1))

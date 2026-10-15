@@ -2,6 +2,16 @@
 
 **Format:** Meaningful changes only. Not every trivial edit.
 
+## [2026-10-15] — Treasury recorded available balance
+
+- Added permission-protected ledger summary and Arabic Treasury balance/account/cash/noncash presentation with read time, refresh, error handling, inactive flags and stored-balance discrepancy diagnostics.
+- Excluded uncollected invoices/estimates, unpaid or external maintenance and shift cash counts; preserved existing payment mappings/refunds. Equal internal ledger legs net to zero without introducing a transfer workflow.
+- Fixed lost updates in sales/refund account balances using atomic SQL arithmetic. Exact decimal-string currency rendering preserves cents and negative signs.
+- Preserved Treasury access for shift managers while enabling the existing treasury.view permission; expense UI follows its existing server permissions.
+- Verification: 35 focused API tests pass, including deterministic pre-fix concurrency failures reproduced and fixed; responsive synthetic UI checks pass; API/web builds and lint pass with existing warnings. Test-only current-schema alignment preserved historical rows and financial totals; the existing migration defect remains documented.
+- No schema change to development/production, historical correction, settlement/reconciliation policy or deployment. See [the investigation and full evidence](quality/TREASURY_AVAILABLE_BALANCE.md) for owner decisions, affected files and limits.
+
+
 ## [2026-10-13] — CR: Products Optional English Names + Expenses Fix + Reservations Customer Search
 
 **Type:** BUG FIX

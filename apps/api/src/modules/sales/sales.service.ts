@@ -218,14 +218,10 @@ export class SalesService {
               notes: `Payment for Sale ${newSaleId}`
             })
 
-            // Update Treasury Account Balance
-            const [accRow] = await tx.select().from(treasuryAccounts).where(eq(treasuryAccounts.id, p.treasuryAccountId)).limit(1)
-            if (accRow) {
-              const newBalance = parseFloat(accRow.balance as string) + parseFloat(p.amount.toString())
-              await tx.update(treasuryAccounts)
-                .set({ balance: newBalance.toString() })
-                .where(eq(treasuryAccounts.id, p.treasuryAccountId))
-            }
+            // Apply the delta in SQL so concurrent collections cannot overwrite it.
+            await tx.update(treasuryAccounts)
+              .set({ balance: sql`${treasuryAccounts.balance} + ${p.amount}` })
+              .where(eq(treasuryAccounts.id, p.treasuryAccountId))
           }
 
           await auditService.log({
@@ -315,14 +311,10 @@ export class SalesService {
           notes: `Refund for Cancelled Sale ${saleId}`
         })
 
-        // Update Treasury Account Balance
-        const [accRow] = await tx.select().from(treasuryAccounts).where(eq(treasuryAccounts.id, p.treasuryAccountId)).limit(1)
-        if (accRow) {
-          const newBalance = parseFloat(accRow.balance as string) - pAmount
-          await tx.update(treasuryAccounts)
-            .set({ balance: newBalance.toString() })
-            .where(eq(treasuryAccounts.id, p.treasuryAccountId))
-        }
+        // Preserve other committed account movements when applying this refund.
+        await tx.update(treasuryAccounts)
+          .set({ balance: sql`${treasuryAccounts.balance} - ${p.amount}` })
+          .where(eq(treasuryAccounts.id, p.treasuryAccountId))
       }
 
       await auditService.log({ userId: adminUserId, action: 'CANCEL_SALE', entityType: 'SALE', entityId: String(saleId), newValue: { status: 'cancelled' } }, tx)

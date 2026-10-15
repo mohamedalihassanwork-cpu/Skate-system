@@ -3,10 +3,15 @@ import { Landmark, ArrowDownToLine, LockOpen, Lock, Plus } from 'lucide-react'
 import { treasuryApi, type Shift, type Expense } from './treasury.api'
 import { Button, Input, useToast, Card, PageLoader } from '../../components/ui'
 import { useAuth } from '../../contexts/AuthContext'
+import { TreasuryBalance } from './TreasuryBalance'
 
 export default function TreasuryPage() {
   const { hasPermission } = useAuth()
   const canManage = hasPermission('shifts.manage')
+  const canViewBalance = hasPermission('treasury.view')
+  const canViewExpenses = hasPermission('expenses.view')
+  const canRecordExpenses = hasPermission('expenses.create')
+  const [balanceRefreshKey, setBalanceRefreshKey] = useState(0)
   const { showToast } = useToast()
 
   const [shift, setShift] = useState<Shift | null>(null)
@@ -30,7 +35,8 @@ export default function TreasuryPage() {
       const sRes = await treasuryApi.getCurrentShift()
       setShift(sRes)
       
-      if (sRes && sRes.status === 'active') {
+      setExpenses([])
+      if (sRes && sRes.status === 'active' && canViewExpenses) {
         const eRes = await treasuryApi.getExpenses()
         // eRes might also not have .data depending on backend, let's assume getExpenses returns array directly or ApiResponse.
         // Actually, let's check getExpenses return type later if it fails.
@@ -87,16 +93,13 @@ export default function TreasuryPage() {
         description: expenseData.description
       })
       showToast({ type: 'success', title: 'تم تسجيل المصروف بنجاح' })
+      setBalanceRefreshKey(key => key + 1)
       setShowExpenseForm(false)
       setExpenseData({ amount: '', description: '' })
       fetchData()
     } catch (err: any) {
       showToast({ type: 'error', title: err.response?.data?.error?.message || err.response?.data?.message || 'خطأ في تسجيل المصروف' })
     }
-  }
-
-  if (loading) {
-    return <PageLoader label="جارٍ تحميل بيانات الخزينة" />
   }
 
   return (
@@ -107,10 +110,12 @@ export default function TreasuryPage() {
             <Landmark size={24} aria-hidden="true" style={{ color: 'var(--color-text-muted)' }} />
             إدارة الخزينة
           </h1>
-          <p className="page-header-subtitle">إدارة الورديات والمصروفات النثرية</p>
+          <p className="page-header-subtitle">أرصدة الحسابات والورديات والمصروفات النثرية</p>
         </div>
       </div>
 
+      {canViewBalance && <TreasuryBalance refreshKey={balanceRefreshKey} />}
+      {loading ? <PageLoader label="جارٍ تحميل بيانات الوردية" /> : (
       <div className="treasury-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
         {/* Shift Management */}
         <Card>
@@ -199,14 +204,14 @@ export default function TreasuryPage() {
               <ArrowDownToLine style={{ color: 'var(--color-warning-500)' }} />
               <h2>المصروفات النثرية</h2>
             </div>
-            {shift?.status === 'active' && canManage && (
+            {shift?.status === 'active' && canRecordExpenses && (
               <Button onClick={() => setShowExpenseForm(!showExpenseForm)} variant="secondary" size="sm">
                 <Plus size={16} style={{ marginInlineEnd: 'var(--space-1)' }} /> إضافة مصروف
               </Button>
             )}
           </div>
 
-          {showExpenseForm && (
+          {showExpenseForm && canRecordExpenses && (
             <form onSubmit={handleRecordExpense} style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-4)', backgroundColor: 'var(--color-warning-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-warning-200)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <Input
@@ -236,7 +241,9 @@ export default function TreasuryPage() {
             </form>
           )}
 
-          {!shift || shift.status !== 'active' ? (
+          {!canViewExpenses ? (
+            <p>ليس لديك صلاحية عرض المصروفات.</p>
+          ) : !shift || shift.status !== 'active' ? (
             <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-4) 0', margin: 0 }}>يجب فتح وردية لتسجيل وعرض المصروفات.</p>
           ) : expenses.length === 0 ? (
             <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-4) 0', margin: 0 }}>لا توجد مصروفات مسجلة في هذه الوردية.</p>
@@ -257,6 +264,7 @@ export default function TreasuryPage() {
           )}
         </Card>
       </div>
+      )}
       <style>{`
         @media screen and (min-width: 1024px) {
           .treasury-grid {

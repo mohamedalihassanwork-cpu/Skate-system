@@ -359,3 +359,15 @@
 - Final browser interaction checks: 162/162 PASS. Delivery is local only; no push or deployment.
 
 Evidence: [Desktop UI/UX Audit](quality/DESKTOP_UI_UX_AUDIT.md). Decision: DEC-081.
+
+## Treasury available balance — 2026-10-15
+
+**Status:** IMPLEMENTED / TESTED / VERIFIED for the scoped recorded-ledger balance change (CR-TREASURY-AVAILABLE-2026-10-15). See [full financial model, findings, owner decisions and verification](quality/TREASURY_AVAILABLE_BALANCE.md).
+
+Treasury now shows exact committed movement totals, cash/noncash and account breakdowns, read time, refresh and stored-balance discrepancy diagnostics. Sales/refund stored-balance writes are atomic. Existing treasury.view protects the new read API; existing shift access and all server mutation permissions are preserved. No historical financial data was rewritten.
+
+Verification: 35/35 focused API integration tests pass; Arabic RTL UI checks pass across phone/tablet/desktop; API/frontend builds and frontend lint pass with existing warnings. Development SELECT-only inspection found 5 accounts / 28 movements / zero stored-ledger discrepancies, without asserting physical or bank reconciliation.
+
+Test-environment limitation: legacy koshk_skate_test schema lacked multi-skate rental fields. Only that test schema was aligned through 15 non-destructive DDL statements; all 159 historical rental row values, financial counts/totals and migration journal were verified unchanged. Existing migration 0020 is absent from the journal, duplicates started_at and omits a required late-fee item field; production/fresh-database migration repair is outside this CR.
+
+Pending: initial funding/history corrections, electronic settlement/holds, reconciliation approval/posting, transfer workflow and inactive-account spendability (TAB-OWNER-001–005). Existing OWNER-001/002 and F-002 remain open. No deployment or claim of physically verified cash.

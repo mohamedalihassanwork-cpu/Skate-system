@@ -686,3 +686,18 @@ Actual routes audited: `/login`, `/`, `/users`, `/roles`, `/skates`, `/customers
 All 21 existing routes listed in the desktop additions remain unchanged.
 
 The completion review also adds `tests/mobile_operational_checks.py`: isolated normal-motion rental-wizard, damage/maintenance and nested-confirmation checks. It reuses synthetic fixtures and rejects business writes.
+
+## Treasury recorded available balance — 2026-10-15
+
+| Path | Current purpose |
+|---|---|
+| `apps/api/src/modules/payments/payments.{service,routes,types}.ts` | Existing account/method reads plus exact ledger-based GET /api/v1/payments/treasury-summary (treasury.view) |
+| `apps/api/src/modules/sales/sales.service.ts` | Atomic account increments/decrements for existing collections/refunds |
+| `apps/web/src/modules/treasury/TreasuryBalance.tsx` | Independent recorded-balance panel, breakdown and discrepancy/error/refresh states |
+| `apps/web/src/modules/treasury/treasury-balance.css` | Scoped responsive RTL balance styles using existing tokens |
+| `apps/web/src/modules/treasury/{TreasuryPage.tsx,treasury.api.ts}` | Integration and typed summary API |
+| `apps/api/src/tests/{treasury,sales-balance}.test.ts` | Real test-DB balance, source-flow, permission, rollback and concurrency coverage |
+| `tests/treasury_balance_ui.py` | Synthetic Chrome Treasury checks, no real business writes |
+| `docs/quality/TREASURY_AVAILABLE_BALANCE.md` | Current model, findings, owner decisions, verification and limits |
+
+Actual accounts/movements live in `apps/api/src/db/schema/payments.ts`; shifts/expenses live in `schema/treasury.ts`. There is no separate backend treasury directory or implemented transfer workflow. This entry supersedes the stale PLANNED Treasury/Payments navigation above for these paths only.

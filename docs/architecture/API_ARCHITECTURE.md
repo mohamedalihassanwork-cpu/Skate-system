@@ -340,3 +340,14 @@ Financial operations (payment recording, rental start) should be protected again
 ---
 
 *Last updated: 2026-09-09*
+
+
+## Treasury recorded available balance — 2026-10-15
+
+**Status: IMPLEMENTED / TESTED (2026-10-15).** See [Treasury change record](../quality/TREASURY_AVAILABLE_BALANCE.md), CR-TREASURY-AVAILABLE-2026-10-15.
+
+`GET /api/v1/payments/treasury-summary` uses authentication and the existing `treasury.view` permission. It returns `{ success: true, data: { asOf, currency: 'EGP', totalBalance, cashBalance, nonCashBalance, hasDiscrepancies, accounts } }`. Amounts are exact two-decimal strings. Each account includes `id`, `name`, `nameAr`, `isActive`, `isCashDrawer`, `balance` (signed movement sum), `storedBalance`, `difference` (stored minus movements), and `movementCount`.
+
+One SQL statement reads accounts and aggregated committed movements consistently; server-side integer piastres sum the breakdown. All accounts remain visible, including inactive accounts. No invoice totals, shift opening counts, unpaid charges, or payment-method joins contribute money. A stored-balance discrepancy is diagnostic and never triggers a write or an inferred opening balance. `asOf` indicates generation of this read result, not physical reconciliation or electronic settlement. Responses are not cacheable.
+
+The existing `/api/v1/payments/treasury-accounts` contract and all mutation permissions remain unchanged. This read API introduces no transfer, funding, or reconciliation workflow.

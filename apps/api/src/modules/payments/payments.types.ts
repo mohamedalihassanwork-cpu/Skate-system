@@ -18,3 +18,26 @@ export interface TreasuryAccountDTO {
   isActive: boolean
   balance: number
 }
+
+/** Exact EGP decimals; no payment-method join or floating-point summation. */
+export interface TreasuryBalanceAccountDTO {
+  id: number
+  name: string
+  nameAr: string
+  isActive: boolean
+  isCashDrawer: boolean
+  balance: string
+  storedBalance: string
+  difference: string
+  movementCount: number
+}
+
+export interface TreasurySummaryDTO {
+  asOf: string
+  currency: 'EGP'
+  totalBalance: string
+  cashBalance: string
+  nonCashBalance: string
+  hasDiscrepancies: boolean
+  accounts: TreasuryBalanceAccountDTO[]
+}

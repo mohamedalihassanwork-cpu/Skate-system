@@ -195,7 +195,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       document.removeEventListener('focusin', containFocus)
     }
   }, [mobileOpen, isDrawerClosing, onMobileClose])
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
 
   const NavItem = ({ icon: Icon, label, to, exact }: { icon: typeof Package; label: string; to: string; exact?: boolean }) => (
     <NavLink
@@ -243,7 +243,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       <nav className="sidebar-nav" aria-label="التنقل الرئيسي">
         {NAV_ITEMS.map(item => (
           item.permission ? (
-            <PermissionGate key={item.to} permission={item.permission}>
+            <PermissionGate key={item.to} permission={item.to === '/treasury' && hasPermission('treasury.view') ? 'treasury.view' : item.permission}>
               <NavItem icon={item.icon} label={item.label} to={item.to} exact={item.exact} />
             </PermissionGate>
           ) : (
@@ -348,7 +348,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
               <nav className="sidebar-nav" aria-label="التنقل الرئيسي">
                 {NAV_ITEMS.map(item =>
                   item.permission ? (
-                    <PermissionGate key={item.to} permission={item.permission}>
+                    <PermissionGate key={item.to} permission={item.to === '/treasury' && hasPermission('treasury.view') ? 'treasury.view' : item.permission}>
                       <NavLink
                         to={item.to}
                         end={item.exact}
@@ -1175,8 +1175,12 @@ export default function App() {
                 } />
                 <Route path="/treasury" element={
                   <PermissionGate
-                    permission="shifts.manage"
-                    fallback={<NoAccessPage permission="shifts.manage" />}
+                    permission="treasury.view"
+                    fallback={
+                      <PermissionGate permission="shifts.manage" fallback={<NoAccessPage permission="treasury.view" />}>
+                        <TreasuryPage />
+                      </PermissionGate>
+                    }
                   >
                     <TreasuryPage />
                   </PermissionGate>
