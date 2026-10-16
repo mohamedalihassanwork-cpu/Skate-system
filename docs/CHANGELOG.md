@@ -1,5 +1,39 @@
 # Changelog — KOSHK SKATE ERP
 
+
+## [2026-10-16] — fix: Treasury page 500 error — migration 0021 not applied to dev database
+
+**Type:** BUG FIX
+
+**Root cause:** `GET /api/v1/treasury/config` returned HTTP 500 ("حدث خطأ داخلي في الخادم") because migration `0021_subtreasury` had never been applied to the development database (`koshk_skate`). The `configuration()` function in `treasury-posting.ts` issues `SELECT … FROM treasury_configuration WHERE id=1`; with the table absent, MySQL throws `ER_NO_SUCH_TABLE`, which is not an `AppError` subclass and therefore falls through to the global 500 handler. The permissions introduced by 0021 were already present (inserted separately), so there was no auth error — the failure was purely a missing schema.
+
+**Why the table was absent:** Migration 0020 tables were applied to the dev database outside the Drizzle journal (so `npm run db:migrate` fails with `ER_TABLE_EXISTS_ERROR`). The guarded `repair-migration-0021.ts` script correctly enforces `koshk_skate_test`-only writes. A targeted dev repair script was therefore written and run once to apply all 70 missing statements from 0021 idempotently, then deleted.
+
+**Fix applied (database only — no source code changes):**
+- Applied all 70 DDL/DML statements from `0021_subtreasury.sql` to `koshk_skate`:
+  - 7 new tables: `financial_operations`, `treasury_assignments`, `treasury_configuration`, `treasury_funding`, `treasury_handovers`, `treasury_settlements`, `treasury_transfers`
+  - 13 new columns across `cashier_shifts`, `treasury_movements`, `treasury_accounts`, `rental_payments`
+  - 6 MODIFY COLUMN widenings (DECIMAL precision)
+  - 2 unique indexes, 27 foreign keys, 4 non-unique indexes
+  - `INSERT INTO treasury_configuration(id,enabled) VALUES(1,0)` — sub-treasury disabled, no main account
+  - 4 `INSERT IGNORE` permission/role-permission grants
+- Recorded canonical migration 0021 hash in `__drizzle_migrations` (`created_at=1792117165099`)
+- Registered migration 0020 journal entry for consistency (`created_at=1792108800000`)
+
+**Verification:**
+- `GET /api/v1/treasury/config` → `200 {"enabled":false,"mainAccountId":null}` (was 500)
+- `GET /api/v1/treasury/summary` → `200` with zero counts
+- `GET /api/v1/treasury/me` → `200` with null assignment
+- `GET /api/v1/payments/treasury-summary` → `200` with 5 accounts, total 140,228 EGP, zero discrepancies
+- `npm test` — `src/tests/treasury.test.ts` (14 tests) PASS; `src/tests/subtreasury.test.ts` (24 tests) PASS; `src/tests/subtreasury-producers.test.ts` (20 tests) PASS. Pre-existing failures in rentals/returns/payments are unrelated to this fix.
+- Financial data preserved: no rows modified, no balances changed, no historical movements altered.
+
+## 2026-10-16 — Approved sub-treasuries and daily handover
+
+Implemented ST-01–06: independent cashier cash/electronic accounts, auditable count-only opening, two-user funding, immutable close/pending handover, manager-confirmed receipt, explicit variance adjustment, retained rejection/replacement and zero acknowledgment. Cash producers/refunds use assigned funded drawers, with transaction locks, persisted retry keys, server own/all permissions and required audit. Arabic RTL administration, cashier workspace, review/history and separate receipt/adjustment summaries reuse existing components.
+
+Migration0020 prerequisite is repaired without inferred backfills; additive0021 defaults disabled and preserves historical values/nulls. Guarded partial-DDL recovery addresses the observed MySQL identifier-length failure. Exact test counts, initial failures, corrected reruns, limitations and Git status are in [the verification report](quality/SUB_TREASURY_VERIFICATION.md). No physical cash or production deployment claim.
+
 **Format:** Meaningful changes only. Not every trivial edit.
 
 ## [2026-10-15] — Treasury recorded available balance
