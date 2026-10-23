@@ -122,6 +122,8 @@ export const rentals = mysqlTable('rentals', {
   createdAt: datetime('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: datetime('updated_at').notNull().default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`),
 }, (table) => ({
+  legacySkateIdIdx: index('rentals_skate_id_idx').on(table.skateId),
+  legacyExpectedEndIdx: index('rentals_expected_end_at_idx').on(table.expectedEndAt),
   customerIdIdx: index('rentals_customer_id_idx').on(table.customerId),
   cashierIdIdx:  index('rentals_cashier_id_idx').on(table.cashierId),
   statusIdx:     index('rentals_status_idx').on(table.status),
