@@ -39,6 +39,7 @@ import rentalItemsRoutes from './modules/rentals/rental-items.routes.js'
 
 // Phase 06 routes
 import paymentsRoutes from './modules/payments/payments.routes.js'
+import treasuryRoutes from './modules/treasury/treasury.routes.js'
 
 // Phase 08 routes
 import { damageRouter } from './modules/damage/damage.routes.js'
@@ -179,6 +180,7 @@ app.use('/api/v1/rental-items', rentalItemsRoutes)
 // ---------------------------------------------------------------------------
 
 app.use('/api/v1/payments', paymentsRoutes)
+app.use('/api/v1/treasury', treasuryRoutes)
 
 // ---------------------------------------------------------------------------
 // Phase 08 routes

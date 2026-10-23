@@ -65,6 +65,14 @@ const ALL_PERMISSIONS: Array<{ key: string; labelAr: string; module: string }> =
   // Treasury
   { key: 'treasury.view', labelAr: 'عرض الخزينة', module: 'treasury' },
   { key: 'treasury.manage', labelAr: 'إدارة الخزينة', module: 'treasury' },
+  { key: 'treasury.view_own', labelAr: 'عرض خزينتي', module: 'treasury' },
+  { key: 'treasury.assign', labelAr: 'تعيين الخزائن وتفعيلها', module: 'treasury' },
+  { key: 'treasury.fund', labelAr: 'تمويل الخزائن', module: 'treasury' },
+  { key: 'treasury.handovers.view', labelAr: 'مراجعة تسليم الخزائن', module: 'treasury' },
+  { key: 'treasury.handovers.confirm', labelAr: 'تأكيد استلام الخزائن', module: 'treasury' },
+  { key: 'treasury.reconcile', labelAr: 'اعتماد فروق النقدية', module: 'treasury' },
+  { key: 'shifts.view_all', labelAr: 'عرض جميع الورديات', module: 'shifts' },
+  { key: 'expenses.view_all', labelAr: 'عرض جميع المصروفات', module: 'expenses' },
   // Reports
   { key: 'reports.view', labelAr: 'عرض التقارير', module: 'reports' },
   // Users
@@ -123,7 +131,7 @@ const DEFAULT_ROLES = [
       'sales.view', 'sales.create',
       'products.view',
       'expenses.view', 'expenses.create',
-      'shifts.view', 'shifts.manage',
+      'shifts.view', 'shifts.manage', 'treasury.view_own',
       'reservations.view', 'reservations.create', 'reservations.edit', 'reservations.cancel',
       'damage.view', 'damage.create', 'damage.collect_charge',
     ],
