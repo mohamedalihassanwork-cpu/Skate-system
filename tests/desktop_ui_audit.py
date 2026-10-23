@@ -83,6 +83,7 @@ def fixture(path, query, empty=False):
     if path=='/maintenance': return dict(success=True,records=rows([MAINTENANCE]),pagination=dict(page=1,limit=20,total=1,totalPages=1))
     if path=='/maintenance/1': return wrapped(MAINTENANCE)
     if path=='/reservations': return paged(rows([RESERVATION]))
+    if path=='/treasury/config': return dict(enabled=False,mainAccountId=None)
     if path=='/shifts/current': return SHIFT
     if path=='/expenses': return wrapped(rows([EXPENSE]))
     if path=='/payments/methods': return wrapped(PAYMENTS)

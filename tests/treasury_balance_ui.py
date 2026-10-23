@@ -90,6 +90,8 @@ def main():
                 data = None
                 if path == '/auth/me':
                     data = wrapped({'user': dict(USER, permissions=permissions, roles=[])})
+                elif path == '/treasury/config':
+                    data = dict(enabled=False, mainAccountId=None)
                 elif path == '/payments/treasury-summary':
                     if state['hold_summary']:
                         state['pending'].append(route)
