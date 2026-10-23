@@ -353,3 +353,10 @@ Rental lists, active cards, detail grids and the creation wizard fit phone/table
 Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
 
 Completion review (2026-10-13): rental search controls have Arabic accessible names, and skate/duration choices expose pressed state. The full customer-to-review wizard was exercised with synthetic data without starting a rental.
+
+
+## Approved sub-treasury integration — 2026-10-16
+
+Current finalization locks the acting cashier/session inside its transaction, routes cash to the assigned drawer and electronics to mapped accounts, and stores actual account snapshots. Start/return/extension/unpaid cancellation remain noncollections, with existing shift requirements checked in their transaction. Required financial audit rolls back finalization on failure.
+
+Authority: [ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Current workflow: [Treasury](TREASURY.md). Executed checks and limits: [verification report](../quality/SUB_TREASURY_VERIFICATION.md). Earlier proposal/pending wording is historical and superseded only within this approved scope.

@@ -1,41 +1,31 @@
 # Module: Cashier Shifts
 
-**Status:** IMPLEMENTED; verification remains partial. Sub-treasury/handover proposal PENDING owner decisions, not implemented.
-**Last updated:** 2026-10-15 — current-state reconciliation for CR-SUB-TREASURY-2026-10-15.
+**Status:** Approved managed-session workflow IMPLEMENTED; [verification status](../quality/SUB_TREASURY_VERIFICATION.md).
+**Last updated:** 2026-10-16
 
-## Current implementation
+## Current behavior
 
-Cashier shifts are implemented in `apps/api/src/modules/shifts/` and `apps/api/src/db/schema/treasury.ts`. TreasuryPage hosts the current shift and open/close forms. The previous PLANNED/NOT IMPLEMENTED stub was stale; this correction does not claim new runtime verification.
+[ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) supersede the prior sub-treasury proposal. `apps/api/src/modules/shifts/` uses shared financial transactions and actor/session locking. One active shift per cashier is enforced by serialization, plus a generated unique managed-active-cashier column; old historical duplicates are not silently altered. Duplicate legacy active sessions block operations pending review.
 
-- `openShift()` checks for an existing active shift and inserts opening cash, with an OPEN_SHIFT audit call. The check lacks a serialization lock/database unique guard, so concurrent opening is a known gap.
-- `closeShift()` locks the shift, checks exact cashier ownership and active status, calculates cash expected/count/difference, then stores closed status and emits CLOSE_SHIFT. Closing creates no ledger transfer.
-- Opening/actual are physical cash counts, not funding. Expected = opening + cash inflows - cash outflows, selected by shift ID and account cash flag. Electronics are excluded from variance. Current calculation uses floating-point numbers.
-- Cashier can close with shortage/overage under DEC-073. Optional supplied closing time is validated only against opening; future times are not excluded.
-- Current schema stores cashier, opening/closing timestamps, opening/expected/actual/difference, status and notes. It has no treasury assignment, explicit opened_by/closed_by, handover, receiver or confirmation record.
+Opening stores the cashier's declared count separately from the account's ledger snapshot. It never creates money. Expected counted cash = opening count + subsequent signed drawer movements. Ledger due = opening ledger + those movements. Funding accepted before opening is already in the snapshot; session top-ups count exactly once. Electronics are independent and excluded from cash count variance. Opening count-versus-ledger mismatch is retained/audited without a funding or adjustment posting.
 
-## Current APIs and permissions
+Closing requires exact ownership and active state, nonnegative actual count/full declaration, and a reason for discrepancy. It records immutable snapshots, server closing time, closedBy and a pending handover in one transaction; no transfer occurs. Managed sessions reject caller-supplied closing time. Africa/Cairo business date remains the opening date through overnight work. All financial producers hold the common shift guard through commit so closing cannot omit a concurrent committed movement.
 
-| Route | Current check and scope |
+A closed drawer remains frozen until manager settlement. Rejection and replacement preserve original count/difference; zero receipt is acknowledged without a transfer. Read [Treasury](TREASURY.md) for confirmation, variance and two-user rules.
+
+## API and permissions
+
+| Route | Server scope |
 |---|---|
-| GET /api/v1/shifts/current | Authenticated user, own active shift |
-| POST /api/v1/shifts/open | shifts.manage; own shift |
+| GET /api/v1/shifts/current | Authenticated user's active session |
+| POST /api/v1/shifts/open | shifts.manage; own session |
 | POST /api/v1/shifts/:id/close | shifts.manage plus exact ownership |
-| GET /api/v1/shifts | shifts.view; currently all users' shifts |
+| GET /api/v1/shifts | shifts.view: own; shifts.view_all: all |
 
-Seeded Cashier has shifts.view as well as shifts.manage; the history endpoint is not manager-only. Current UI does not provide closed-shift review. DEC-071–074 remain authoritative: one active shift per user, cash-only counts, permitted own closing with variance and current-shift refund attribution.
+Managed open/close requires a stable operationKey. Treasury own/detail endpoints return decimal-string snapshots and histories. Existing shift DTO numeric fields are retained for compatibility; new ledger snapshot fields are additive. Required financial audits are transaction-critical.
 
-## Gaps and proposed change
+## Historical compatibility and evidence
 
-[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) documents the source investigation, distinct closing/pending/confirmed workflow, proposed assignment/funding/variance rules, permission migration, APIs, concurrency controls and history-preserving cutover. All ST-01–06 choices remain PENDING. No behavior, schema or permission is changed by this document.
+Migration leaves old account/assignment/ledger links null, preserving counts and movements. Legacy sessions close through their prior cash-count flow before explicit activation; no old closure becomes a receipt. Legacy caller closing times remain supported. New cashier drawers start zero and obtain funds through recorded transfers.
 
-Required integration: all financial producers must hold the same shift guard through posting so close cannot omit an in-flight movement. Required audit must persist atomically; the current shared helper can swallow failures. Counted cash, handover declaration and manager receipt must be separate evidence. Legacy opening counts cannot be converted into funds.
-
-## Verification
-
-No dedicated current shift lifecycle/close-versus-posting/handover suite exists. Existing F-013 evidence tests opening authorization; it must not be represented as complete close authorization/lifecycle coverage. Prior Phase 12 results are historical. Planned exact-money, ownership, concurrent open/close, financial routing, audit rollback and Arabic RTL checks are in the CR. No tests were run for this documentation reconciliation.
-
-## Phone/tablet presentation — 2026-10-12
-
-Phone/tablet open/close shift controls and summaries reflow within the existing treasury screen. The shift workflow, expected/count balances and server operations are unchanged.
-
-Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+The lifecycle and producer suites cover exact money, ownership, concurrent opens/confirmations/close-versus-sale, funding, count-only opening, rejection/replacement, shortages/overages, zero receipt and rollback. UI uses the existing Arabic RTL design system with desktop/mobile checks. Exact executed counts and remaining limits are in the [verification report](../quality/SUB_TREASURY_VERIFICATION.md); older Phase12/presentation tests remain historical evidence only.

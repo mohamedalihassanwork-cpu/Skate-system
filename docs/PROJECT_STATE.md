@@ -1,7 +1,7 @@
 # Project State — KOSHK SKATE ERP
 
 **Version:** 5.7
-**Last updated:** 2026-10-13 — CR: Products optional English names + Expenses NO_CASH_DRAWER fix + Reservations customer search (3 bug fixes). Both builds PASS, zero TS errors.
+**Last updated:** 2026-10-16 — approved independent Sub-Treasury/Daily Closing CR implementation; actual verification below.
 **Updated by:** AI Agent — Change Request Implementation
 
 ---
@@ -17,7 +17,7 @@
 | **Environment** | Node.js (ESM), Vite, React 19, Drizzle ORM, MySQL 8 |
 | **Databases** | `koshk_skate` (Development/Demo), `koshk_skate_test` (Automated Tests Only — **WARNING: Tests must never run against development DB.**) |
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
-| **Active Work** | None — desktop UI audit verified and documented for local delivery. |
+| **Active Work** | Approved ST-01–06 implemented; final verification/documentation/Git delivery in progress. |
 | **Blocked Work** | Browser verification (Playwright driver failure — 404 from Azure edge node) affects P05.5, P13, P14, P15, P16, P17 |
 | **Last Verification** | 2026-10-11 — Desktop UI: frontend build/lint PASS; 147 route/width browser cases, 63 below-desktop preservation comparisons. See desktop audit for limits. Prior backend test results remain historical. |
 | **Last Git Commit** | `fix(ui): improve desktop ERP layouts and accessibility` — this documented change; hash available from `git log -1`. |
@@ -383,3 +383,7 @@ Pending owner choices: payment scope/assignment; funded float/full handover/next
 Verification this stage: source/document/test inspection only; builds, DB integration and browser behavior tests not run. Existing 0020 migration defect remains a prerequisite. No physical reconciliation or production claim.
 
 Git baseline was a0f157f on master. Existing rental-receipt/audit-filter changes are preserved separately; delivery reports the documentation commit and push status. The feature remains incomplete until approved implementation, migration, verification, documentation and Git requirements are satisfied.
+
+## Approved sub-treasury implementation — 2026-10-16
+
+CR-SUB-TREASURY-2026-10-15 ST-01–06 APPROVED with independent accounts and cashier-entered count-only opening. Ledger funding requires recorded transfers. Work IN PROGRESS: safe 0020 migration repair, additive treasury schema, transaction/ownership integration, closing/handovers/funding, Arabic interfaces and verification. Current actual results are tracked in [SUB_TREASURY_VERIFICATION.md](quality/SUB_TREASURY_VERIFICATION.md), including initial migration and concurrency failures plus their corrected reruns. Working tree was clean at start (owner intentionally removed prior unrelated edits); do not restore them. See approved CR clarification section.

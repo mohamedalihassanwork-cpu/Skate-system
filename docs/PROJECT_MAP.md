@@ -2,12 +2,10 @@
 
 **Version:** 2.0
 **Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.
-**Last updated:** 2026-09-26 (Governance and Migration Hardening)
+**Last updated:** 2026-10-16 (approved sub-treasury implementation navigation)
 
 > [!IMPORTANT]
-> **PROJECT STATE: Phase 12 (Expenses) CLOSED ✅. Phase 13 (Reports) is IN PROGRESS ⏳.**
-> All Phase 01–12 files are committed and verified.
-> Phase 13 Backend is verified. Phase 13 Frontend is pending.
+> Current delivery status is maintained in [PROJECT_STATE.md](PROJECT_STATE.md). The original phase navigation is historical; the dated addenda below identify current implemented paths.
 
 > [!WARNING]
 > **Gate 5.3 — STALE NOTICE (2026-10-03):** This PROJECT_MAP was last updated at Phase 05
@@ -700,19 +698,26 @@ The completion review also adds `tests/mobile_operational_checks.py`: isolated n
 | `tests/treasury_balance_ui.py` | Synthetic Chrome Treasury checks, no real business writes |
 | `docs/quality/TREASURY_AVAILABLE_BALANCE.md` | Current model, findings, owner decisions, verification and limits |
 
-Actual accounts/movements live in `apps/api/src/db/schema/payments.ts`; shifts/expenses live in `schema/treasury.ts`. There is no separate backend treasury directory or implemented transfer workflow. This entry supersedes the stale PLANNED Treasury/Payments navigation above for these paths only.
+Historical 2026-10-15 state: accounts/movements lived in `apps/api/src/db/schema/payments.ts`, shifts/expenses in `schema/treasury.ts`, with no separate treasury backend or transfer workflow then. The implemented 2026-10-16 sub-treasury navigation below supersedes that absence.
 
-## Independent sub-treasury request — current navigation (2026-10-15)
+## Independent sub-treasury request — implemented navigation (2026-10-16)
 
-[CR-SUB-TREASURY-2026-10-15](decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) is a PROPOSED specification, not implemented routes/tables. It contains investigation, owner decision sheet, architecture, workflow, migration and verification plan.
+[CR-SUB-TREASURY-2026-10-15](decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) records the approved ST-01–06 scope, implementation and remaining verification/delivery status. These paths supersede stale PLANNED Treasury/Payments/Shifts/Expenses navigation above. The existing frontend route remains `/treasury`; a separate shift frontend page is not implied.
 
-| Implemented area | Actual path |
+| Area | Actual path/purpose |
 |---|---|
-| Accounts/methods/ledger | apps/api/src/db/schema/payments.ts; modules/payments/ |
-| Shift/expense schema | apps/api/src/db/schema/treasury.ts |
-| Shift/expense APIs | apps/api/src/modules/shifts/; modules/expenses/ |
-| Treasury/current shifts/expenses UI | apps/web/src/modules/treasury/ |
-| Reports/audit | apps/api/src/modules/reports/; modules/audit/ |
-| Current financial regression tests | apps/api/src/tests/treasury.test.ts; sales-balance.test.ts; maintenance-payments.test.ts |
+| Treasury API/lifecycle | `apps/api/src/modules/treasury/treasury.routes.ts`, `treasury.service.ts`: account setup, assignment, activation, funding, own workspace, handover review/history and settlement. |
+| Financial transaction adapter | `apps/api/src/modules/treasury/treasury-posting.ts`: shared raw/Drizzle transaction posting, exact money, locks, idempotency and mandatory audit. |
+| Account/method/ledger schema | `apps/api/src/db/schema/payments.ts`; existing `modules/payments/` keeps global recorded ledger summary. |
+| New lifecycle schema | `apps/api/src/db/schema/subtreasury.ts`: configuration, assignments, funding, handovers, transfers, settlements and financial operation keys. |
+| Shifts/expenses | `apps/api/src/db/schema/treasury.ts`; `apps/api/src/modules/shifts/`, `modules/expenses/`: managed count/ledger closing snapshots and own/all scopes. |
+| Financial source integration | `apps/api/src/modules/rentals/`, `sales/`, `expenses/`, `maintenance/`; actual rental posting account in `schema/payments.ts`. |
+| Treasury screen | `apps/web/src/modules/treasury/{TreasuryPage.tsx,SubTreasuryPage.tsx,TreasuryAdministration.tsx,TreasuryHandovers.tsx}`. |
+| Treasury client/state/styles | `apps/web/src/modules/treasury/{treasury.api.ts,subtreasury.state.ts,subtreasury.ui.tsx,subtreasury.css}`; existing `TreasuryBalance.tsx` remains the recorded global balance panel. |
+| Reports/audit | `apps/api/src/modules/reports/`, `modules/audit/`; transfer/variance sources remain distinct from operational revenue/expense. |
+| API integration regressions | `apps/api/src/tests/subtreasury.test.ts`, `subtreasury-producers.test.ts`; existing `treasury.test.ts`, `sales-balance.test.ts`, `maintenance-payments.test.ts`. |
+| Migrations | `apps/api/src/db/migrations/0020_multi_skate_rentals.sql`, `0021_subtreasury.sql`, matching metadata/journal; `apps/api/drizzle.config.ts`. |
+| Guarded migration tools | `apps/api/scripts/{migration-0020.ts,migration-0021.ts,repair-migration-0020.ts,repair-migration-0021.ts,verify-migrations.ts,verify-treasury-activation.ts}`. |
+| Specification and evidence | `docs/decisions/SUB_TREASURY_DAILY_CLOSING_CR.md`, `docs/modules/TREASURY.md`, `CASHIER_SHIFTS.md`, `docs/quality/SUB_TREASURY_MIGRATION.md`; current routes/schema in architecture addenda. |
 
-These paths supersede stale PLANNED Treasury/Payments/Shifts/Expenses navigation above. Proposed assignment/handover/funding/transfer routes and tables do not exist yet. No separate shift page or backend treasury module should be inferred from the target tree.
+New lifecycle APIs are under `/api/v1/treasury`; existing shift and source APIs are integrated. Each account retains its own ledger/balance. Closing creates pending liability, while only separately authorized confirmation/acceptance creates a completed paired transfer. Fresh, legacy, partial and aligned migration paths plus zero-balance activation have guarded evidence; no development/production migration is inferred from implementation.

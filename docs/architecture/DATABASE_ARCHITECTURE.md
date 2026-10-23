@@ -1,11 +1,11 @@
 # Database Architecture — KOSHK SKATE ERP
 
-**Version:** 1.2  
-**Status:** PARTIAL — Engine and ORM approved (Phase 01). Customers schema IMPLEMENTED (Phase 04). Schema for other tables is PLANNED (Phase 02+).  
-**Last updated:** 2026-09-21 (Phase 05 Entry Gate documentation corrections: `customers.is_active` added per DEC-052; `rentals.status` ENUM corrected per DEC-064; `rentals.shift_id` nullability noted per DEC-063)
+**Version:** 1.3
+**Status:** Current Treasury/Shift schema documented in the 2026-10-16 implementation addendum; the original target catalog below is historical.
+**Last updated:** 2026-10-16 (approved sub-treasury schema and guarded migration verification)
 
 > [!IMPORTANT]
-> The database engine and ORM are approved (DEC-015, DEC-022). The local `koshk_skate` database has been created. No business tables exist yet — all table definitions below are PLANNED and will be implemented starting Phase 02.
+> The engine/ORM are approved (DEC-015, DEC-022), and business tables exist. The original phase target definitions are retained as historical context. Use the current implementation addendum below, PROJECT_STATE and actual schema for Treasury/Shift behavior.
 
 ---
 
@@ -566,12 +566,27 @@ Initial seed data should include:
 
 The implemented `schema/payments.ts` uses `treasury_accounts.balance DECIMAL(12,2)` (stored balance), `is_cash_drawer`, payment-method account mappings and signed `treasury_movements`. The new summary computes movement net per account in one consistent SQL read and compares it with the stored value; it neither reconstructs opening money nor rewrites history. Totals are aggregated as integer piastres and returned as decimal strings. No development/production schema change was needed.
 
-The isolated test database required schema-only alignment to existing multi-skate source for rental-flow verification. The existing 0020 migration/journal mismatch remains unresolved for general deployment. See [verification limits](../quality/TREASURY_AVAILABLE_BALANCE.md).
+Historical 2026-10-15 result: the isolated test database required schema-only alignment to existing multi-skate source, and the 0020 mismatch was then unresolved. The 2026-10-16 section below records the approved repair and its limits. Earlier evidence remains in [Treasury available balance verification](../quality/TREASURY_AVAILABLE_BALANCE.md).
 
-## Sub-treasury proposal and current schema reconciliation — 2026-10-15
+## Implemented sub-treasury schema and historical reconciliation — 2026-10-16
 
-Current account/ledger schema is `apps/api/src/db/schema/payments.ts`; shifts/expenses are `schema/treasury.ts`. There is no implemented shift_treasury_snapshots, sub-account assignment, handover or transfer table. Earlier diagrams/target columns are not evidence that these exist.
+Owner-approved ST-01–06 in [CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) are implemented. This section supersedes the historical Treasury/Shift target tables above where they differ. `shift_treasury_snapshots` remains unimplemented.
 
-[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) specifies proposed additive account metadata, assignments, closing/attempts, funding, transfer legs, variance approvals and uniqueness controls, conditional on owner decisions. No schema is approved/generated/applied in this stage. Preserve legacy financial rows and nullable references; do not infer historical custody or turn opening counts into funds.
+Every cash/electronic account has an independent `treasury_accounts.balance DECIMAL(12,2)` and signed movement ledger. The designated main cash account is a transfer endpoint, not a parent balance that includes drawers. Cashier assignments reuse the existing account model; electronic payment methods retain their independent configured accounts.
 
-Migration prerequisite: 0020 is unjournalled, duplicates started_at, omits late_fee_records.rental_item_id and includes historical backfills. Fresh/already-upgraded paths need reviewed repair; test-only alignment is not migration proof. Existing verify-migrations.ts drops its selected database without a target guard and must not be run blindly. See CR sections 7–9 for safe migration and verification requirements.
+| Schema location | Current implementation |
+|---|---|
+| `schema/payments.ts` | Existing accounts/methods/movements plus `account_role`; movement amount widened to DECIMAL(12,2), nullable `transfer_id`/`transfer_leg`, cash-classification snapshot and transfer/variance reference types. Unique transfer/leg prevents duplicate ledger legs. |
+| `schema/treasury.ts` | Existing shifts/expenses; managed shifts add nullable account/assignment, immutable Cairo opening business date, entered opening count, separate ledger opening/closing expectation, declaration and closing actor. Generated `active_cashier_id` uniquely guards managed active sessions only. |
+| `schema/payments.ts` (rental payments) | Nullable actual posting-account FK; historical nulls are retained. |
+| `schema/subtreasury.ts` | `treasury_configuration`, `treasury_assignments`, `treasury_funding`, `treasury_handovers`, `treasury_transfers`, `treasury_settlements`, `financial_operations`. |
+
+Assignments uniquely bind one persistent account and cashier. Funding is `pending` → `accepted` or `cancelled`; only acceptance posts paired transfer legs. Handover attempts are `pending` → `rejected`, `confirmed` or `zero_acknowledged`. Replacement appends a linked attempt and retains original closing counts. Transfers exist only when completed atomically; zero acknowledgment has a settlement without a fictitious zero transfer.
+
+Database uniqueness protects one attempt number per shift, one settlement per shift/handover, one transfer per funding/handover, each transfer leg, and each actor/scope/operation key. Transactions serialize the configuration gate, actor/session/source records and account balances; account locks use ascending IDs. Financial mutations and their mandatory audit records commit together. Persisted request hash/results make identical logical retries return the original outcome and changed-payload key reuse conflict.
+
+Opening count creates no ledger entry. Expected counted cash uses the opening count plus subsequent cash movements; ledger due uses the opening ledger snapshot plus those movements. Closing freezes the drawer and records a pending declaration, changing no treasury balance. Explicit permitted manager receipt posts any approved signed variance plus the paired handover transfer atomically. Recorded confirmation is a user attestation, not independent physical verification.
+
+Migration 0020 is now registered and schema-only, without inferred historical rental items or duplicate `started_at`. Migration 0021 adds the model and approved permissions with configuration disabled by default; no main account, assignments, funding, historical handovers or custody redistribution is inferred. Historical values and nullable links remain unchanged. Legacy active sessions must close before explicit activation; new accounts start at zero.
+
+Guarded fresh/legacy/partial/aligned migration and activation checks passed on dedicated test/disposable databases. MySQL DDL is non-atomic; reviewed partial recovery validates actual definitions and original rows before journaling. See [migration implementation, results and limits](../quality/SUB_TREASURY_MIGRATION.md), including the initial overlength FK failure and shared-test forward recovery. Development/production databases were not migrated.

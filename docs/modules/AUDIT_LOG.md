@@ -109,3 +109,10 @@ Presentation changes apply only to screen widths of at least 1024px. Existing mo
 Phone/tablet audit filters use a labelled responsive grid. The existing table has readable token-based styling and contained horizontal scrolling; pagination wraps. Audit data/filter logic is unchanged.
 
 Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+
+## Approved sub-treasury integration — 2026-10-16
+
+New/touched financial operations use strict awaited transaction-bound audit: funding authorization/acceptance/cancellation, account assignment/activation, count-only opening, close/declaration/replacement/rejection, explicit variance approval, transfer and confirmation. A failure rolls back the financial transaction. Global nonfinancial audit-failure policy remains OWNER-002; this change does not silently resolve it. Original snapshots/attempts and reviewer/approver identities remain auditable.
+
+Authority: [ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Current workflow: [Treasury](TREASURY.md). Executed checks and limits: [verification report](../quality/SUB_TREASURY_VERIFICATION.md). Earlier proposal/pending wording is historical and superseded only within this approved scope.

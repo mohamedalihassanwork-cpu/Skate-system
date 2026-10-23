@@ -1873,7 +1873,7 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 
 **Implementation commit:** The logical feature commit named `fix(treasury): show recorded available balances` containing this record; exact hash/push status reported at delivery. Verified scope: 35 API tests, 96 UI checks, builds/lint. No physical-cash, settlement, reconciliation or deployment claim.
 
-## CR-SUB-TREASURY-2026-10-15
+## CR-SUB-TREASURY-2026-10-15 — Original proposal (historical; approved below)
 
 **Date:** 2026-10-15
 **Type:** CHANGE REQUEST
@@ -1903,3 +1903,14 @@ Example acceptable sequence: `RN-00025`, `RN-00026`, `RN-00028` — `RN-00027` m
 **Approved by:** Owner request authorizes objectives and investigation. No owner approval of ST-01–06 recommendations has been received. No approval inferred from earlier change requests.
 
 **Implementation commit:** NONE. This documentation-only proposal does not implement the feature; exact documentation commit/push status is reported at delivery.
+
+## CR-SUB-TREASURY-2026-10-15 — Owner approval 2026-10-16
+
+**Status:** APPROVED / implementation in progress.
+
+Owner approved ST-01–06 with independent cash/electronic accounts and cashier-specified auditable opening cash. Follow-up explicitly approved count-only opening: ledger funds come from recorded transfers. ST-03–06 recommendations and bounded strict financial audit/shared posting guard are approved. The [approved clarification section](SUB_TREASURY_DAILY_CLOSING_CR.md) supersedes conflicting earlier proposal language. No parent-rollup balance, automatic opening money, historical redistribution or production deployment is authorized. Recorded count/ledger differences remain distinct and auditable; manager adjustment uses ledger due. Implementation follows the recorded approval. Actual verification and Git status are maintained in [SUB_TREASURY_VERIFICATION.md](../quality/SUB_TREASURY_VERIFICATION.md); original proposal statements above are historical. Opening count arithmetic and ledger settlement arithmetic are separately implemented.
+
+
+### ST implementation reconciliation — 2026-10-16
+
+The approved workflow extends existing independent accounts, with no parent rollup or automatic opening movement. Reports separate latest pending/rejected declarations from recorded receipts and signed adjustments. Read-only Treasury snapshots keep related figures consistent; new Treasury writes require persistent operation keys even before activation. These implement approved integrity/reporting requirements without adding financial policy. 0020 schema-only repair and corrected0021 plus guarded partial recovery preserve old values/nulls. MySQL identifier-limit failure, recovery evidence and actual tests are recorded in the migration/verification reports. Account reassignment, arbitrary initial-money import, historical repairs and production cutover remain outside this delivered scope.

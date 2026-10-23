@@ -111,3 +111,10 @@ Damage tabs, details, summaries and actions wrap below desktop; payment controls
 Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
 
 Completion review (2026-10-13): details/collection/waiver controls expose selected state; mobile summary foregrounds use approved readable tokens. All three tabs were exercised without payment or waiver submissions.
+
+
+## Approved sub-treasury integration — 2026-10-16
+
+Managed cash collection uses the acting cashier’s active drawer, while electronic collection retains its configured account. Partial payments/waivers retain their existing semantics. Each collection uses a persisted operation key, common session lock and required atomic audit; no estimate or waived amount creates funds.
+
+Authority: [ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Current workflow: [Treasury](TREASURY.md). Executed checks and limits: [verification report](../quality/SUB_TREASURY_VERIFICATION.md). Earlier proposal/pending wording is historical and superseded only within this approved scope.

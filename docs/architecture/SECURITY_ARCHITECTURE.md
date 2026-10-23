@@ -246,3 +246,10 @@ Requirements:
 ---
 
 *Last updated: 2026-09-09*
+
+
+## Sub-treasury architecture — 2026-10-16
+
+ST-05 adds distinct own/all history and assignment/funding/confirmation/reconciliation rights. Treasury services independently check actor permissions, source services retain their existing route authorization, and all account/session ownership is checked server-side. Manager confirmation and cashier funding acknowledgment require different users, including users granted every right. No Administrator-name bypass is introduced. Required audit failures roll back new/touched financial transactions. Managed money/key/identifier/reason validation and immutable original handover snapshots prevent client-side state tampering.
+
+See [approved CR](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md), [Treasury](../modules/TREASURY.md), and [actual verification](../quality/SUB_TREASURY_VERIFICATION.md).

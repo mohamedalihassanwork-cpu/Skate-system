@@ -166,3 +166,10 @@ See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for desktop-only sc
 User cards, long names/emails, permission chips and actions wrap below desktop. Shared create/edit/password/permission dialogs inherit touch sizing, bounded scrolling and keyboard containment. Permission decisions are unchanged.
 
 Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+
+## Approved sub-treasury integration — 2026-10-16
+
+ST-05 adds treasury.view_own, treasury.assign, treasury.fund, treasury.handovers.view, treasury.handovers.confirm, treasury.reconcile, shifts.view_all and expenses.view_all. Existing shifts.view/expenses.view now mean own history; treasury.view stays global. Migration/seed grants management rights to treasury.manage roles and the Administrator system role, and own Treasury access to shifts.manage roles. Authorization uses exact permission checks, not role-name bypasses. No user can confirm their own handover or both authorize and accept their own funding.
+
+Authority: [ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Current workflow: [Treasury](TREASURY.md). Executed checks and limits: [verification report](../quality/SUB_TREASURY_VERIFICATION.md). Earlier proposal/pending wording is historical and superseded only within this approved scope.

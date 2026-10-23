@@ -1,8 +1,8 @@
 # API Architecture — KOSHK SKATE ERP
 
-**Version:** 1.0  
-**Status:** PLANNED — No API exists yet.  
-**Last updated:** 2026-09-09
+**Version:** 1.1
+**Status:** APIs are implemented. The original endpoint catalog is a historical target; current Treasury/Shift contracts are reconciled in the 2026-10-16 addendum.
+**Last updated:** 2026-10-16 (approved sub-treasury API)
 
 ---
 
@@ -350,4 +350,40 @@ Financial operations (payment recording, rental start) should be protected again
 
 One SQL statement reads accounts and aggregated committed movements consistently; server-side integer piastres sum the breakdown. All accounts remain visible, including inactive accounts. No invoice totals, shift opening counts, unpaid charges, or payment-method joins contribute money. A stored-balance discrepancy is diagnostic and never triggers a write or an inferred opening balance. `asOf` indicates generation of this read result, not physical reconciliation or electronic settlement. Responses are not cacheable.
 
-The existing `/api/v1/payments/treasury-accounts` contract and all mutation permissions remain unchanged. This read API introduces no transfer, funding, or reconciliation workflow.
+This 2026-10-15 read API introduced no transfer, funding or reconciliation workflow. The independent approved sub-treasury implementation below now defines those actions; the payments summary retains its own contract.
+
+## Implemented sub-treasury API — 2026-10-16
+
+This section supersedes the historical target Treasury/Shift routes, generic response/pagination targets and idempotency TBD above for the approved [sub-treasury CR](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Implemented router: `apps/api/src/modules/treasury/treasury.routes.ts`; all paths below start with `/api/v1/treasury`.
+
+The router requires authentication, reloads the active user and current permissions, and sends `Cache-Control: no-store`. Services enforce permissions and ownership on the server; Administrator is not a special bypass. The new router returns direct JSON DTOs, without the generic `{ success, data }` envelope. Handover/movement lists return `{ data, meta: { total, page, limit, totalPages } }`; `page` defaults to 1 and `limit` to 50, capped at 100.
+
+| Method/path | Server permission and scope |
+|---|---|
+| GET `/config` | Authenticated active user; enabled state and designated main account. |
+| GET `/summary` | `treasury.handovers.view`: all; `treasury.view_own` or `shifts.manage`: own. |
+| GET `/me` | `treasury.view_own` or `shifts.manage`; own assignment, ledger balance, count/ledger expectation, shift, pending funding and recent handovers. |
+| GET `/setup-options` | `treasury.assign` or `treasury.fund`. |
+| GET `/accounts` | `treasury.view`; independent account balances/status. |
+| POST `/accounts` | `treasury.assign`; create a zero-balance account. |
+| GET `/accounts/:id/movements` | `treasury.view`: all; otherwise `treasury.view_own` or `shifts.manage` and ownership of assigned account. |
+| POST `/assignments`, POST `/activate` | `treasury.assign`; explicit assignment/cutover validation. |
+| GET `/funding`, POST `/funding` | `treasury.fund`; list (optional status, maximum 100) or authorize. |
+| POST `/funding/:id/accept` | `shifts.manage` or `treasury.view_own`; target cashier only, distinct from author. |
+| POST `/funding/:id/cancel` | `treasury.fund`; pending only, reason required. |
+| GET `/handovers`, GET `/handovers/:id` | `treasury.handovers.view`: all; `treasury.view_own` or `shifts.manage`: own. List supports status. Detail includes closing, all attempts, movements and settlement. |
+| POST `/handovers/:id/confirm` | `treasury.handovers.confirm`, non-self. Nonzero ledger variance also requires `treasury.reconcile`, explicit `approveVariance: true` and reason. |
+| POST `/handovers/:id/reject` | `treasury.handovers.confirm`, non-self; required reason. |
+| POST `/handovers/:id/replace` | `shifts.manage`; own latest rejected attempt; append-only declaration/reason. |
+
+Mutations carry `operationKey` (8–100 letters/digits/colon/underscore/hyphen). Keys are persisted by actor and operation scope with a canonical payload hash/result. Same key and payload returns the first outcome; changed payload conflicts. State and unique constraints additionally prevent settling the same handover twice with different keys. New sales/expenses are deduplicated per supplied logical-operation key; different keys cannot be distinguished from legitimate separate operations.
+
+Money is accepted as validated two-decimal values; clients should send decimal strings. New treasury DTOs return exact decimal strings. Existing shift DTO numeric fields remain compatible and add separate ledger/count snapshots and managed declaration. Managed operations cannot bypass operation keys or handover declarations through old clients.
+
+Close uses existing `POST /api/v1/shifts/:id/close`: full counted cash/declaration are recorded with expected count and ledger due, reason for discrepancy and actor/time. It creates a pending handover atomically and posts no movement. Confirmation requires `receivedAmount` to equal the latest declaration. A different recount requires rejection and a linked replacement; original closing counts are retained. Funding acceptance and confirmed nonzero handover each post both transfer legs in one transaction. Zero receipt produces `zero_acknowledged` with no transfer; an approved adjustment can still be required. Responses attest recorded user actions, not independently verified physical receipt.
+
+`GET /summary` uses only the latest attempt per shift and returns `pendingCount`, `pendingDeclaredAmount`, `rejectedCount`, `rejectedDeclaredAmount`, `completedCount`, `zeroAcknowledgedCount`, `receivedAmount`, and `adjustmentAmount`. Pending/rejected declarations are separate from settled receipts. Exact aggregate amounts remain decimal strings. Account/history reads use consistent snapshots where multiple queries compose a result.
+
+Existing shift history is own-scoped under `shifts.view`, or all under `shifts.view_all`; expense history similarly uses `expenses.view`/`expenses.view_all`. Existing manage/create rights remain required for their actions. Rental/sale/expense/payment producers route eligible managed cash through the acting cashier's assigned active drawer; electronic accounts remain independent. Cash refunds use the acting funded drawer, while electronic refunds retain the recorded original account.
+
+`GET /api/v1/payments/treasury-summary` remains a distinct global ledger summary under `treasury.view`, with its existing success envelope. Transfer pairs affect independent account balances once each and net to zero in an all-account total; they are not revenue. Pending handovers produce no received balance. See [Treasury](../modules/TREASURY.md), [Cashier shifts](../modules/CASHIER_SHIFTS.md), and [migration/cutover](../quality/SUB_TREASURY_MIGRATION.md).

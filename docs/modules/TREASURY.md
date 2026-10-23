@@ -1,98 +1,70 @@
 # Module: Treasury
 
-**Status:** Existing accounts/ledger, shifts and expenses IMPLEMENTED — prior verification remains partial. Recorded-balance change IMPLEMENTED / TESTED / VERIFIED.
-**Last updated:** 2026-10-15 (implementation and scoped verification)
+**Status:** Approved sub-treasury workflow IMPLEMENTED; current verification and delivery status are recorded in [the verification report](../quality/SUB_TREASURY_VERIFICATION.md).
+**Last updated:** 2026-10-16
 
-## Purpose and current status
+## Authority and architecture
 
-Treasury manages financial accounts and traceable collections/payments. The existing page hosts cashier shifts and ordinary expenses. The owner-authorized `CR-TREASURY-AVAILABLE-2026-10-15` adds **الرصيد المتاح المسجل**, the committed ledger balance with account and cash/noncash breakdowns. It is not physically verified cash or electronic settlement certification.
+[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md), ST-01–06, approved 2026-10-16, governs this independent change. Opening cash is explicitly **count only; ledger funds come from recorded transfers**. Earlier Treasury available-balance and presentation audit records retain their own historical scope.
 
-| Area | State |
-|---|---|
-| Account/method schema, source movements and existing stored-balance API | IMPLEMENTED |
-| Shift/expense page | IMPLEMENTED; prior audit evidence retained below |
-| Ledger summary API and current-balance display | IMPLEMENTED / TESTED / VERIFIED |
-| Sales balance concurrency correction | IMPLEMENTED / TESTED: atomic SQL account increments/decrements |
-| Transfers, settlement, opening-funding and reconciliation postings | Not implemented by this CR; owner decisions required |
+The existing modular monolith uses MySQL/InnoDB, Express/TypeScript, Drizzle/mysql2 and React. Previously methods mapped globally to accounts, shifts had counts without custody/receipt records, expenses selected the first cash account, and closing could race posting. The approved model extends those accounts and movements instead of creating a second ledger.
 
-The [investigation and implementation plan](../quality/TREASURY_AVAILABLE_BALANCE.md) defines authorization, findings, calculation, scope, pending decisions and verification. Earlier Phase 06 upfront-rental descriptions are historical: current rental creation collects no payment; finalization posts collections.
+Every account is independent: main cash, persistent assigned cashier drawers and configured electronic accounts. Main cash is a receiving/funding account, never a parent balance containing drawer funds. One cashier owns one drawer; ownership is persistent and historical assignments are not reused. No terminal/branch structure is inferred. Cash collections and payments route to the acting cashier's active assigned drawer. Electronic payment methods retain their configured accounts. Split components and actual posting account snapshots remain traceable.
 
-## Current financial model and approved calculation
+## Count, session and handover
 
-- Methods map to Treasury accounts; multiple methods may share one account. Every split component remains identifiable and linked to its source.
-- Committed inflows add funds; committed outflows reduce them. Invoice amounts, estimates, unpaid charges and pending actions are not additional collections.
-- Current ledger movements have no pending/cleared/settled status. Late-fee fields set before final payment are not used as collection evidence.
-- Source movements are append-only and traceable. Existing refunds append outflows while retaining original collections.
-- The new summary uses a single consistent account/ledger query: per-account `SUM(in) - SUM(out)`, then exact integer-piastre aggregation for totals. API money fields are two-decimal strings.
-- Cash/noncash uses `is_cash_drawer`, not method labels. Accounts are summed once, including inactive accounts with visible flags; activity is not a spendability guarantee.
-- An account with no movements has recorded balance `0.00` under the current zero-default model. This does not rule out unrecorded opening funds.
-- Stored `account.balance` and stored-minus-ledger difference are diagnostics. No historic repair/backfill is authorized.
-- Shift opening/actual cash and variances are separate counts, not funding/reconciliation postings; exclude them from the global balance (DEC-072).
-- Equal recorded transfer out/in legs net to zero overall. No transfer workflow is introduced.
+1. Administration creates independent zero-balance accounts, assigns fresh unused cash drawers and explicitly selects main cash for activation. No opening count creates money.
+2. A manager authorizes funding; the cashier separately acknowledges receipt. Authorization alone neither reserves nor transfers funds. Acceptance rechecks available main funds and atomically records both legs. Pre-opening acceptance is included in the later opening ledger snapshot; accepted session top-ups count once as subsequent movements.
+3. Opening stores cashier-entered count, recorded ledger snapshot, cashier, server time and Africa/Cairo business date. Expected count = opening count + subsequent signed drawer movements. Ledger due = opening ledger snapshot + those movements. Electronics do not affect expected cash.
+4. Closing stores original actual count, full declared handover, expected count, ledger due, count variance, reason, actor and server time. Count must equal original full declaration. Closing creates a pending attempt and no financial movement. The closed drawer cannot reopen, spend or accept funding before settlement.
+5. Manager reviews snapshots, movements and attempts. Received amount must equal the latest declaration. Rejection needs a reason and changes no balance; cashier supplies a new linked declaration without changing original counts.
+6. Manager confirmation requires a different user. Adjustment = received amount − ledger due. A nonzero adjustment needs explicit `treasury.reconcile` acknowledgment and reason, recorded separately from confirmation. Adjustment, paired transfer, account deltas, settlement, status and audit commit together. The drawer ends at zero; main increases only by received amount.
+7. Zero is recorded as `zero_acknowledged` with no fictitious transfer. A total shortage still requires an approved adjustment. Count variance and approved settlement adjustment are distinct historical facts.
 
-## Implementation locations
-
-| Area | Path |
-|---|---|
-| Account/method/ledger schema | `apps/api/src/db/schema/payments.ts` |
-| Account reads and ledger summary | `apps/api/src/modules/payments/` |
-| Financial posting | Existing rentals, sales, damage, maintenance and expense services |
-| Shift counts/variance | `apps/api/src/modules/shifts/` |
-| Treasury page | `apps/web/src/modules/treasury/TreasuryPage.tsx` |
-| Web summary reads | `apps/web/src/modules/treasury/treasury.api.ts` |
-| Route/navigation visibility | `apps/web/src/App.tsx` |
-
-Accounts have names/activity/cash flags and `balance DECIMAL(12,2)` default zero. Movements have account, `amount DECIMAL(10,2)`, direction, reference type/ID, cashier, optional shift and timestamp. No schema migration is planned. Older architecture target field names must not be mistaken for the actual implemented schema.
-
-## APIs and permissions
-
-| Endpoint | Permission | State |
+| Entity | States | Balance effect |
 |---|---|---|
-| `GET /api/v1/payments/treasury-accounts` | `treasury.view` | Existing all-account/stored-balance contract; unchanged |
-| `GET /api/v1/payments/treasury-summary` | `treasury.view` | IMPLEMENTED additive exact ledger summary, account flags, stored-balance diagnostics and read time |
+| Session | active → closed | Opening/closing counts do not post money |
+| Handover attempt | pending → rejected / confirmed / zero_acknowledged | Pending/rejected posts nothing |
+| Funding | pending → accepted / cancelled | Only acceptance posts paired legs |
+| Transfer | completed | Equal out/in legs; net zero across accounts |
+| Settlement | one per session and accepted attempt | Separate signed variance, then actual receipt transfer if positive |
 
-The route/navigation accepts existing `treasury.view` OR `shifts.manage`, preserving shift-only access. Financial summary display/requests require `treasury.view`; shift controls retain `shifts.manage`; expense read/create controls follow `expenses.view`/`expenses.create` independently. All existing backend checks remain; no new permission grants.
+Cash refunds use the performing cashier's funded drawer; electronic refunds retain the original recorded account. New drawers cannot overdraw or silently fall back to main/another cashier. Insufficient funding fails atomically. Recorded balances and receipt acknowledgments do not certify physically counted funds or bank settlement.
 
-The summary refreshes on entry, focus, manual request and successful expense recording. It shows last successful read time, handles stale/error states, and loads independently from shift/expense requests. Existing Arabic RTL tokens and shared components are reused.
+## Integrity and access
 
-## Financial effects and boundaries
+- Exact decimal strings/integer piastres; source pricing and legacy tolerances remain scoped to their existing modules.
+- Shared config and user/session locks serialize activation, opening, posting and closing. Sorted account locks and unique transfer-leg/session-settlement/active-session constraints prevent duplicate state.
+- Persisted actor/scope/operation keys return the original result for identical retries and reject a changed payload. New Treasury writes always require a key; existing producer/open/close calls require it after activation. Browser keys survive retries/reload and are cleared only after success.
+- Required financial audit failures roll back the transaction. Unrelated global audit policy remains OWNER-002, outside this CR.
+- Multi-read Treasury views use a consistent read-only snapshot. Ledger/stored drift is shown and prevents financial settlement; no automatic historical correction is made.
 
-Current rental finalization, sale collection and damage collection post inflows. Recorded ordinary expenses, system maintenance payments and existing refunds post outflows. Rental start/estimates, waived/uncollected charges, maintenance completion/cost estimates and external maintenance payment do not add or subtract system funds on their own.
+| Permission | Scope |
+|---|---|
+| treasury.view | All independent account balances and movements |
+| treasury.view_own or shifts.manage | Own drawer, funding acknowledgment, handovers and summary |
+| treasury.assign | Create account, assign drawer, configure activation |
+| treasury.fund | Authorize/cancel funding and view funding requests |
+| treasury.handovers.view | All cashier handovers, details and aggregate summary |
+| treasury.handovers.confirm | Confirm/reject; does not independently grant all-history reads |
+| treasury.reconcile | Explicit variance approval, additionally requiring confirmation rights |
+| shifts.view / shifts.view_all | Own / all session history |
+| expenses.view / expenses.view_all | Own / all expense history |
 
-Only sales create/refund account balance writes change: replace unlocked read/calculate/overwrite with atomic SQL `balance +/- amount` inside the existing audited transactions. Mapping, eligibility, ledger history, permissions, refund policy and shift calculations are preserved. Summary reads are not financial events.
+All checks are server-side; there is no Administrator-name bypass. Self-confirmation and authorizing/accepting one's own funding are forbidden even with every permission. Migration grants new management rights to existing treasury.manage roles and the Administrator system role, and own access to shifts.manage roles; custom roles remain permission-based.
 
-## Findings, unknown decisions and verification
+## Reports and UI
 
-The prior page lacked a global balance and sales account writes could lose concurrent updates. The scoped implementation resolves both, and exposes stored-balance drift without inventing historical funds. Pending policy and migration limitations remain in the linked investigation.
+The Arabic RTL workspace provides own balance/counts/movements, opening/closing, funding acknowledgment, manager queue/detail/rejection/confirmation, paginated historical attempts, and account administration. Manager confirmation includes an explicit recorded-receipt acknowledgment. All accounts display independent balances.
 
-Initial funding/imports, historical corrections, electronic settlement/fees/holds, formal reconciliation adjustments, transfers and restricted-funds policy require owner decisions in the [investigation](../quality/TREASURY_AVAILABLE_BALANCE.md#7-business-decisions-remaining-unapproved). OWNER-001 payment consolidation and OWNER-002 audit-failure policy remain pending. F-002 production-reference verification remains deferred.
+`GET /api/v1/treasury/summary` reports all-time latest pending/rejected declaration counts and amounts, positive completed receipt count, zero-acknowledgment count, recorded receipt total and signed approved adjustment total. Replaced rejected attempts do not inflate outstanding amounts. Summary scope matches handover history. These figures are not added to account balances. Operating reports/dashboard continue to whitelist actual revenue/expense sources, excluding internal transfers and variance adjustments. Classification of variances into income/expense remains outside the approved scope.
 
-Verify exact amounts, mapping, refunds/expenses, unpaid exclusions, rollback, concurrent account updates, server permissions and unchanged shifts. Verify Arabic RTL responsive layout and independent loading/empty/error/refresh states. Actual results belong in the [verification record](../quality/TREASURY_AVAILABLE_BALANCE.md#8-verification-plan-and-actual-result-record). Section 9 records the completed scoped checks. Use the dedicated test database. Existing phase and synthetic-UI evidence retain their original limits.
+Existing `GET /payments/treasury-summary` remains the recorded all-account balance, cash/noncash breakdown and drift diagnostics. Pending handovers remain in the source drawer, with no main credit. Treasury reads are not financial events.
 
-The presentation audit additions below remain historical evidence for their own scope.
+## Implementation and cutover
 
-## Desktop UI audit ? 2026-10-11
+Core locations: `apps/api/src/modules/treasury/{treasury.service,treasury-posting,treasury.routes}.ts`, `db/schema/subtreasury.ts`, existing payments/treasury schema, and `apps/web/src/modules/treasury/`. Producers: rentals, sales/refunds, damage, expenses and system maintenance. See [API architecture](../architecture/API_ARCHITECTURE.md) and [project map](../PROJECT_MAP.md).
 
-Reviewed active/inactive shifts, opening/closing forms, petty-expense entry and the expense list. Desktop close-shift fields and action wrap without squeezing the native date/time input; opening controls, expense headers and long descriptions remain contained. Shift, expense, amount and permission behavior is unchanged. The current page also uses Phase 12 shift/expense functionality.
+Migration 0021 adds nullable historical links, assignment/session snapshots, funding, handovers, transfers, settlements, idempotency and permission records. Existing amounts are preserved while movement/shift precision expands to DECIMAL(12,2). Feature defaults disabled. Close legacy active shifts before activation; ensure stored/ledger agreement, explicitly select main account and assign drawers. No old money is redistributed, no old opening count becomes funding, and no historical handover is inferred. Initial unrecorded funds/historical repairs require separate evidence and owner authorization. Follow the [guarded 0020/0021 runbook](../quality/SUB_TREASURY_MIGRATION.md); MySQL DDL is not transactional and partially applied migrations must not be blindly rerun.
 
-Presentation changes apply only to screen widths of at least 1024px. Existing mobile/tablet presentation and print output are preserved. See [Desktop UI/UX Audit](../quality/DESKTOP_UI_UX_AUDIT.md) for consolidated coverage, evidence and verification results.
-
-
-## Phone/tablet presentation — 2026-10-12
-
-Shift summary/open/close controls and expense rows stack or wrap below desktop, including native datetime input clearance. Treasury calculations and operations are unchanged.
-
-Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
-
-Completion review (2026-10-13): mobile close-shift headings/captions and expense amounts use approved readable foreground tokens. Financial values, validation and submit handlers are unchanged.
-
-
-## Verification update — 2026-10-15
-
-The scoped recorded-balance feature is IMPLEMENTED / TESTED / VERIFIED: 35 focused API tests, 96 synthetic UI checks across 17 cases, API/web builds and frontend lint pass. See [actual evidence and retained limits](../quality/TREASURY_AVAILABLE_BALANCE.md#9-implemented-changes-and-verified-results), including the test-only schema alignment and unresolved existing migration defect. No physical-cash or electronic-settlement claim.
-
-## Independent sub-treasury request — 2026-10-15
-
-**PROPOSED / owner decisions PENDING; NOT IMPLEMENTED.** [CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) investigates assigned cash drawers, daily closing and manager-confirmed handovers. Current accounts remain globally mapped and current closing still posts no transfer. Proposed pending/rejected handovers have no ledger effect; only accepted settlement creates paired movements, with separately authorized variance adjustments if ST-03 is approved.
-
-The proposal includes explicit decisions on cash/electronics, float/carryover, discrepancies, refunds, permissions and historical cutover. It does not reuse earlier UI or recorded-balance authorization to approve those policies. Existing behavior/results above remain the baseline, not proof of the proposed feature.
+Account reassignment/deletion, electronic settlement/fees/holds and production configuration/deployment are not included. [Actual checks and limitations](../quality/SUB_TREASURY_VERIFICATION.md) govern completion claims.

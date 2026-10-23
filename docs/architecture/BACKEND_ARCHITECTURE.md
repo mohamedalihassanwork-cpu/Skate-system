@@ -309,3 +309,10 @@ STORAGE_PATH=/var/app/uploads
 ---
 
 *Last updated: 2026-09-09*
+
+
+## Sub-treasury architecture — 2026-10-16
+
+The approved Treasury service and shared treasury-posting.ts primitives extend the existing modular monolith. Raw mysql2 and Drizzle transactions share the same connection through one query adapter. Managed writes use config/user/session locks, sorted account locks, exact piastres and required audit; raw finance transactions retry deadlock/lock-timeout at most three attempts. Unique actor/scope/operation keys replay committed results, unique active managed session and settlement/transfer-leg constraints enforce state integrity. Multi-read Treasury responses use a read-only repeatable-read snapshot. No new ledger or background financial posting service is introduced.
+
+See [approved CR](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md), [Treasury](../modules/TREASURY.md), and [actual verification](../quality/SUB_TREASURY_VERIFICATION.md).

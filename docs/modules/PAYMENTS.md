@@ -32,7 +32,7 @@ Sales collect in `createSale()` and refund through existing `cancelSale()`. Dama
 | Web summary reads | `apps/web/src/modules/treasury/treasury.api.ts` |
 | Summary display | `apps/web/src/modules/treasury/TreasuryPage.tsx` |
 
-Accounts default to zero. Movements preserve source/cashier/shift references. No migration or historical data rewrite is planned.
+Accounts default to zero. Movements preserve source/cashier/shift references. Migration 0021 adds nullable actual-account snapshots and transfer/cash-snapshot links while preserving historical values and null links; see the sub-treasury section below.
 
 The directly related sales fix replaces unlocked stored-balance read/calculate/overwrite with atomic SQL increments/decrements inside existing audited transactions. Implemented and verified under `CR-TREASURY-AVAILABLE-2026-10-15`.
 
@@ -46,7 +46,7 @@ The directly related sales fix replaces unlocked stored-balance read/calculate/o
 
 The summary uses one consistent account/ledger query: inflows minus outflows per account, with exact integer-piastre aggregation for overall/cash/noncash totals. Monetary fields return decimal strings. Account activity/cash flags, stored balances/differences and read time make the result inspectable. All accounts, including inactive accounts, remain included/flagged; inactivity does not determine fund accessibility.
 
-Backend authentication/permissions remain enforced. Collection/refund permissions remain within source modules. App Treasury route/navigation will admit existing `treasury.view` OR `shifts.manage`, while summary, shift and expense controls independently follow their existing respective permissions. No roles receive new grants.
+Backend authentication/permissions remain enforced. Collection/refund permissions remain within source modules. App Treasury route/navigation will admit existing `treasury.view` OR `shifts.manage`, while summary, shift and expense controls independently follow their existing respective permissions. ST-05 now adds scoped Treasury/history grants as documented in Treasury; source-operation permissions remain enforced.
 
 See [Treasury](TREASURY.md) and the [detailed change plan](../quality/TREASURY_AVAILABLE_BALANCE.md).
 
@@ -75,8 +75,8 @@ Scope, source coverage, verification results and live-testing limits are recorde
 
 The scoped recorded-balance feature is IMPLEMENTED / TESTED / VERIFIED: 35 focused API tests, 96 synthetic UI checks across 17 cases, API/web builds and frontend lint pass. See [actual evidence and retained limits](../quality/TREASURY_AVAILABLE_BALANCE.md#9-implemented-changes-and-verified-results), including the test-only schema alignment and unresolved existing migration defect. No physical-cash or electronic-settlement claim.
 
-## Independent sub-treasury proposal — 2026-10-15
+## Approved sub-treasury integration — 2026-10-16
 
-[CR-SUB-TREASURY-2026-10-15](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md) records current routing and all six financial producers. Proposed assigned-cash routing, acting-cashier refund funding, locked shift checks and exact close/transfer money require the documented decisions before implementation. Current electronics mappings, source history and uncollected exclusions remain authoritative. No code or permission is changed in this documentation stage.
+ST-01–06 are approved. Cash collections and payments now route through the acting cashier's assigned active drawer after explicit activation; electronic methods retain their independent mapped accounts. Rental and sale components retain actual account snapshots. Cash refunds debit the refunding cashier's drawer, electronic refunds the original account. All six touched producers hold the session guard through posting and use required atomic audit. Sale/damage/expense logical retries use persisted operation keys; already-finalized/paid/cancelled source state guards remain for the other source transitions. Counts and pending handovers do not post money.
 
-Clarification of earlier wording: the scoped sales atomic-balance fix is already implemented (not a remaining current lost-update finding); App Treasury access already admits treasury.view OR shifts.manage. Earlier future-tense verification wording describes that prior plan; its actual results are in the verification update above.
+The [Treasury module](TREASURY.md) is the current source for states, permissions, funding and settlement. Earlier unapproved transfer/variance statements refer to the earlier available-balance CR and are superseded only within ST scope. OWNER-001/002 remain unresolved globally. The [verification report](../quality/SUB_TREASURY_VERIFICATION.md) records current results; old upfront-rental tests cannot certify current multi-skate finalization.

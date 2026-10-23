@@ -1,7 +1,86 @@
 # Changelog — KOSHK SKATE ERP
 
 
+
+
+## [2026-10-19] — ops: Reset database to fresh state (no operational data)
+
+**Type:** OPERATIONAL — database reset (development environment)
+
+**Database:** `koshk_skate` on `localhost:3306`
+
+**Script added:** `apps/api/scripts/reset-to-fresh.ts`  
+**npm scripts added:** `db:reset` (dry-run), `db:reset:confirm` (live)
+
+### Purpose
+
+Reset the development database to a clean fresh-installation state so the
+system can be used for a fresh demonstration / re-testing cycle with no
+historical business data.
+
+### Operational data deleted
+
+| Table | Rows deleted |
+|---|---|
+| `audit_logs` | 114 |
+| `rental_item_extensions` | 2 |
+| `maintenance_parts` | 1 |
+| `sale_items` | 1 |
+| `sale_payments` | 2 |
+| `rental_payments` | 20 |
+| `treasury_movements` | 28 |
+| `treasury_funding` | 1 |
+| `financial_operations` | 8 |
+| `damage_reports` | 1 |
+| `maintenance_records` | 2 |
+| `late_fee_records` | 5 |
+| `inspections` | 18 |
+| `rental_items` | 18 |
+| `rentals` | 14 |
+| `reservations` | 2 |
+| `sales` | 1 |
+| `expenses` | 1 |
+| `cashier_shifts` | 7 |
+| `treasury_assignments` | 2 |
+| `refresh_tokens` | 1,035 |
+| `customers` | 4 |
+| Non-admin/system users | 2 |
+
+Skates (4): status reset to `available`, `is_active=1`.  
+Sequences (1): `value` reset to `0`.  
+Treasury accounts (7): `balance` reset to `0.00`.
+
+### System configuration preserved
+
+| Item | Count |
+|---|---|
+| `settings` | 6 |
+| `permissions` | 57 |
+| `roles` | 3 |
+| `role_permissions` | 89 |
+| `treasury_accounts` | 7 |
+| `payment_methods` | 5 |
+| `treasury_configuration` | 1 |
+
+Admin account (`admin@koshkskate.com`) kept; password re-hashed from
+`SEED_ADMIN_PASSWORD` env var.  
+System actor (`system@koshkskate.internal`) kept.
+
+### Post-reset verification
+
+- ✅ API started: `✅ Database connected — localhost:3306/koshk_skate`
+- ✅ `POST /api/v1/auth/login` → `200 OK`, `success: true`, full JWT issued
+- ✅ Admin user `id=1`, `is_active=true`, `is_system_account=false`
+- ✅ Password verified via bcrypt (PASS)
+- ✅ All 57 permissions present in JWT response
+- ✅ All operational tables verified empty (0 rows)
+- ✅ `npm run db:seed` re-run — all config idempotently confirmed
+
+---
+
 ## [2026-10-16] — fix: Treasury page 500 error — migration 0021 not applied to dev database
+
+
 
 **Type:** BUG FIX
 

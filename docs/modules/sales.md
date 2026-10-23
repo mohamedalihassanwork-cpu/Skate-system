@@ -26,3 +26,10 @@ The Sales & POS module provides a dedicated point-of-sale interface for selling 
 - **Transaction Atomicity**: Creating a sale, deducting stock, and recording payments occur within a single database transaction. If any step fails, the entire transaction rolls back.
 - **Cancellation**: Sales can be cancelled (by authorized users). Cancellation reverses payments (logs them back to the treasury as negative movements) and restores the exact product quantities back to the stock.
 - **No Negative Stock**: Stock quantities are strictly prevented from falling below zero at the database level using `CHECK` constraints, application logic, and transaction locking.
+
+
+## Approved sub-treasury integration — 2026-10-16
+
+Managed sales and refunds use approved independent accounts: cash from the performing cashier’s active funded drawer, electronics from configured/original accounts. Persisted sale operation keys and required transactional audit prevent duplicate retries and partial writes. See Treasury and the verification report for current evidence.
+
+Authority: [ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Current workflow: [Treasury](TREASURY.md). Executed checks and limits: [verification report](../quality/SUB_TREASURY_VERIFICATION.md). Earlier proposal/pending wording is historical and superseded only within this approved scope.

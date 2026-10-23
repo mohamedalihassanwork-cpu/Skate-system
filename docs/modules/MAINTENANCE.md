@@ -109,3 +109,10 @@ Presentation changes apply only to screen widths of at least 1024px. Existing mo
 Existing record details, parts, summary/payment controls and footer actions receive scoped layout/spacing; new records use the full form width. Part deletion controls meet the approved touch size. Maintenance rules and operations are unchanged.
 
 Scope, source coverage, verification results and live-testing limits are recorded in the [Mobile/tablet UI audit](../quality/MOBILE_TABLET_UI_UX_AUDIT.md) (DEC-082). This presentation pass does not close earlier module or backend verification gaps.
+
+
+## Approved sub-treasury integration — 2026-10-16
+
+System maintenance payment uses the active performing cashier’s assigned drawer for cash and configured account for electronics. Existing active-shift requirements remain for both. Paid-state/source locks prevent duplicates; financial movement, balance and awaited required audit commit together. External payments and completion/cost estimates still do not spend system funds.
+
+Authority: [ST-01–06](../decisions/SUB_TREASURY_DAILY_CLOSING_CR.md). Current workflow: [Treasury](TREASURY.md). Executed checks and limits: [verification report](../quality/SUB_TREASURY_VERIFICATION.md). Earlier proposal/pending wording is historical and superseded only within this approved scope.
