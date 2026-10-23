@@ -1,4 +1,5 @@
 export interface CreateExpenseInput {
+  operationKey?: string
   amount: number
   description: string
   categoryId?: number

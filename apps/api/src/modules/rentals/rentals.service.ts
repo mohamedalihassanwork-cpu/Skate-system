@@ -39,6 +39,7 @@ import { customers } from '../../db/schema/customers.js'
 import { users } from '../../db/schema/users.js'
 import { settings } from '../../db/schema/settings'
 import { paymentMethods, rentalPayments, treasuryMovements, treasuryAccounts } from '../../db/schema/payments'
+import { lockCashierSession, resolvePaymentAccount, lockTreasuryAccounts, postTreasuryMovement, strictAudit, cents } from '../treasury/treasury-posting.js'
 import { lateFeeRecords } from '../../db/schema/inspections.js'
 import {
   NotFoundError,
@@ -538,24 +539,12 @@ export async function startRental(
   // --- Read pricing from settings ---
   const hourlyRate = await readHourlyRate()
 
-  // --- Enforce active shift ---
-  const [activeShiftRows] = await db.execute(
-    sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${cashierId} AND status = 'active' LIMIT 1`
-  )
-  const activeShift = (activeShiftRows as unknown as any[])[0]
-  if (!activeShift) {
-    throw new BusinessRuleError(
-      'عملية إنشاء الإيجار تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
-      'NO_ACTIVE_SHIFT',
-    )
-  }
-
-  // --- Atomic transaction with FOR UPDATE locking on ALL skates ---
   const connection = await pool.getConnection()
   let newRentalId: number
 
   try {
     await connection.beginTransaction()
+    const activeShift = await lockCashierSession(connection, cashierId)
 
     // Lock all requested skates simultaneously (alphabetic order to avoid deadlocks)
     const sortedSkateIds = [...data.skateIds].sort((a, b) => a - b)
@@ -815,18 +804,6 @@ export async function returnRentalItem(
   // Read grace minutes from settings (§9)
   const gracePeriodMinutes = await readGraceMinutes()
 
-  // --- Enforce active shift ---
-  const [activeShiftRows] = await db.execute(
-    sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${cashierId} AND status = 'active' LIMIT 1`
-  )
-  const activeShift = (activeShiftRows as unknown as any[])[0]
-  if (!activeShift) {
-    throw new BusinessRuleError(
-      'عملية الإرجاع تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
-      'NO_ACTIVE_SHIFT',
-    )
-  }
-
   const connection = await pool.getConnection()
   let inspectionId: number
   let newRentalItemId = itemId
@@ -835,6 +812,7 @@ export async function returnRentalItem(
 
   try {
     await connection.beginTransaction()
+    await lockCashierSession(connection, cashierId)
 
     // Lock the rental item
     const [itemRows] = await connection.execute<any[]>(
@@ -1017,22 +995,11 @@ export async function extendRentalItem(
     throw new ValidationError('مدة التمديد يجب أن تكون عدداً صحيحاً أكبر من صفر')
   }
 
-  // --- Enforce active shift ---
-  const [activeShiftRows] = await db.execute(
-    sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${cashierId} AND status = 'active' LIMIT 1`
-  )
-  const activeShift = (activeShiftRows as unknown as any[])[0]
-  if (!activeShift) {
-    throw new BusinessRuleError(
-      'عملية التمديد تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
-      'NO_ACTIVE_SHIFT',
-    )
-  }
-
   const connection = await pool.getConnection()
 
   try {
     await connection.beginTransaction()
+    await lockCashierSession(connection, cashierId)
 
     // Lock the rental item
     const [itemRows] = await connection.execute<any[]>(
@@ -1138,6 +1105,7 @@ export async function finalizeRental(
   }
   let requestedTotalPayment = 0
   for (const p of data.payments) {
+    cents(p.amount)
     if (!p.paymentMethodId || !Number.isInteger(p.paymentMethodId) || p.paymentMethodId <= 0) {
       throw new ValidationError('معرف طريقة الدفع غير صالح')
     }
@@ -1147,22 +1115,11 @@ export async function finalizeRental(
     requestedTotalPayment += p.amount
   }
 
-  // --- Enforce active shift ---
-  const [activeShiftRows] = await db.execute(
-    sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${cashierId} AND status = 'active' LIMIT 1`
-  )
-  const activeShift = (activeShiftRows as unknown as any[])[0]
-  if (!activeShift) {
-    throw new BusinessRuleError(
-      'عملية إتمام الإيجار تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
-      'NO_ACTIVE_SHIFT',
-    )
-  }
-
   const connection = await pool.getConnection()
 
   try {
     await connection.beginTransaction()
+    const activeShift = await lockCashierSession(connection, cashierId)
 
     // Lock the rental
     const [rentalRows] = await connection.execute<any[]>(
@@ -1242,6 +1199,12 @@ export async function finalizeRental(
 
     const rentalCode = (await connection.execute<any[]>('SELECT rental_code FROM rentals WHERE id = ?', [rentalId]))[0][0]?.rental_code ?? ''
 
+    const resolvedAccounts = new Map<number, number>()
+    for (const pm of pmRows) {
+      resolvedAccounts.set(pm.id, await resolvePaymentAccount(connection, activeShift, pm.treasury_account_id, cashierId))
+    }
+    await lockTreasuryAccounts(connection, [...resolvedAccounts.values()])
+
     let remainingLateFee = lateFeeAmount
 
     for (const p of data.payments) {
@@ -1258,6 +1221,8 @@ export async function finalizeRental(
         )
       }
 
+      const accountId = resolvedAccounts.get(p.paymentMethodId)!
+
       // Proportionally allocate this payment between late fee and base rent
       let amountForLateFee = 0
       let amountForRent = p.amount
@@ -1272,57 +1237,37 @@ export async function finalizeRental(
         // Insert rental payment
         await connection.execute(
           `INSERT INTO rental_payments
-            (rental_id, payment_method_id, amount, payment_type, cashier_id, created_at)
-           VALUES (?, ?, ?, 'rental', ?, NOW())`,
-          [rentalId, p.paymentMethodId, amountForRent, cashierId],
+            (rental_id, payment_method_id, treasury_account_id, amount, payment_type, cashier_id, created_at)
+           VALUES (?, ?, ?, ?, 'rental', ?, NOW())`,
+          [rentalId, p.paymentMethodId, accountId, amountForRent.toFixed(2), cashierId],
         )
 
-        // Treasury movement for rent
-        await connection.execute(
-          `INSERT INTO treasury_movements
-            (treasury_account_id, amount, type, reference_type, reference_id, cashier_id, shift_id, notes, created_at)
-           VALUES (?, ?, 'in', 'rental_payment', ?, ?, ?, ?, NOW())`,
-          [
-            pm.treasury_account_id,
-            amountForRent,
-            rentalId,
-            cashierId,
-            activeShift.id,
-            `Rental ${rentalCode} Final Payment (Rent)`,
-          ],
-        )
+        await postTreasuryMovement(connection, {
+          accountId, amount: amountForRent.toFixed(2), type: 'in',
+          referenceType: 'rental_payment', referenceId: rentalId,
+          cashierId, shiftId: activeShift.id,
+          notes: `Rental ${rentalCode} Final Payment (Rent)`,
+        })
       }
 
       if (amountForLateFee > 0) {
         // Insert late fee payment
         await connection.execute(
           `INSERT INTO rental_payments
-            (rental_id, payment_method_id, amount, payment_type, cashier_id, created_at)
-           VALUES (?, ?, ?, 'late_fee', ?, NOW())`,
-          [rentalId, p.paymentMethodId, amountForLateFee, cashierId],
+            (rental_id, payment_method_id, treasury_account_id, amount, payment_type, cashier_id, created_at)
+           VALUES (?, ?, ?, ?, 'late_fee', ?, NOW())`,
+          [rentalId, p.paymentMethodId, accountId, amountForLateFee.toFixed(2), cashierId],
         )
 
-        // Treasury movement for late fee
-        await connection.execute(
-          `INSERT INTO treasury_movements
-            (treasury_account_id, amount, type, reference_type, reference_id, cashier_id, shift_id, notes, created_at)
-           VALUES (?, ?, 'in', 'late_fee_payment', ?, ?, ?, ?, NOW())`,
-          [
-            pm.treasury_account_id,
-            amountForLateFee,
-            rentalId,
-            cashierId,
-            activeShift.id,
-            `Rental ${rentalCode} Final Payment (Late Fee)`,
-          ],
-        )
+        await postTreasuryMovement(connection, {
+          accountId, amount: amountForLateFee.toFixed(2), type: 'in',
+          referenceType: 'late_fee_payment', referenceId: rentalId,
+          cashierId, shiftId: activeShift.id,
+          notes: `Rental ${rentalCode} Final Payment (Late Fee)`,
+        })
       }
 
-      // Update treasury balance (total amount)
-      await connection.execute(
-        `UPDATE treasury_accounts SET balance = balance + ?, updated_at = NOW() WHERE id = ?`,
-        [p.amount, pm.treasury_account_id],
-      )
+
     }
 
     // Complete the rental
@@ -1336,13 +1281,13 @@ export async function finalizeRental(
     )
 
     // Audit log
-    await auditService.logRaw({
+    await strictAudit(connection, {
       userId: cashierId,
       action: 'FINALIZE_RENTAL',
       entityType: 'RENTAL',
       entityId: String(rentalId),
-      newValue: { status: 'completed', totalAmount, invoiceNumber },
-    }, connection)
+      newValue: { status: 'completed', totalAmount, invoiceNumber, shiftId: activeShift.id },
+    })
 
     await connection.commit()
   } catch (err) {
@@ -1362,22 +1307,11 @@ export async function finalizeRental(
  * No payment refund needed (payment not collected at start in new model).
  */
 export async function cancelRental(rentalId: number, cashierId: number): Promise<RentalDTO> {
-  // --- Enforce active shift ---
-  const [activeShiftRows] = await db.execute(
-    sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${cashierId} AND status = 'active' LIMIT 1`
-  )
-  const activeShift = (activeShiftRows as unknown as any[])[0]
-  if (!activeShift) {
-    throw new BusinessRuleError(
-      'عملية إلغاء الإيجار تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
-      'NO_ACTIVE_SHIFT',
-    )
-  }
-
   const connection = await pool.getConnection()
 
   try {
     await connection.beginTransaction()
+    await lockCashierSession(connection, cashierId)
 
     // Lock the rental
     const [rentalRows] = await connection.execute<any[]>(

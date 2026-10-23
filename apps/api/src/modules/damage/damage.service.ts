@@ -6,6 +6,7 @@ import { skates } from '../../db/schema/skates.js'
 import { customers } from '../../db/schema/customers.js'
 import { users } from '../../db/schema/users.js'
 import { paymentMethods } from '../../db/schema/payments.js'
+import { lockCashierSession, resolvePaymentAccount, lockTreasuryAccounts, postTreasuryMovement, strictAudit, withFinancialOperation, cents } from '../treasury/treasury-posting.js'
 import { BusinessRuleError, NotFoundError, ValidationError } from '../../utils/errors.js'
 import {
   CreateDamageReportRequest,
@@ -227,107 +228,106 @@ export async function collectCharge(
   cashierId: number,
   data: PayDamageChargeRequest
 ): Promise<DamageReportDTO> {
+  if (!Array.isArray(data.payments) || data.payments.length === 0) {
+    throw new ValidationError('المدفوعات مطلوبة')
+  }
+  for (const payment of data.payments) {
+    if (typeof payment.amount !== 'number' || cents(payment.amount) <= 0n || !Number.isInteger(payment.paymentMethodId) || payment.paymentMethodId <= 0) {
+      throw new ValidationError('بيانات الدفعة غير صالحة')
+    }
+  }
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
+    await withFinancialOperation(connection, cashierId, 'COLLECT_DAMAGE_CHARGE', data.operationKey,
+      { reportId: id, payments: data.payments.map(p => ({ paymentMethodId: p.paymentMethodId, amount: p.amount })) }, async () => {
+        const activeShift = await lockCashierSession(connection, cashierId)
+        const shiftId = activeShift.id
 
-    const [reportRows] = await connection.execute<any[]>(
-      'SELECT * FROM damage_reports WHERE id = ? FOR UPDATE',
-      [id]
-    )
-    const report = reportRows[0]
-    if (!report) {
-      await connection.rollback()
-      throw new NotFoundError('تقرير الضرر غير موجود')
-    }
+        const [reportRows] = await connection.execute<any[]>(
+          'SELECT * FROM damage_reports WHERE id = ? FOR UPDATE',
+          [id]
+        )
+        const report = reportRows[0]
+        if (!report) {
+          await connection.rollback()
+          throw new NotFoundError('تقرير الضرر غير موجود')
+        }
 
-    if (report.status === 'paid' || report.status === 'waived') {
-      await connection.rollback()
-      throw new BusinessRuleError('لا يمكن تحصيل رسوم لتقرير تم دفعه أو الإعفاء عنه', 'ALREADY_PAID')
-    }
+        if (report.status === 'paid' || report.status === 'waived') {
+          await connection.rollback()
+          throw new BusinessRuleError('لا يمكن تحصيل رسوم لتقرير تم دفعه أو الإعفاء عنه', 'ALREADY_PAID')
+        }
 
-    const currentCharge = parseFloat(String(report.customer_charge))
-    const currentCollected = parseFloat(String(report.charge_collected))
-    const currentWaived = parseFloat(String(report.charge_waived))
-    const remaining = currentCharge - (currentCollected + currentWaived)
+        const currentCharge = parseFloat(String(report.customer_charge))
+        const currentCollected = parseFloat(String(report.charge_collected))
+        const currentWaived = parseFloat(String(report.charge_waived))
+        const remaining = currentCharge - (currentCollected + currentWaived)
 
-    let requestedTotal = 0
-    for (const p of data.payments) {
-      requestedTotal += p.amount
-    }
+        let requestedTotal = 0
+        for (const p of data.payments) {
+          requestedTotal += p.amount
+        }
 
-    if (requestedTotal > remaining + 0.001) {
-      await connection.rollback()
-      throw new BusinessRuleError('المبلغ المطلوب تحصيله أكبر من المبلغ المتبقي', 'OVERPAYMENT_NOT_ALLOWED')
-    }
+        if (requestedTotal > remaining + 0.001) {
+          await connection.rollback()
+          throw new BusinessRuleError('المبلغ المطلوب تحصيله أكبر من المبلغ المتبقي', 'OVERPAYMENT_NOT_ALLOWED')
+        }
 
-    const [shiftRows] = await connection.execute<any[]>(
-      'SELECT id FROM cashier_shifts WHERE cashier_id = ? AND closed_at IS NULL LIMIT 1',
-      [cashierId]
-    )
-    const shiftId = shiftRows[0]?.id ?? null
+        const paymentMethodIds = data.payments.map(p => p.paymentMethodId)
+        const placeholders = paymentMethodIds.map(() => '?').join(',')
+        const [pmRows] = await connection.execute<any[]>(
+          `SELECT id, treasury_account_id, is_active FROM payment_methods WHERE id IN (${placeholders}) FOR UPDATE`,
+          paymentMethodIds
+        )
 
-    // F-007 fix (Gate 4.2 Batch 1): Enforce active cashier shift — consistent with
-    // startRental, returnRental, cancelRental, createSale, cancelSale, recordExpense,
-    // and payRecord. Previously, shiftId was silently null, causing treasury_movements
-    // to be recorded with shift_id = NULL and no financial-shift traceability.
-    if (!shiftId) {
-      await connection.rollback()
-      throw new BusinessRuleError(
-        'عملية تحصيل رسوم الضرر تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.',
-        'NO_ACTIVE_SHIFT'
-      )
-    }
+        const resolvedAccounts = new Map<number, number>()
+        for (const pm of pmRows) {
+          resolvedAccounts.set(pm.id, await resolvePaymentAccount(connection, activeShift, pm.treasury_account_id, cashierId))
+        }
+        await lockTreasuryAccounts(connection, [...resolvedAccounts.values()])
 
-    const paymentMethodIds = data.payments.map(p => p.paymentMethodId)
-    const placeholders = paymentMethodIds.map(() => '?').join(',')
-    const [pmRows] = await connection.execute<any[]>(
-      `SELECT id, treasury_account_id, is_active FROM payment_methods WHERE id IN (${placeholders}) FOR UPDATE`,
-      paymentMethodIds
-    )
+        for (const p of data.payments) {
+          const pm = pmRows.find(row => row.id === p.paymentMethodId)
+          if (!pm || !pm.is_active) {
+            await connection.rollback()
+            throw new BusinessRuleError(`طريقة الدفع غير صالحة`, 'PAYMENT_METHOD_INVALID')
+          }
 
-    for (const p of data.payments) {
-      const pm = pmRows.find(row => row.id === p.paymentMethodId)
-      if (!pm || !pm.is_active) {
-        await connection.rollback()
-        throw new BusinessRuleError(`طريقة الدفع غير صالحة`, 'PAYMENT_METHOD_INVALID')
-      }
+          const accountId = resolvedAccounts.get(p.paymentMethodId)!
+          await connection.execute(
+            `INSERT INTO rental_payments (rental_id, payment_method_id, treasury_account_id, amount, payment_type, cashier_id, created_at) VALUES (?, ?, ?, ?, 'damage_charge', ?, NOW())`,
+            [report.rental_id, p.paymentMethodId, accountId, p.amount, cashierId]
+          )
 
-      await connection.execute(
-        `INSERT INTO rental_payments (rental_id, payment_method_id, amount, payment_type, cashier_id, created_at) VALUES (?, ?, ?, 'damage_charge', ?, NOW())`,
-        [report.rental_id, p.paymentMethodId, p.amount, cashierId]
-      )
+          await postTreasuryMovement(connection, {
+            accountId, shiftId, amount: p.amount, type: 'in',
+            referenceType: 'damage_charge_payment', referenceId: id, cashierId,
+            notes: `Damage charge for report ${id}`,
+          })
+        }
 
-      await connection.execute(
-        `INSERT INTO treasury_movements (treasury_account_id, shift_id, amount, type, reference_type, reference_id, cashier_id, notes, created_at) VALUES (?, ?, ?, 'in', 'damage_charge_payment', ?, ?, ?, NOW())`,
-        [pm.treasury_account_id, shiftId, p.amount, id, cashierId, `Damage charge for report ${id}`]
-      )
+        const newCollected = currentCollected + requestedTotal
+        const nextStatus = computeStatus(currentCharge, newCollected, currentWaived)
 
-      await connection.execute(
-        `UPDATE treasury_accounts SET balance = balance + ?, updated_at = NOW() WHERE id = ?`,
-        [p.amount, pm.treasury_account_id]
-      )
-    }
+        await connection.execute(
+          `UPDATE damage_reports SET charge_collected = ?, status = ?, updated_at = NOW() WHERE id = ?`,
+          [newCollected, nextStatus, id]
+        )
 
-    const newCollected = currentCollected + requestedTotal
-    const nextStatus = computeStatus(currentCharge, newCollected, currentWaived)
+        await strictAudit(connection, {
+          userId: cashierId,
+          action: 'COLLECT_DAMAGE_CHARGE',
+          entityType: 'DAMAGE_REPORT',
+          entityId: String(id),
+          newValue: {
+            rentalId: report.rental_id,
+            collectedAmount: requestedTotal, shiftId
+          }
+        })
 
-    await connection.execute(
-      `UPDATE damage_reports SET charge_collected = ?, status = ?, updated_at = NOW() WHERE id = ?`,
-      [newCollected, nextStatus, id]
-    )
-
-    await auditService.logRaw({
-      userId: cashierId,
-      action: 'COLLECT_DAMAGE_CHARGE',
-      entityType: 'DAMAGE_REPORT',
-      entityId: String(id),
-      newValue: {
-        rentalId: report.rental_id,
-        collectedAmount: requestedTotal
-      }
-    }, connection)
-
+        return { reportId: id }
+    })
     await connection.commit()
   } catch (err) {
     try { await connection.rollback() } catch { }

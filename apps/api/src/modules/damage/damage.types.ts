@@ -11,6 +11,7 @@ export interface CreateDamageReportRequest {
 }
 
 export interface PayDamageChargeRequest {
+  operationKey?: string
   payments: { paymentMethodId: number; amount: number }[]
 }
 

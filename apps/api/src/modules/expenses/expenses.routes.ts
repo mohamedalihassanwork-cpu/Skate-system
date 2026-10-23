@@ -3,7 +3,8 @@ import { authenticate } from '../../middleware/auth.js'
 import { requirePermission } from '../../middleware/permission.js'
 import * as ExpensesService from './expenses.service.js'
 import type { CreateExpenseInput } from './expenses.types.js'
-import { ValidationError } from '../../utils/errors.js'
+import { ValidationError, UnauthorizedError } from '../../utils/errors.js'
+import { loadUserWithPermissions } from '../auth/auth.service.js'
 
 const router = Router()
 
@@ -27,9 +28,11 @@ router.post('/', requirePermission('expenses.create'), async (req, res, next) =>
 })
 
 // GET /api/v1/expenses - List expenses
-router.get('/', requirePermission('expenses.view'), async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    const list = await ExpensesService.listExpenses()
+    const actor = await loadUserWithPermissions(req.user!.sub)
+    if (!actor.isActive) throw new UnauthorizedError()
+    const list = await ExpensesService.listExpenses(req.user!.sub, actor.permissions)
     res.json(list)
   } catch (error) {
     next(error)

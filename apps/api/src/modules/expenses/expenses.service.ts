@@ -1,79 +1,76 @@
 import { eq, desc, sql } from 'drizzle-orm'
 import { db } from '../../db/connection.js'
-import { expenses, cashierShifts } from '../../db/schema/treasury.js'
-import { treasuryMovements } from '../../db/schema/payments.js'
+import { expenses } from '../../db/schema/treasury.js'
 import { users } from '../../db/schema/users.js'
-import { auditService } from '../audit/audit.service.js'
-import { AppError, BusinessRuleError } from '../../utils/errors.js'
+import { lockCashierSession, resolvePaymentAccount, postTreasuryMovement, strictAudit, withFinancialOperation } from '../treasury/treasury-posting.js'
+import { BusinessRuleError, ForbiddenError } from '../../utils/errors.js'
 import type { CreateExpenseInput, ExpenseDTO } from './expenses.types.js'
 
 export async function recordExpense(cashierId: number, input: CreateExpenseInput): Promise<ExpenseDTO> {
-  return await db.transaction(async (tx) => {
-    // 1. Get active shift
-    const [activeShiftRows] = await tx.execute(
-      sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${cashierId} AND status = 'active' LIMIT 1`
-    )
-    const activeShift = (activeShiftRows as unknown as any[])[0]
-    if (!activeShift) {
-      throw new BusinessRuleError('عملية تسجيل المصروف تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.', 'NO_ACTIVE_SHIFT')
-    }
-    const shiftId = activeShift.id
+  return await db.transaction(tx => withFinancialOperation(
+    tx, cashierId, 'CREATE_EXPENSE', input.operationKey,
+    { amount: input.amount, description: input.description, categoryId: input.categoryId ?? null },
+    async () => {
+      const activeShift = await lockCashierSession(tx, cashierId)
+      const shiftId = activeShift.id
 
-    // 2. Insert expense
-    const [result] = await tx.insert(expenses).values({
-      amount: String(input.amount),
-      description: input.description,
-      categoryId: input.categoryId || null,
-      cashierId,
-      shiftId,
-    })
+      // 2. Insert expense
+      const [result] = await tx.insert(expenses).values({
+        amount: String(input.amount),
+        description: input.description,
+        categoryId: input.categoryId || null,
+        cashierId,
+        shiftId,
+      })
 
-    const newId = result.insertId
+      const newId = result.insertId
 
-    // 3. Create treasury movement (Cash Out)
-    const [cashAccountRows] = await tx.execute(
-      sql`SELECT id FROM treasury_accounts WHERE is_cash_drawer = true LIMIT 1`
-    )
-    const cashAccount = (cashAccountRows as unknown as any[])[0]
-    if (!cashAccount) {
-      throw new BusinessRuleError('لا يوجد درج نقدية محدد في النظام', 'NO_CASH_DRAWER')
-    }
-    const treasuryAccountId = cashAccount.id
+      // Managed sessions always spend their assigned drawer. Legacy sessions retain
+      // their original global cash mapping until the explicit cutover.
+      let sourceAccountId = activeShift.treasuryAccountId
+      if (!activeShift.managed) {
+        const [cashAccountRows] = await tx.execute(
+          sql`SELECT id FROM treasury_accounts WHERE is_cash_drawer = true LIMIT 1`
+        )
+        const cashAccount = (cashAccountRows as unknown as any[])[0]
+        if (!cashAccount) {
+          throw new BusinessRuleError('لا يوجد درج نقدية محدد في النظام', 'NO_CASH_DRAWER')
+        }
+        sourceAccountId = cashAccount.id
+      }
+      const treasuryAccountId = await resolvePaymentAccount(tx, activeShift, sourceAccountId!, cashierId)
+
+      await postTreasuryMovement(tx, {
+        accountId: treasuryAccountId,
+        amount: String(input.amount),
+        type: 'out',
+        referenceType: 'expense',
+        referenceId: newId,
+        cashierId,
+        shiftId,
+        notes: input.description
+      })
+
+      await strictAudit(tx, { userId: cashierId, action: 'CREATE_EXPENSE', entityType: 'EXPENSE', entityId: String(newId), newValue: { amount: input.amount, categoryId: input.categoryId, treasuryAccountId, shiftId } })
+
+      // 5. Fetch inserted
+      const [row] = await tx.select().from(expenses).where(eq(expenses.id, newId))
     
-    await tx.insert(treasuryMovements).values({
-      treasuryAccountId,
-      amount: String(input.amount),
-      type: 'out',
-      referenceType: 'expense',
-      referenceId: newId,
-      cashierId,
-      shiftId,
-      notes: input.description
-    })
-
-    // 4. Update treasury balance
-    await tx.execute(
-      sql`UPDATE treasury_accounts SET balance = balance - ${input.amount}, updated_at = NOW() WHERE id = ${treasuryAccountId}`
-    )
-
-    await auditService.log({ userId: cashierId, action: 'CREATE_EXPENSE', entityType: 'EXPENSE', entityId: String(newId), newValue: { amount: input.amount, categoryId: input.categoryId } }, tx)
-
-    // 5. Fetch inserted
-    const [row] = await tx.select().from(expenses).where(eq(expenses.id, newId))
-    
-    return {
-      id: row.id,
-      amount: parseFloat(String(row.amount)),
-      description: row.description,
-      categoryId: row.categoryId,
-      cashierId: row.cashierId,
-      shiftId: row.shiftId,
-      createdAt: row.createdAt.toISOString()
-    }
-  })
+      return {
+        id: row.id,
+        amount: parseFloat(String(row.amount)),
+        description: row.description,
+        categoryId: row.categoryId,
+        cashierId: row.cashierId,
+        shiftId: row.shiftId,
+        createdAt: row.createdAt.toISOString()
+      }
+  }))
 }
 
-export async function listExpenses(): Promise<ExpenseDTO[]> {
+export async function listExpenses(cashierId: number, permissions: readonly string[]): Promise<ExpenseDTO[]> {
+  const canViewAll = permissions.includes('expenses.view_all')
+  if (!canViewAll && !permissions.includes('expenses.view')) throw new ForbiddenError()
   const rows = await db
     .select({
       id: expenses.id,
@@ -87,6 +84,7 @@ export async function listExpenses(): Promise<ExpenseDTO[]> {
     })
     .from(expenses)
     .leftJoin(users, eq(users.id, expenses.cashierId))
+    .where(canViewAll ? undefined : eq(expenses.cashierId, cashierId))
     .orderBy(desc(expenses.createdAt))
 
   return rows.map(r => ({

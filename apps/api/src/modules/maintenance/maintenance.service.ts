@@ -1,8 +1,9 @@
 import { eq, desc, sql, and } from 'drizzle-orm'
 import { db } from '../../db/connection'
-import { maintenanceRecords, maintenanceParts, skates, users, treasuryMovements, paymentMethods, cashierShifts } from '../../db/schema/index.js'
+import { maintenanceRecords, maintenanceParts, skates, users, paymentMethods } from '../../db/schema/index.js'
 import { NotFoundError, BusinessRuleError } from '../../utils/errors.js'
 import { auditService } from '../audit/audit.service.js'
+import { lockCashierSession, resolvePaymentAccount, postTreasuryMovement, strictAudit } from '../treasury/treasury-posting.js'
 import type {
   CreateMaintenanceRecordPayload,
   UpdateMaintenanceRecordPayload,
@@ -418,6 +419,7 @@ export class MaintenanceService {
    */
   async payRecord(id: number, userId: number, paymentMethodId: number) {
     return await db.transaction(async (tx) => {
+      const activeShift = await lockCashierSession(tx, userId)
       // 1. Lock maintenance record
       const [record] = await tx
         .select()
@@ -447,37 +449,19 @@ export class MaintenanceService {
         .select()
         .from(paymentMethods)
         .where(eq(paymentMethods.id, paymentMethodId))
+        .for('update')
 
       if (!method || !method.isActive) {
         throw new BusinessRuleError('وسيلة الدفع غير صالحة', 'INVALID_PAYMENT_METHOD')
       }
 
-      // 5. Resolve active cashier shift
-      const [activeShiftRows] = await tx.execute(
-        sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${userId} AND status = 'active' LIMIT 1`
-      )
-      const activeShift = (activeShiftRows as unknown as any[])[0]
-      if (!activeShift) {
-        throw new BusinessRuleError('عملية الدفع تتطلب وجود وردية نشطة للكاشير.', 'NO_ACTIVE_SHIFT')
-      }
-      const shiftId = activeShift.id
-
-      // 6. Create treasury movement
-      await tx.insert(treasuryMovements).values({
-        treasuryAccountId: method.treasuryAccountId,
-        amount: record.totalCost || '0',
-        type: 'out',
-        referenceType: 'maintenance_payment',
-        referenceId: id,
-        cashierId: userId,
-        shiftId: shiftId,
-        notes: `دفعة صيانة: ${record.problemDescription || ''}`
+      const accountId = await resolvePaymentAccount(tx, activeShift, method.treasuryAccountId, userId)
+      await postTreasuryMovement(tx, {
+        accountId, amount: record.totalCost || '0', type: 'out',
+        referenceType: 'maintenance_payment', referenceId: id,
+        cashierId: userId, shiftId: activeShift.id,
+        notes: `دفعة صيانة: ${record.problemDescription || ''}`,
       })
-
-      // 6b. Update treasury account balance
-      await tx.execute(
-        sql`UPDATE treasury_accounts SET balance = balance - ${record.totalCost || 0}, updated_at = NOW() WHERE id = ${method.treasuryAccountId}`
-      )
 
       // 7. Update maintenance record
       await tx.update(maintenanceRecords)
@@ -491,14 +475,14 @@ export class MaintenanceService {
         .where(eq(maintenanceRecords.id, id))
 
       // 8. Audit log
-      auditService.log({
+      await strictAudit(tx, {
         userId,
         action: 'PAY_MAINTENANCE_SYSTEM',
         entityType: 'MAINTENANCE_RECORD',
         entityId: String(id),
         oldValue: { paymentStatus: 'unpaid' },
-        newValue: { paymentStatus: 'paid', paymentMethodId, amount: record.totalCost }
-      }, tx)
+        newValue: { paymentStatus: 'paid', paymentMethodId, amount: record.totalCost, treasuryAccountId: accountId, shiftId: activeShift.id }
+      })
 
       return { success: true }
     })

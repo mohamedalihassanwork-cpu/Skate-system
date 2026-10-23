@@ -1,9 +1,13 @@
 export interface OpenShiftInput {
-  openingBalance: number
+  openingBalance: number | string
+  operationKey?: string
 }
 
 export interface CloseShiftInput {
-  actualBalance: number
+  actualBalance: number | string
+  declaredAmount?: number | string
+  reason?: string
+  operationKey?: string
   closedAt?: string // Optional explicit end time
 }
 
@@ -18,4 +22,10 @@ export interface ShiftDTO {
   actualBalance: number | null
   difference: number | null
   status: 'active' | 'closed'
+  treasuryAccountId?: number | null
+  expectedLedgerBalance?: string | null
+  openingLedgerBalance?: string | null
+  declaredAmount?: string | null
+  businessDate?: string | null
+  handoverId?: number
 }

@@ -1,9 +1,9 @@
-import { eq, desc, sql } from 'drizzle-orm'
+import { eq, desc, sql, inArray } from 'drizzle-orm'
 import { db } from '../../db/connection.js'
 import { sales, saleItems, salePayments } from '../../db/schema/sales.js'
 import { products } from '../../db/schema/products.js'
-import { paymentMethods, treasuryMovements, treasuryAccounts } from '../../db/schema/payments.js'
-import { auditService } from '../audit/audit.service.js'
+import { paymentMethods } from '../../db/schema/payments.js'
+import { lockCashierSession, resolvePaymentAccount, lockTreasuryAccounts, postTreasuryMovement, strictAudit, withFinancialOperation, cents } from '../treasury/treasury-posting.js'
 import { CreateSaleDTO, SaleDTO } from './sales.types.js'
 import { BusinessRuleError, NotFoundError, AppError } from '../../utils/errors.js'
 
@@ -82,12 +82,12 @@ export class SalesService {
       throw new BusinessRuleError('المدفوعات مطلوبة', 'NO_PAYMENTS')
     }
 
-    const [activeShiftRows] = await db.execute(
-      sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${data.cashierId} AND status = 'active' LIMIT 1`
-    )
-    const activeShift = (activeShiftRows as unknown as any[])[0]
-    if (!activeShift) {
-      throw new BusinessRuleError('عملية إنشاء البيع تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.', 'NO_ACTIVE_SHIFT')
+    // Ignore caller-supplied account/shift IDs; the server resolves custody.
+    const operationPayload = {
+      customerId: data.customerId ?? null,
+      items: data.items.map(item => ({ productId: item.productId, quantity: item.quantity })),
+      payments: data.payments.map(payment => ({ paymentMethodId: payment.paymentMethodId, amount: payment.amount })),
+      notes: data.notes ?? null,
     }
 
     // F-012 fix: retry the transaction up to 3 times on duplicate saleCode.
@@ -99,141 +99,146 @@ export class SalesService {
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
-        const saleId = await db.transaction(async (tx) => {
-          let computedTotalAmount = 0
-          const processedItems = []
+        const saleId = await db.transaction(tx => withFinancialOperation(
+          tx, data.cashierId, 'CREATE_SALE', data.operationKey, operationPayload, async () => {
+            const activeShift = await lockCashierSession(tx, data.cashierId)
+            let computedTotalAmount = 0
+            const processedItems = []
 
-          // 1. Process items and lock products
-          for (const item of data.items) {
-            if (item.quantity <= 0) {
-              throw new BusinessRuleError('الكمية غير صالحة', 'INVALID_QUANTITY')
+            // 1. Process items and lock products
+            for (const item of data.items) {
+              if (item.quantity <= 0) {
+                throw new BusinessRuleError('الكمية غير صالحة', 'INVALID_QUANTITY')
+              }
+
+              // Lock row FOR UPDATE
+              const [productRow] = await tx.execute(
+                sql`SELECT * FROM products WHERE id = ${item.productId} FOR UPDATE`
+              )
+
+              const product = (productRow as unknown as any[])[0]
+              if (!product) {
+                throw new NotFoundError('المنتج غير موجود')
+              }
+
+              if (!product.is_active) {
+                throw new BusinessRuleError('المنتج غير مفعل', 'PRODUCT_INACTIVE')
+              }
+
+              if (product.stock_quantity < item.quantity) {
+                throw new BusinessRuleError('المخزون غير كاف', 'INSUFFICIENT_STOCK')
+              }
+
+              const unitPrice = parseFloat(product.price)
+              const totalPrice = unitPrice * item.quantity
+              computedTotalAmount += totalPrice
+
+              processedItems.push({
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice,
+                totalPrice
+              })
+
+              // Deduct stock
+              await tx.update(products)
+                .set({ stockQuantity: product.stock_quantity - item.quantity })
+                .where(eq(products.id, item.productId))
             }
 
-            // Lock row FOR UPDATE
-            const [productRow] = await tx.execute(
-              sql`SELECT * FROM products WHERE id = ${item.productId} FOR UPDATE`
-            )
+            // Phase 14: Unified Invoice Number — F-003 fix
+            // Use LAST_INSERT_ID(value + 1) so the incremented value is session-scoped.
+            // SELECT LAST_INSERT_ID() reads ONLY the value this session wrote, preventing
+            // concurrent transactions from reading each other's sequence value.
+            await tx.execute(sql`INSERT INTO sequences (name, value) VALUES ('invoice_number', 1) ON DUPLICATE KEY UPDATE value = LAST_INSERT_ID(value + 1)`)
+            const [seqRows] = await tx.execute(sql`SELECT LAST_INSERT_ID() AS value`)
+            const invoiceVal = (seqRows as unknown as any[])[0].value
+            const invoiceNumber = `INV-${String(invoiceVal).padStart(6, '0')}`
 
-            const product = (productRow as unknown as any[])[0]
-            if (!product) {
-              throw new NotFoundError('المنتج غير موجود')
+            // 2. Validate payments
+            let totalPaymentProvided = 0
+            const resolvedPayments = []
+            const methods = await tx.select().from(paymentMethods)
+              .where(inArray(paymentMethods.id, data.payments.map(p => p.paymentMethodId)))
+              .orderBy(paymentMethods.id).for('update')
+            for (const p of data.payments) {
+              cents(p.amount)
+              if (typeof p.amount !== 'number' || p.amount <= 0) throw new BusinessRuleError('مبلغ الدفعة غير صالح', 'INVALID_PAYMENT_AMOUNT')
+
+              // Verify payment method to treasury account mapping
+              const pmRow = methods.find(method => method.id === p.paymentMethodId)
+              if (!pmRow || !pmRow.isActive) throw new BusinessRuleError('طريقة الدفع غير صالحة', 'INVALID_PAYMENT_METHOD')
+
+              const treasuryAccountId = await resolvePaymentAccount(tx, activeShift, pmRow.treasuryAccountId, data.cashierId)
+              resolvedPayments.push({ ...p, treasuryAccountId })
+
+              totalPaymentProvided += p.amount
             }
 
-            if (!product.is_active) {
-              throw new BusinessRuleError('المنتج غير مفعل', 'PRODUCT_INACTIVE')
+            await lockTreasuryAccounts(tx, resolvedPayments.map(payment => payment.treasuryAccountId))
+
+            // Floating point safe comparison
+            if (Math.abs(computedTotalAmount - totalPaymentProvided) > 0.01) {
+              throw new BusinessRuleError('المدفوعات لا تتطابق مع الإجمالي', 'PAYMENT_MISMATCH')
             }
 
-            if (product.stock_quantity < item.quantity) {
-              throw new BusinessRuleError('المخزون غير كاف', 'INSUFFICIENT_STOCK')
-            }
-
-            const unitPrice = parseFloat(product.price)
-            const totalPrice = unitPrice * item.quantity
-            computedTotalAmount += totalPrice
-
-            processedItems.push({
-              productId: item.productId,
-              quantity: item.quantity,
-              unitPrice,
-              totalPrice
-            })
-
-            // Deduct stock
-            await tx.update(products)
-              .set({ stockQuantity: product.stock_quantity - item.quantity })
-              .where(eq(products.id, item.productId))
-          }
-
-          // 2. Validate payments
-          let totalPaymentProvided = 0
-          for (const p of data.payments) {
-            if (p.amount <= 0) throw new BusinessRuleError('مبلغ الدفعة غير صالح', 'INVALID_PAYMENT_AMOUNT')
-            
-            // Verify payment method to treasury account mapping
-            const [pmRow] = await tx.select().from(paymentMethods).where(eq(paymentMethods.id, p.paymentMethodId)).limit(1)
-            if (!pmRow) throw new BusinessRuleError('طريقة الدفع غير صالحة', 'INVALID_PAYMENT_METHOD')
-            
-            // Auto-assign treasury account
-            p.treasuryAccountId = pmRow.treasuryAccountId
-
-            totalPaymentProvided += p.amount
-          }
-
-          // Floating point safe comparison
-          if (Math.abs(computedTotalAmount - totalPaymentProvided) > 0.01) {
-            throw new BusinessRuleError('المدفوعات لا تتطابق مع الإجمالي', 'PAYMENT_MISMATCH')
-          }
-
-          // Phase 14: Unified Invoice Number — F-003 fix
-          // Use LAST_INSERT_ID(value + 1) so the incremented value is session-scoped.
-          // SELECT LAST_INSERT_ID() reads ONLY the value this session wrote, preventing
-          // concurrent transactions from reading each other's sequence value.
-          await tx.execute(sql`INSERT INTO sequences (name, value) VALUES ('invoice_number', 1) ON DUPLICATE KEY UPDATE value = LAST_INSERT_ID(value + 1)`)
-          const [seqRows] = await tx.execute(sql`SELECT LAST_INSERT_ID() AS value`)
-          const invoiceVal = (seqRows as unknown as any[])[0].value
-          const invoiceNumber = `INV-${String(invoiceVal).padStart(6, '0')}`
-
-          // 3. Create Sale (generateSaleCode() called fresh on each attempt)
-          const [saleResult] = await tx.insert(sales).values({
-            saleCode: generateSaleCode(),
-            invoiceNumber,
-            customerId: data.customerId || null,
-            cashierId: data.cashierId,
-            shiftId: activeShift.id,
-            totalAmount: computedTotalAmount.toString(),
-            notes: data.notes || null,
-            status: 'completed'
-          })
-
-          const newSaleId = saleResult.insertId
-
-          // 4. Create Sale Items
-          for (const pItem of processedItems) {
-            await tx.insert(saleItems).values({
-              saleId: newSaleId,
-              productId: pItem.productId,
-              quantity: pItem.quantity,
-              unitPrice: pItem.unitPrice.toString(),
-              totalPrice: pItem.totalPrice.toString()
-            })
-          }
-
-          // 5. Create Sale Payments & Treasury Movements
-          for (const p of data.payments) {
-            const [paymentResult] = await tx.insert(salePayments).values({
-              saleId: newSaleId,
-              paymentMethodId: p.paymentMethodId,
-              amount: p.amount.toString(),
-              treasuryAccountId: p.treasuryAccountId
-            })
-
-            await tx.insert(treasuryMovements).values({
-              treasuryAccountId: p.treasuryAccountId,
-              amount: p.amount.toString(),
-              type: 'in',
-              referenceType: 'sale_payment',
-              referenceId: newSaleId, // link to sale ID
+            // 3. Create Sale (generateSaleCode() called fresh on each attempt)
+            const [saleResult] = await tx.insert(sales).values({
+              saleCode: generateSaleCode(),
+              invoiceNumber,
+              customerId: data.customerId || null,
               cashierId: data.cashierId,
               shiftId: activeShift.id,
-              notes: `Payment for Sale ${newSaleId}`
+              totalAmount: computedTotalAmount.toString(),
+              notes: data.notes || null,
+              status: 'completed'
             })
 
-            // Apply the delta in SQL so concurrent collections cannot overwrite it.
-            await tx.update(treasuryAccounts)
-              .set({ balance: sql`${treasuryAccounts.balance} + ${p.amount}` })
-              .where(eq(treasuryAccounts.id, p.treasuryAccountId))
-          }
+            const newSaleId = saleResult.insertId
 
-          await auditService.log({
-            userId: data.cashierId,
-            action: 'CREATE_SALE',
-            entityType: 'SALE',
-            entityId: String(newSaleId),
-            newValue: { totalAmount: computedTotalAmount }
-          }, tx)
+            // 4. Create Sale Items
+            for (const pItem of processedItems) {
+              await tx.insert(saleItems).values({
+                saleId: newSaleId,
+                productId: pItem.productId,
+                quantity: pItem.quantity,
+                unitPrice: pItem.unitPrice.toString(),
+                totalPrice: pItem.totalPrice.toString()
+              })
+            }
 
-          return newSaleId
-        })
+            // 5. Create Sale Payments & Treasury Movements
+            for (const p of resolvedPayments) {
+              await tx.insert(salePayments).values({
+                saleId: newSaleId,
+                paymentMethodId: p.paymentMethodId,
+                amount: p.amount.toString(),
+                treasuryAccountId: p.treasuryAccountId
+              })
+
+              await postTreasuryMovement(tx, {
+                accountId: p.treasuryAccountId,
+                amount: p.amount.toString(),
+                type: 'in',
+                referenceType: 'sale_payment',
+                referenceId: newSaleId, // link to sale ID
+                cashierId: data.cashierId,
+                shiftId: activeShift.id,
+                notes: `Payment for Sale ${newSaleId}`
+              })
+
+            }
+
+            await strictAudit(tx, {
+              userId: data.cashierId,
+              action: 'CREATE_SALE',
+              entityType: 'SALE',
+              entityId: String(newSaleId),
+              newValue: { totalAmount: computedTotalAmount }
+            })
+
+            return newSaleId
+        }))
 
         return (await this.getSale(saleId))!
 
@@ -257,15 +262,8 @@ export class SalesService {
   }
 
   static async cancelSale(saleId: number, adminUserId: number): Promise<SaleDTO> {
-    const [activeShiftRows] = await db.execute(
-      sql`SELECT id FROM cashier_shifts WHERE cashier_id = ${adminUserId} AND status = 'active' LIMIT 1`
-    )
-    const activeShift = (activeShiftRows as unknown as any[])[0]
-    if (!activeShift) {
-      throw new BusinessRuleError('عملية إلغاء البيع تتطلب وجود وردية نشطة. يرجى فتح وردية أولاً.', 'NO_ACTIVE_SHIFT')
-    }
-    
     await db.transaction(async (tx) => {
+      const activeShift = await lockCashierSession(tx, adminUserId)
       // Lock sale FOR UPDATE
       const [saleRow] = await tx.execute(
         sql`SELECT * FROM sales WHERE id = ${saleId} FOR UPDATE`
@@ -280,7 +278,7 @@ export class SalesService {
 
       // Lock and restore products
       const items = await tx.select().from(saleItems).where(eq(saleItems.saleId, saleId))
-      
+
       for (const item of items) {
         const [productRow] = await tx.execute(
           sql`SELECT * FROM products WHERE id = ${item.productId} FOR UPDATE`
@@ -296,30 +294,34 @@ export class SalesService {
       // Refund treasury movements
       const payments = await tx.select().from(salePayments).where(eq(salePayments.saleId, saleId))
       let totalRefundAmount = 0
+      const refundedComponents = []
+      const refundAccounts = new Map<number, number>()
+      for (const p of payments) {
+        refundAccounts.set(p.id, await resolvePaymentAccount(tx, activeShift, p.treasuryAccountId, adminUserId))
+      }
+      await lockTreasuryAccounts(tx, [...refundAccounts.values()])
       for (const p of payments) {
         const pAmount = parseFloat(p.amount as string)
         totalRefundAmount += pAmount
 
-        await tx.insert(treasuryMovements).values({
-          treasuryAccountId: p.treasuryAccountId,
+        const accountId = refundAccounts.get(p.id)!
+        await postTreasuryMovement(tx, {
+          accountId,
           amount: p.amount,
           type: 'out',
           referenceType: 'sale_refund',
           referenceId: saleId,
           cashierId: adminUserId,
-          shiftId: activeShift ? activeShift.id : null,
-          notes: `Refund for Cancelled Sale ${saleId}`
+          shiftId: activeShift.id,
+          notes: `Refund for Sale ${saleId}; payment ${p.id}; original account ${p.treasuryAccountId}`
         })
 
-        // Preserve other committed account movements when applying this refund.
-        await tx.update(treasuryAccounts)
-          .set({ balance: sql`${treasuryAccounts.balance} - ${p.amount}` })
-          .where(eq(treasuryAccounts.id, p.treasuryAccountId))
+        refundedComponents.push({ paymentId: p.id, originalAccountId: p.treasuryAccountId, accountId, amount: p.amount })
       }
 
-      await auditService.log({ userId: adminUserId, action: 'CANCEL_SALE', entityType: 'SALE', entityId: String(saleId), newValue: { status: 'cancelled' } }, tx)
+      await strictAudit(tx, { userId: adminUserId, action: 'CANCEL_SALE', entityType: 'SALE', entityId: String(saleId), newValue: { status: 'cancelled' } })
       if (totalRefundAmount > 0) {
-        await auditService.log({ userId: adminUserId, action: 'REFUND_SALE', entityType: 'SALE', entityId: String(saleId), newValue: { refundedAmount: totalRefundAmount } }, tx)
+        await strictAudit(tx, { userId: adminUserId, action: 'REFUND_SALE', entityType: 'SALE', entityId: String(saleId), newValue: { refundedAmount: totalRefundAmount, components: refundedComponents } })
       }
     })
 

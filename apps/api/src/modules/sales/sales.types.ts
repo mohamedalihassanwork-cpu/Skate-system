@@ -15,6 +15,7 @@ export interface SaleItemInput {
 }
 
 export interface CreateSaleDTO {
+  operationKey?: string
   customerId?: number | null
   cashierId: number
   shiftId?: number | null
