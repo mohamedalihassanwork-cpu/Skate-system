@@ -29,3 +29,5 @@ export * from './sales'
 export * from './treasury'
 export * from './audit'
 export * from './sequences'
+
+export * from './subtreasury'

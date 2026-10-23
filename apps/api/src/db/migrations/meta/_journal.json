@@ -141,6 +141,20 @@
       "when": 1790801208338,
       "tag": "0019_fat_joystick",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1792108800000,
+      "tag": "0020_multi_skate_rentals",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1792117165099,
+      "tag": "0021_subtreasury",
+      "breakpoints": true
     }
   ]
 }
