@@ -12,6 +12,7 @@ export interface SaleItemInput {
 }
 
 export interface CreateSaleRequest {
+  operationKey?: string
   customerId?: number | null
   items: SaleItemInput[]
   payments: SalePaymentInput[]

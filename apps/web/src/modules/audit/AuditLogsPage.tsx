@@ -193,26 +193,26 @@ export default function AuditLogsPage() {
               <table className="w-full text-sm text-right audit-data-table">
                 <thead className="bg-slate-50 text-slate-600 font-semibold border-b">
                   <tr>
-                    <th className="px-4 py-3 text-center">رقم</th>
-                    <th className="px-4 py-3">التاريخ والوقت</th>
-                    <th className="px-4 py-3">المستخدم</th>
-                    <th className="px-4 py-3">العملية</th>
-                    <th className="px-4 py-3">الكيان</th>
-                    <th className="px-4 py-3">معرف الكيان</th>
-                    <th className="px-4 py-3">IP Address</th>
+                    <th className="px-4 py-3 text-center audit-col-id">رقم</th>
+                    <th className="px-4 py-3 audit-col-date">التاريخ والوقت</th>
+                    <th className="px-4 py-3 audit-col-user">المستخدم</th>
+                    <th className="px-4 py-3 audit-col-action">العملية</th>
+                    <th className="px-4 py-3 audit-col-entity">الكيان</th>
+                    <th className="px-4 py-3 audit-col-entity-id">معرف الكيان</th>
+                    <th className="px-4 py-3 audit-col-ip">IP Address</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {logs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-4 py-3 text-center text-slate-500 font-mono text-xs">#{log.id}</td>
-                      <td className="px-4 py-3 whitespace-nowrap" dir="ltr">
+                      <td className="px-4 py-3 text-center text-slate-500 font-mono text-xs audit-col-id">#{log.id}</td>
+                      <td className="px-4 py-3 whitespace-nowrap audit-col-date" dir="ltr">
                         {formatDateTime(log.createdAt)}
                       </td>
-                      <td className="px-4 py-3 font-medium">
+                      <td className="px-4 py-3 font-medium audit-col-user">
                         {log.userName || <span className="text-slate-400">النظام</span>}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 audit-col-action">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${log.action === 'CREATE' ? 'bg-green-100 text-green-800' :
                             log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
                               log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
@@ -221,13 +221,13 @@ export default function AuditLogsPage() {
                           {translateAction(log.action)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-700">
+                      <td className="px-4 py-3 font-medium text-slate-700 audit-col-entity">
                         {translateEntityType(log.entityType)}
                       </td>
-                      <td className="px-4 py-3 font-mono text-slate-500 text-xs">
+                      <td className="px-4 py-3 font-mono text-slate-500 text-xs audit-col-entity-id">
                         {log.entityId}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs font-mono" dir="ltr">
+                      <td className="px-4 py-3 text-slate-500 text-xs font-mono audit-col-ip" dir="ltr">
                         {log.ipAddress}
                       </td>
                     </tr>
@@ -239,7 +239,7 @@ export default function AuditLogsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="p-4 border-t flex items-center justify-between bg-slate-50">
+            <div className="p-4 border-t flex items-center justify-between bg-slate-50 audit-pagination">
               <div className="text-sm text-slate-500">
                 صفحة <span className="font-medium text-slate-900">{page}</span> من <span className="font-medium text-slate-900">{totalPages}</span>
               </div>
@@ -268,6 +268,55 @@ export default function AuditLogsPage() {
         </div>
       </Card>
       <style>{`
+        /*
+          Phone/tablet presentation. This table is read-only and its value is
+          column-aligned comparison, so a stacked card layout would lose the
+          scanability that makes an audit log useful. Instead the table is
+          tightened so the five columns an auditor actually reads on a small
+          screen — row id, time, user, action, entity — fit without deep
+          horizontal scrolling, and the two low-value technical columns
+          (entity id, IP address) are dropped rather than clipped, since
+          neither is actionable on a phone.
+        */
+        @media screen and (max-width: 1023px) {
+          .audit-page { padding: var(--page-padding-mobile); max-width: 100%; margin: 0; min-width: 0; }
+          .audit-page-header { gap: var(--space-3); align-items: flex-start; }
+          .audit-page-title { font-size: var(--font-size-2xl); color: var(--color-navy-800); margin: 0; line-height: var(--line-height-tight); overflow-wrap: anywhere; }
+          .audit-page-subtitle { color: var(--color-text-secondary); margin: var(--space-1) 0 0; }
+          .audit-page .audit-card { padding: 0 !important; overflow: hidden; min-width: 0; }
+          .audit-page .audit-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+            align-items: end;
+            gap: var(--space-3);
+            padding: var(--space-4);
+          }
+          .audit-filters > div { min-width: 0; }
+          .audit-filters label { display: block; color: var(--color-text-secondary); margin-bottom: var(--space-1); }
+          .audit-filters select {
+            width: 100%; min-width: 0; min-height: 44px;
+            padding-inline: var(--space-3);
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-base);
+            background: var(--color-white);
+            color: var(--color-text-primary);
+            font-size: var(--font-size-base);
+          }
+          .audit-filters select:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+
+          .audit-table-scroll { width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+          .audit-data-table { width: 100%; border-collapse: collapse; direction: rtl; font-variant-numeric: tabular-nums; }
+          .audit-data-table th, .audit-data-table td { padding: var(--space-3) var(--space-3); text-align: right; vertical-align: middle; overflow-wrap: anywhere; }
+          .audit-data-table th { background: var(--color-page-bg); color: var(--color-text-secondary); font-weight: var(--font-weight-semibold); white-space: nowrap; font-size: var(--font-size-sm); }
+          .audit-data-table td { border-bottom: 1px solid var(--color-border); color: var(--color-text-primary); font-size: var(--font-size-sm); }
+          .audit-data-table tr:last-child td { border-bottom: 0; }
+          .audit-col-entity-id, .audit-col-ip { display: none; }
+          .audit-col-action { white-space: nowrap; }
+
+          /* Pagination keeps both controls reachable and wraps the page count. */
+          .audit-pagination { flex-wrap: wrap; gap: var(--space-3); }
+        }
+
         @media screen and (min-width: 1024px) {
           .audit-page { padding: var(--page-padding); max-width: var(--content-max-width); margin-inline: auto; min-width: 0; }
           .audit-page-header { margin-bottom: var(--space-6); }

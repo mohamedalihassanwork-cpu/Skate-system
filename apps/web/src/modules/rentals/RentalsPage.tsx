@@ -77,11 +77,15 @@ export default function RentalsPage() {
 
   const handleStatusChange = (s: string) => { setStatus(s); setPage(1) }
 
+  // `priority` drives the stacked phone/tablet card layout: rental code and the
+  // joined skate codes identify the card, the customer/amount/start become
+  // labelled fields, and the "عرض التفاصيل" icon button moves to the card
+  // footer instead of sitting at the end of a seven-column horizontal scroll.
   const columns: TableColumn<any>[] = [
-    { key: 'rentalCode', header: 'كود الإيجار', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{r.rentalCode}</span> },
-    { key: 'customer', header: 'العميل', render: (_, r: any) => r.customer?.name ?? '—' },
+    { key: 'rentalCode', header: 'كود الإيجار', priority: 'primary', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{r.rentalCode}</span> },
+    { key: 'customer', header: 'العميل', priority: 'secondary', render: (_, r: any) => r.customer?.name ?? '—' },
     {
-      key: 'skates', header: 'الاسكيتات',
+      key: 'skates', header: 'الاسكيتات', priority: 'primary',
       render: (_, r: any) => {
         const items = r.items ?? []
         if (items.length === 0) return '—'
@@ -90,16 +94,16 @@ export default function RentalsPage() {
       }
     },
     {
-      key: 'amount', header: 'المبلغ',
+      key: 'amount', header: 'المبلغ', priority: 'secondary',
       render: (_, r: any) => {
         const amount = r.totalAmount ?? r.items?.reduce((s: number, i: any) => s + (i.actualAmount ?? 0), 0)
         return amount != null ? formatCurrency(amount) : '— (لم يُحدد بعد)'
       }
     },
-    { key: 'startedAt', header: 'البداية', render: (_, r: any) => <span dir="ltr">{formatDateTime(r.startedAt)}</span> },
-    { key: 'status', header: 'الحالة', render: (_, r: any) => <Badge status={lifetimeStatusToBadge(r.status)}>{getRentalStatusLabel(r.status)}</Badge> },
+    { key: 'startedAt', header: 'البداية', priority: 'secondary', render: (_, r: any) => <span dir="ltr">{formatDateTime(r.startedAt)}</span> },
+    { key: 'status', header: 'الحالة', priority: 'primary', render: (_, r: any) => <Badge status={lifetimeStatusToBadge(r.status)}>{getRentalStatusLabel(r.status)}</Badge> },
     {
-      key: 'actions', header: '', align: 'left', render: (_, r: any) => (
+      key: 'actions', header: '', align: 'left', priority: 'actions', render: (_, r: any) => (
         <IconButton
           icon={Eye}
           label="عرض التفاصيل"
@@ -162,6 +166,7 @@ export default function RentalsPage() {
           <DataTable
             columns={columns}
             data={rentals as any}
+            mobileLayout="cards"
             emptyMessage={statusFilter ? 'لا توجد إيجارات بهذه الحالة' : 'لم يتم تسجيل أي إيجار بعد'}
             emptyIcon={Ticket}
           />

@@ -102,15 +102,20 @@ export function ReservationsPage() {
     setModalOpen(true)
   }
 
+  // `priority` drives the stacked phone/tablet card layout. The skate code and
+  // customer identify the card; the two booking timestamps become labelled
+  // fields (dates are the widest cells and caused the deepest horizontal
+  // scroll); the three permission-gated actions move to the card footer so
+  // "تنفيذ الإيجار" is never off-screen behind a scroll.
   const columns: TableColumn<any>[] = [
-    { key: 'id', header: 'رقم', render: (_, r: any) => `#${r.id}` },
-    { key: 'skate', header: 'الاسكيت', render: (_, r: any) => `${r.skate.skateCode} (مقاس ${r.skate.size})` },
-    { key: 'customer', header: 'العميل', render: (_, r: any) => `${r.customer.name} - ${r.customer.phone}` },
-    { key: 'from', header: 'من', render: (_, r: any) => <span dir="ltr">{new Date(r.reservedFrom).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</span> },
-    { key: 'to', header: 'إلى', render: (_, r: any) => <span dir="ltr">{new Date(r.reservedUntil).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</span> },
-    { key: 'status', header: 'الحالة', render: (_, r: any) => <ReservationStatusBadge status={r.status} /> },
+    { key: 'id', header: 'رقم', priority: 'primary', render: (_, r: any) => `#${r.id}` },
+    { key: 'skate', header: 'الاسكيت', priority: 'primary', render: (_, r: any) => `${r.skate.skateCode} (مقاس ${r.skate.size})` },
+    { key: 'customer', header: 'العميل', priority: 'secondary', render: (_, r: any) => `${r.customer.name} - ${r.customer.phone}` },
+    { key: 'from', header: 'من', priority: 'secondary', render: (_, r: any) => <span dir="ltr">{new Date(r.reservedFrom).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</span> },
+    { key: 'to', header: 'إلى', priority: 'secondary', render: (_, r: any) => <span dir="ltr">{new Date(r.reservedUntil).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</span> },
+    { key: 'status', header: 'الحالة', priority: 'primary', render: (_, r: any) => <ReservationStatusBadge status={r.status} /> },
     {
-      key: 'actions', header: 'الإجراءات', width: '140px', align: 'left', render: (_, res: any) => {
+      key: 'actions', header: 'الإجراءات', width: '140px', align: 'left', priority: 'actions', render: (_, res: any) => {
         const isActive = res.status === 'pending' || res.status === 'confirmed'
         return isActive ? (
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -196,6 +201,7 @@ export function ReservationsPage() {
         <DataTable
           columns={columns}
           data={reservations as any[]}
+          mobileLayout="cards"
           emptyMessage="لم يتم العثور على أي حجوزات تطابق البحث."
           emptyIcon={Calendar}
         />

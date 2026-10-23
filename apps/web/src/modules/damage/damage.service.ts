@@ -35,6 +35,7 @@ export interface CreateDamageReportPayload {
 }
 
 export interface PayDamageChargePayload {
+  operationKey?: string
   payments: { paymentMethodId: number; amount: number }[]
 }
 

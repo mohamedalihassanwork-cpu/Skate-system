@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Landmark, ArrowDownToLine, LockOpen, Lock, Plus } from 'lucide-react'
-import { treasuryApi, type Shift, type Expense } from './treasury.api'
+import { subTreasuryApi, treasuryApi, type Shift, type Expense } from './treasury.api'
 import { Button, Input, useToast, Card, PageLoader } from '../../components/ui'
 import { useAuth } from '../../contexts/AuthContext'
 import { TreasuryBalance } from './TreasuryBalance'
+import { SubTreasuryPage } from './SubTreasuryPage'
+import { ResourceState } from './subtreasury.ui'
+import { operationToken, useResource } from './subtreasury.state'
 
-export default function TreasuryPage() {
-  const { hasPermission } = useAuth()
+function LegacyTreasuryPage() {
+  const { hasPermission, user } = useAuth()
   const canManage = hasPermission('shifts.manage')
   const canViewBalance = hasPermission('treasury.view')
-  const canViewExpenses = hasPermission('expenses.view')
+  const canViewExpenses = hasPermission('expenses.view') || hasPermission('expenses.view_all')
   const canRecordExpenses = hasPermission('expenses.create')
   const [balanceRefreshKey, setBalanceRefreshKey] = useState(0)
   const { showToast } = useToast()
@@ -42,7 +45,7 @@ export default function TreasuryPage() {
         // Actually, let's check getExpenses return type later if it fails.
         // Based on typical Koshk API, usually it's just the array.
         // Let's use eRes.data || eRes just to be safe.
-        setExpenses((eRes as any).data || (Array.isArray(eRes) ? eRes : []))
+        setExpenses(((eRes as any).data || (Array.isArray(eRes) ? eRes : [])).filter((expense: Expense) => expense.shiftId === sRes.id))
       }
     } catch (err: any) {
       if (err.response?.status === 404 || err.response?.data?.error?.code === 'NOT_FOUND') {
@@ -87,11 +90,11 @@ export default function TreasuryPage() {
   async function handleRecordExpense(e: React.FormEvent) {
     e.preventDefault()
     if (!expenseData.amount || !expenseData.description) return
+    const payload = { amount: parseFloat(expenseData.amount), description: expenseData.description }
+    const token = operationToken(user!.id, 'expense', payload)
     try {
-      await treasuryApi.recordExpense({
-        amount: parseFloat(expenseData.amount),
-        description: expenseData.description
-      })
+      await treasuryApi.recordExpense({ ...payload, operationKey: token.key })
+      token.clear()
       showToast({ type: 'success', title: 'تم تسجيل المصروف بنجاح' })
       setBalanceRefreshKey(key => key + 1)
       setShowExpenseForm(false)
@@ -290,4 +293,12 @@ export default function TreasuryPage() {
       `}</style>
     </div>
   )
+}
+
+export default function TreasuryPage() {
+  const state = useResource(subTreasuryApi.config)
+  const { hasPermission } = useAuth()
+  if (!state.data) return <div className="page-container treasury-page"><h1 className="page-header-title">الخزينة</h1><ResourceState {...state} retry={() => void state.refresh()} /></div>
+  if (state.data.enabled) return <SubTreasuryPage config={state.data} refreshConfig={() => void state.refresh()} />
+  return <>{['treasury.assign', 'treasury.fund'].some(hasPermission) && <SubTreasuryPage config={state.data} refreshConfig={() => void state.refresh()} />}<LegacyTreasuryPage /></>
 }

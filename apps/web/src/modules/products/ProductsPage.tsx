@@ -137,12 +137,16 @@ export default function ProductsPage() {
     (p.barcode && p.barcode.includes(searchTerm))
   )
 
-  // Table columns definition — uses DataTable
+  // Table columns definition — uses DataTable.
+  // `priority` drives the stacked phone/tablet card layout: the first column
+  // pairs with the name as the card's identity line, the rest become labelled
+  // fields, and the headerless action column moves to the card footer.
   const columns: TableColumn<any>[] = [
     {
       key: 'id',
       header: 'الكود',
       width: '80px',
+      priority: 'primary',
       render: (_, r: any) => (
         <span style={{ fontFamily: 'monospace', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>
           #{r.id}
@@ -152,6 +156,7 @@ export default function ProductsPage() {
     {
       key: 'nameAr',
       header: 'اسم المنتج',
+      priority: 'primary',
       render: (_, r: any) => (
         <span style={{ fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)' }}>
           {r.nameAr}
@@ -161,6 +166,7 @@ export default function ProductsPage() {
     {
       key: 'category',
       header: 'الفئة',
+      priority: 'secondary',
       render: (_, r: any) => {
         const cat = categories.find(c => c.id === r.categoryId)
         return cat?.nameAr || '—'
@@ -169,6 +175,7 @@ export default function ProductsPage() {
     {
       key: 'price',
       header: 'السعر',
+      priority: 'secondary',
       render: (_, r: any) => (
         <span style={{ fontWeight: 'var(--font-weight-bold)' as any, color: 'var(--color-navy-800)' }} dir="ltr">
           {formatCurrency(r.price)}
@@ -179,6 +186,7 @@ export default function ProductsPage() {
       key: 'stock',
       header: 'المخزون',
       align: 'center' as const,
+      priority: 'secondary',
       render: (_, r: any) => (
         <Badge status={r.stockQuantity > 0 ? 'available' : 'damaged'}>
           {r.stockQuantity}
@@ -190,6 +198,7 @@ export default function ProductsPage() {
       header: '',
       width: '80px',
       align: 'center' as const,
+      priority: 'actions' as const,
       render: (_: any, r: any) => (
         <Button variant="ghost" size="sm" onClick={() => editProduct(r)} title="تعديل">
           <Edit size={16} aria-hidden="true" />
@@ -273,10 +282,11 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Data Table */}
+      {/* Data Table — stacked cards on phone/tablet, table from 1024px up */}
       <DataTable
         columns={columns}
         data={filteredProducts as any[]}
+        mobileLayout="cards"
         emptyMessage={searchTerm ? 'لا توجد منتجات مطابقة للبحث' : 'لم يتم إضافة أي منتجات بعد'}
         emptyIcon={Package}
       />

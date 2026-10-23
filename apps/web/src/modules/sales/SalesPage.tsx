@@ -83,16 +83,20 @@ export default function SalesPage() {
 
   const filteredSales = sales.filter(s => s.saleCode.toLowerCase().includes(search.toLowerCase()))
 
+  // `priority` drives the stacked phone/tablet card layout: invoice code
+  // identifies the card, amounts/status become labelled fields, and the
+  // details/cancel icon pair moves into the card footer where it stays
+  // reachable without horizontal scrolling.
   const columns: TableColumn<any>[] = [
-    { key: 'code', header: 'رقم الفاتورة', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)' }}>{r.saleCode}</span> },
-    { key: 'date', header: 'التاريخ والوقت', render: (_, r: any) => formatDate(r.createdAt) },
-    { key: 'total', header: 'الإجمالي', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-bold)' as any }}>{r.totalAmount} ج.م</span> },
-    { key: 'status', header: 'الحالة', render: (_, r: any) => (
+    { key: 'code', header: 'رقم الفاتورة', priority: 'primary', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)' }}>{r.saleCode}</span> },
+    { key: 'date', header: 'التاريخ والوقت', priority: 'secondary', render: (_, r: any) => formatDate(r.createdAt) },
+    { key: 'total', header: 'الإجمالي', priority: 'secondary', render: (_, r: any) => <span style={{ fontWeight: 'var(--font-weight-bold)' as any }}>{r.totalAmount} ج.م</span> },
+    { key: 'status', header: 'الحالة', priority: 'secondary', render: (_, r: any) => (
       <Badge status={r.status === 'completed' ? 'completed' : 'cancelled'}>
         {r.status === 'completed' ? 'مكتمل' : 'ملغى'}
       </Badge>
     ) },
-    { key: 'actions', header: '', align: 'left', render: (_, r: any) => (
+    { key: 'actions', header: '', align: 'left', priority: 'actions', render: (_, r: any) => (
       <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
         <Button variant="ghost" size="sm" onClick={() => handleViewDetails(r.id)} title="التفاصيل">
           <Eye size={16} />
@@ -207,6 +211,7 @@ export default function SalesPage() {
       <DataTable
         columns={columns}
         data={filteredSales as any[]}
+        mobileLayout="cards"
         emptyMessage={search ? 'لا توجد نتائج تطابق بحثك.' : 'لا توجد مبيعات مسجلة.'}
         emptyIcon={ListOrdered}
       />

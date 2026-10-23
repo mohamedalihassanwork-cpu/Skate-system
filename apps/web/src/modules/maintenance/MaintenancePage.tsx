@@ -94,17 +94,23 @@ export default function MaintenancePage() {
     setIsPaymentModalOpen(true)
   }
 
+  // `priority` drives the stacked phone/tablet card layout: record number and
+  // skate code identify the card, both status badges pair with the header,
+  // and the cost/technician/date become labelled fields. The permission-gated
+  // "دفع التكلفة" button moves into the card footer so the primary payment
+  // workflow is reachable without horizontal scrolling.
   const columns: TableColumn<any>[] = [
-    { key: 'id', header: 'رقم السجل', render: (_, r: any) => `#${r.id}` },
-    { key: 'skate', header: 'كود الاسكيت', render: (_, r: any) => <span className="font-medium text-gold-500">{r.skateCode}</span> },
-    { key: 'status', header: 'حالة الصيانة', render: (_, r: any) => renderStatus(r.status) },
-    { key: 'paymentStatus', header: 'حالة الدفع', render: (_, r: any) => renderPaymentStatus(r.paymentStatus) },
-    { key: 'date', header: 'تاريخ الفتح', render: (_, r: any) => new Date(r.createdAt).toLocaleDateString('ar-EG') },
-    { key: 'cost', header: 'إجمالي التكلفة', render: (_, r: any) => `${r.totalCost} ج.م` },
-    { key: 'user', header: 'المسؤول', render: (_, r: any) => r.createdByName },
+    { key: 'id', header: 'رقم السجل', priority: 'primary', render: (_, r: any) => `#${r.id}` },
+    { key: 'skate', header: 'كود الاسكيت', priority: 'primary', render: (_, r: any) => <span className="font-medium text-gold-500">{r.skateCode}</span> },
+    { key: 'status', header: 'حالة الصيانة', priority: 'primary', render: (_, r: any) => renderStatus(r.status) },
+    { key: 'paymentStatus', header: 'حالة الدفع', priority: 'primary', render: (_, r: any) => renderPaymentStatus(r.paymentStatus) },
+    { key: 'date', header: 'تاريخ الفتح', priority: 'detail', render: (_, r: any) => new Date(r.createdAt).toLocaleDateString('ar-EG') },
+    { key: 'cost', header: 'إجمالي التكلفة', priority: 'secondary', render: (_, r: any) => `${r.totalCost} ج.م` },
+    { key: 'user', header: 'المسؤول', priority: 'detail', render: (_, r: any) => r.createdByName },
     {
       key: 'actions',
       header: 'إجراءات',
+      priority: 'actions',
       render: (_, r: any) => {
         if (r.status === 'completed' && r.paymentStatus === 'unpaid' && hasPermission('maintenance.pay')) {
           return (
@@ -167,6 +173,7 @@ export default function MaintenancePage() {
         <DataTable
           columns={columns}
           data={records as any[]}
+          mobileLayout="cards"
           emptyMessage={statusFilter ? "لم يتم العثور على سجلات تطابق الفلتر الحالي." : "لم يتم تسجيل أي عمليات صيانة بعد."}
           emptyIcon={Wrench}
           onRowClick={(r) => openModal(r.id)}

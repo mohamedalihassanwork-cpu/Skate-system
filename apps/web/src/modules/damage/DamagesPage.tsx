@@ -50,15 +50,21 @@ export default function DamagesPage() {
     }
   }
 
+  // `priority` drives the stacked phone/tablet card layout: report number +
+  // skate identify the card, the charge/remaining figures and the customer
+  // become labelled fields, and the audit-only timestamp is de-emphasised.
+  // This is the widest table in the module set (8 columns), so the horizontal
+  // scroll previously hid the charge and status columns entirely on a phone.
   const columns: TableColumn<any>[] = [
-    { key: 'id', header: 'رقم التقرير', render: (_, r: any) => `#${r.id}` },
-    { key: 'skate', header: 'الاسكيت', render: (_, r: any) => <span dir="ltr">{r.skateCode || `ID: ${r.skateId}`}</span> },
-    { key: 'customer', header: 'العميل', render: (_, r: any) => r.customerName || `ID: ${r.customerId}` },
-    { key: 'rental', header: 'رقم الإيجار', render: (_, r: any) => `#${r.rentalId}` },
-    { key: 'charge', header: 'الغرامة المقررة', render: (_, r: any) => formatCurrency(r.customerCharge) },
+    { key: 'id', header: 'رقم التقرير', priority: 'primary', render: (_, r: any) => `#${r.id}` },
+    { key: 'skate', header: 'الاسكيت', priority: 'primary', render: (_, r: any) => <span dir="ltr">{r.skateCode || `ID: ${r.skateId}`}</span> },
+    { key: 'customer', header: 'العميل', priority: 'secondary', render: (_, r: any) => r.customerName || `ID: ${r.customerId}` },
+    { key: 'rental', header: 'رقم الإيجار', priority: 'detail', render: (_, r: any) => `#${r.rentalId}` },
+    { key: 'charge', header: 'الغرامة المقررة', priority: 'secondary', render: (_, r: any) => formatCurrency(r.customerCharge) },
     {
       key: 'remaining',
       header: 'الرصيد المتبقي',
+      priority: 'secondary',
       render: (_, r: any) => {
         const remaining = r.customerCharge - (r.chargeCollected + r.chargeWaived)
         return (
@@ -68,8 +74,8 @@ export default function DamagesPage() {
         )
       }
     },
-    { key: 'status', header: 'الحالة', render: (_, r: any) => getStatusBadge(r.status) },
-    { key: 'date', header: 'تاريخ التقرير', render: (_, r: any) => <span dir="ltr">{new Date(r.createdAt).toLocaleString('ar-EG')}</span> }
+    { key: 'status', header: 'الحالة', priority: 'primary', render: (_, r: any) => getStatusBadge(r.status) },
+    { key: 'date', header: 'تاريخ التقرير', priority: 'detail', render: (_, r: any) => <span dir="ltr">{new Date(r.createdAt).toLocaleString('ar-EG')}</span> }
   ]
 
   if (loading) return <PageLoader label="جارٍ تحميل تقارير الضرر" />
@@ -93,6 +99,7 @@ export default function DamagesPage() {
         <DataTable
           columns={columns}
           data={reports as any[]}
+          mobileLayout="cards"
           emptyMessage="لم يتم تسجيل أي تقارير ضرر للزلاجات حتى الآن."
           emptyIcon={AlertTriangle}
           onRowClick={handleRowClick}

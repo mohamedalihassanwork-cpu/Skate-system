@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { Modal, Button, Alert, Input, Badge, useToast } from '../../components/ui'
 import { formatCurrency } from '../../utils/currency'
 import { damageService, type DamageReportDTO } from './damage.service'
 import { paymentsService, type PaymentMethodDTO } from '../payments/payments.service'
 import { PermissionGate } from '../../components/PermissionGate'
+import { useAuth } from '../../contexts/AuthContext'
+import { operationToken } from '../../utils/financialOperation'
 
 interface DamageReportModalProps {
   isOpen: boolean
@@ -15,6 +17,7 @@ interface DamageReportModalProps {
 
 export function DamageReportModal({ isOpen, onClose, report: initialReport, onSuccess }: DamageReportModalProps) {
   const { showToast } = useToast()
+  const { user } = useAuth()
 
   const [report, setReport] = useState<DamageReportDTO>(initialReport)
   const [loading, setLoading] = useState(false)
@@ -25,6 +28,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
   const [activeTab, setActiveTab] = useState<'details' | 'pay' | 'waive'>('details')
 
   // Pay state
+  const paymentSubmittingRef = useRef(false)
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState<number>(0)
 
@@ -51,6 +55,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
   }, [isOpen, initialReport])
 
   const handlePay = async () => {
+    if (!user || paymentSubmittingRef.current) return
     const amt = parseFloat(paymentAmount)
     if (!amt || amt <= 0) {
       setError('يرجى إدخال مبلغ صحيح')
@@ -61,12 +66,14 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
       return
     }
 
+    const payload = { payments: [{ paymentMethodId, amount: amt }] }
+    const token = operationToken(user.id, `damage.collect:${report.id}`, { reportId: report.id, ...payload })
+    paymentSubmittingRef.current = true
     setLoading(true)
     setError(null)
     try {
-      const res = await damageService.pay(report.id, {
-        payments: [{ paymentMethodId, amount: amt }]
-      })
+      const res = await damageService.pay(report.id, { ...payload, operationKey: token.key })
+      token.clear()
       setReport(res.data)
       showToast({ type: 'success', title: 'تم تحصيل الرسوم بنجاح' })
       onSuccess()
@@ -77,6 +84,7 @@ export function DamageReportModal({ isOpen, onClose, report: initialReport, onSu
       const errObj = err as { response?: { data?: { error?: { message?: string } } }; message?: string }
       setError(errObj?.response?.data?.error?.message ?? errObj?.message ?? 'حدث خطأ أثناء الدفع')
     } finally {
+      paymentSubmittingRef.current = false
       setLoading(false)
     }
   }

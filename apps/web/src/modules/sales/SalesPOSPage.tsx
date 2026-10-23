@@ -5,6 +5,8 @@ import { salesApi } from './sales.api'
 import { paymentsService, type PaymentMethodDTO } from '../payments/payments.service'
 import { invoicesService } from '../invoices/invoices.service'
 import { usePrint } from '../../contexts/PrintContext'
+import { useAuth } from '../../contexts/AuthContext'
+import { operationToken } from '../../utils/financialOperation'
 import { Button, SearchBar, useToast, PageLoader, Alert, EmptyState } from '../../components/ui'
 
 interface CartItem extends Product {
@@ -18,6 +20,7 @@ interface PaymentRow {
 
 export default function SalesPOSPage() {
   const { showToast } = useToast()
+  const { user } = useAuth()
   const { printInvoice } = usePrint()
   
   const [products, setProducts] = useState<Product[]>([])
@@ -35,6 +38,7 @@ export default function SalesPOSPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const fetchedRef = useRef(false)
+  const saleSubmittingRef = useRef(false)
 
   useEffect(() => {
     if (!fetchedRef.current) {
@@ -125,6 +129,7 @@ export default function SalesPOSPage() {
   }
 
   async function handleCompleteSale() {
+    if (!user || saleSubmittingRef.current) return
     if (cart.length === 0) return showToast({ type: 'error', title: 'السلة فارغة' })
     if (payments.length === 0) return showToast({ type: 'error', title: 'يجب إضافة طريقة دفع واحدة على الأقل' })
     if (Math.abs(cartTotal - paymentsTotal) > 0.01) return showToast({ type: 'error', title: 'إجمالي المدفوعات لا يساوي قيمة الفاتورة' })
@@ -132,15 +137,16 @@ export default function SalesPOSPage() {
       return showToast({ type: 'error', title: 'يوجد مبالغ دفع غير صحيحة' })
     }
 
+    const payload = {
+      items: cart.map(c => ({ productId: c.id, quantity: c.cartQuantity })),
+      payments: payments.map(p => ({ paymentMethodId: p.methodId, amount: parseFloat(p.amount) })),
+    }
+    const token = operationToken(user.id, 'sales.create', payload)
+    saleSubmittingRef.current = true
     try {
       setSubmitting(true)
-      const res = await salesApi.createSale({
-        items: cart.map(c => ({ productId: c.id, quantity: c.cartQuantity })),
-        payments: payments.map(p => ({
-          paymentMethodId: p.methodId,
-          amount: parseFloat(p.amount)
-        }))
-      })
+      const res = await salesApi.createSale({ ...payload, operationKey: token.key })
+      token.clear()
       showToast({ type: 'success', title: `تم إنشاء الفاتورة بنجاح: ${res.data.saleCode}` })
       
       // Auto-print sale invoice
@@ -157,6 +163,7 @@ export default function SalesPOSPage() {
     } catch (err: any) {
       showToast({ type: 'error', title: err.response?.data?.error?.message || 'فشل إنشاء الفاتورة' })
     } finally {
+      saleSubmittingRef.current = false
       setSubmitting(false)
     }
   }

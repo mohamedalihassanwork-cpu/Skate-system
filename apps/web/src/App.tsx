@@ -64,6 +64,7 @@ import AuditLogsPage from './modules/audit/AuditLogsPage'
 
 // Phase 12 — Treasury & Shifts
 import TreasuryPage from './modules/treasury/TreasuryPage'
+import { treasuryPermissions } from './modules/treasury/subtreasury.state'
 
 // Phase 13 — Reports
 import ReportsPage from './modules/reports/ReportsPage'
@@ -243,7 +244,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
       <nav className="sidebar-nav" aria-label="التنقل الرئيسي">
         {NAV_ITEMS.map(item => (
           item.permission ? (
-            <PermissionGate key={item.to} permission={item.to === '/treasury' && hasPermission('treasury.view') ? 'treasury.view' : item.permission}>
+            <PermissionGate key={item.to} permission={item.to === '/treasury' ? (treasuryPermissions.find(hasPermission) || 'treasury.view') : item.permission}>
               <NavItem icon={item.icon} label={item.label} to={item.to} exact={item.exact} />
             </PermissionGate>
           ) : (
@@ -348,7 +349,7 @@ function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose, onLog
               <nav className="sidebar-nav" aria-label="التنقل الرئيسي">
                 {NAV_ITEMS.map(item =>
                   item.permission ? (
-                    <PermissionGate key={item.to} permission={item.to === '/treasury' && hasPermission('treasury.view') ? 'treasury.view' : item.permission}>
+                    <PermissionGate key={item.to} permission={item.to === '/treasury' ? (treasuryPermissions.find(hasPermission) || 'treasury.view') : item.permission}>
                       <NavLink
                         to={item.to}
                         end={item.exact}
@@ -1054,6 +1055,11 @@ function AppShell({ children, pageTitle }: { children: ReactNode; pageTitle?: st
 // Root App — routing (unchanged)
 // ---------------------------------------------------------------------------
 
+function TreasuryAccess() {
+  const { hasPermission } = useAuth()
+  return treasuryPermissions.some(hasPermission) ? <TreasuryPage /> : <NoAccessPage permission="treasury.view_own" />
+}
+
 export default function App() {
   return (
     <Routes>
@@ -1173,18 +1179,7 @@ export default function App() {
                     <DamagesPage />
                   </PermissionGate>
                 } />
-                <Route path="/treasury" element={
-                  <PermissionGate
-                    permission="treasury.view"
-                    fallback={
-                      <PermissionGate permission="shifts.manage" fallback={<NoAccessPage permission="treasury.view" />}>
-                        <TreasuryPage />
-                      </PermissionGate>
-                    }
-                  >
-                    <TreasuryPage />
-                  </PermissionGate>
-                } />
+                <Route path="/treasury" element={<TreasuryAccess />} />
                 <Route path="/maintenance" element={
                   <PermissionGate
                     permission="maintenance.view"
