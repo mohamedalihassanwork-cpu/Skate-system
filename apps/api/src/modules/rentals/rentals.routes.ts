@@ -103,7 +103,8 @@ router.get(
 
 // ---------------------------------------------------------------------------
 // POST /api/v1/rentals — start rental (multi-skate, NO payment at creation)
-// Body: { skateIds: number[], customerId, durationMinutes, notes?, reservationId? }
+// Body: { skateIds: number[], customerId, durationMinutes?, notes?, reservationId? }
+// durationMinutes is required for walk-ins; reservation execution derives it server-side.
 // ---------------------------------------------------------------------------
 
 router.post(

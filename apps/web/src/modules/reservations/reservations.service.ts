@@ -23,6 +23,7 @@ export interface ReservationUserInfo {
 
 export interface Reservation {
   id: number
+  rentalId: number | null
   customer: ReservationCustomerInfo
   skate: ReservationSkateInfo
   skateSize: string | null

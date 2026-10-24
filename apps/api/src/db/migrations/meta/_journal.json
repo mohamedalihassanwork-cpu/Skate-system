@@ -155,6 +155,13 @@
       "when": 1792117165099,
       "tag": "0021_subtreasury",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1792804701636,
+      "tag": "0022_reservation_rental_link",
+      "breakpoints": true
     }
   ]
 }

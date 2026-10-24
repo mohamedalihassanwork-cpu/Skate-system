@@ -1,5 +1,19 @@
 # Module: Rentals
 
+> **Current contract — 2026-10-24:** Rentals are multi-skate containers with independent `rental_items`; final billing uses actual item durations. The owner's current request explicitly preserves that model. Historical Phase 05 descriptions below must not be used to restore start-time billing. The [approved reservation repair](../decisions/RESERVATION_RENTAL_WORKFLOW_CR.md) and [current verification](../quality/RESERVATION_RENTAL_VERIFICATION.md) supersede earlier reservation integration descriptions.
+
+## Reservation execution and current timing
+
+- A reservation opens directly at review; a walk-in keeps customer, skate and duration selection.
+- Walk-ins still require positive integer `durationMinutes`. With `reservationId`, the server derives full expected duration from the locked booking window, ignoring client duration overrides. The customer must match and selected skates must include the reserved skate.
+- Actual `started_at` is captured on the server at execution, at DATETIME second precision; every item gets `expected_end_at = started_at + expected_duration_minutes`. Reserved timestamps are never copied into actual start/return fields.
+- Each item independently captures `returned_at` on return and calculates actual duration/amount using its snapshotted rate. Partial returns, late-fee/grace/waiver rules, finalization, split payment and treasury posting are unchanged. The booked duration is an operational expectation, not the final billed duration.
+- A nullable unique `reservationId` links the commercial rental to its source reservation. Link, fulfillment, item creation, skate transitions and start audit share one transaction. Cancelling an unpaid rental retains the source link and does not revive the fulfilled reservation.
+- All selected skates are protected against other active reserved windows. Extensions check their added interval. Adjacent windows may touch exactly; overlapping windows are rejected. Reservation creation/edit also checks active rental-item expected occupancy.
+- See [Reservations](RESERVATIONS.md) for validation, expiry, locking and API details. Migration `0022_reservation_rental_link.sql` must precede running the updated application.
+
+## Historical Phase 05 specification and subsequent records
+
 **Status:** VERIFIED — FINAL GATE PASSED ✅  
 **Last updated:** 2026-09-21 (Phase 05 Closure Gate — FINAL GATE PASSED ✅. Final Verification Gate passed. 170/170 tests. All VG2 findings resolved.)
 

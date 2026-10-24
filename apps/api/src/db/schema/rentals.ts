@@ -40,6 +40,7 @@ import { skates } from './skates'
 import { customers } from './customers'
 import { users } from './users'
 import { cashierShifts } from './treasury'
+import { reservations } from './reservations'
 
 // ---------------------------------------------------------------------------
 // Rental status values (persisted lifecycle)
@@ -84,6 +85,9 @@ export const rentals = mysqlTable('rentals', {
   // Invoice number — set ONLY at finalization (last item returned + payment collected)
   // NULL while Rental is active. Generated from sequences table.
   invoiceNumber: varchar('invoice_number', { length: 50 }).unique(),
+
+  // One reservation may be executed once; walk-ins and historical rentals remain NULL.
+  reservationId: int('reservation_id').unique().references(() => reservations.id),
 
   // LEGACY: skate_id kept nullable for historical data migration
   // New rentals: skate data lives in rental_items

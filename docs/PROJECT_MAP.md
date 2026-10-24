@@ -1,5 +1,15 @@
 # Project Map — KOSHK SKATE ERP
 
+## Reservation execution repair — 2026-10-24
+
+Current navigation superseding historical rental/reservation rows below:
+
+- `apps/web/src/modules/rentals/RentalPOSPage.tsx`: walk-in wizard and direct reservation review; service DTOs in rentals/reservations frontend modules.
+- `apps/api/src/modules/rentals/`: reservation-aware start/extension and item-level rental lifecycle; `apps/api/src/modules/reservations/`: CRUD, UTC expiry, overlap validation and reverse rental link.
+- `apps/api/src/db/schema/rentals.ts`, `apps/api/src/db/migrations/0022_reservation_rental_link.sql`, matching snapshot/journal: one nullable unique reservation FK.
+- `apps/api/src/tests/reservations.test.ts`: current reservation/rental database and concurrency regressions; `tests/reservation_rental_ui.py`: synthetic browser workflow/RTL regressions.
+- [Decision](decisions/RESERVATION_RENTAL_WORKFLOW_CR.md), [current reservation contract](modules/RESERVATIONS.md), [actual verification](quality/RESERVATION_RENTAL_VERIFICATION.md).
+
 **Version:** 2.0
 **Purpose:** Navigation map for future AI agents. Read this BEFORE scanning the repository.
 **Last updated:** 2026-10-16 (approved sub-treasury implementation navigation)

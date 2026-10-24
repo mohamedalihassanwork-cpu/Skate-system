@@ -21,6 +21,7 @@ export interface ReservationUserInfo {
 
 export interface ReservationDTO {
   id: number
+  rentalId: number | null // reverse lookup of rentals.reservation_id; never a second stored link
   customer: ReservationCustomerInfo
   skate: ReservationSkateInfo
   skateSize: string | null // Kept for schema compatibility, though skateId is required in Phase 10

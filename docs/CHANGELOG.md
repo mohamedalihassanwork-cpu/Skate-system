@@ -1,5 +1,12 @@
 # Changelog — KOSHK SKATE ERP
 
+## [2026-10-24] — Approved reservation execution repair
+
+- Owner selected full booked duration from actual start. Reservation execution now opens review with the original booked window and server price estimate, without repeated duration selection. Walk-in duration entry remains.
+- Restored locked server validation, fulfillment and overlap prevention for rental creation/extension and reservation edits/creation. Added one nullable unique rental-to-reservation FK and reciprocal read DTO links; kept independent item returns, actual-duration billing and final treasury transactions.
+- Regression tests exposed premature expiration from MySQL local time compared with UTC bookings; only reservation expiry predicates now explicitly use `UTC_TIMESTAMP()`.
+- Replaced obsolete reservation test fixtures and added synthetic browser workflow regressions. Recorded actual checks and limits in the [verification report](quality/RESERVATION_RENTAL_VERIFICATION.md); [approved CR](decisions/RESERVATION_RENTAL_WORKFLOW_CR.md) records the decision, evidence and scope.
+
 
 
 

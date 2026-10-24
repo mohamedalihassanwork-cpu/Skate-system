@@ -66,6 +66,7 @@ import type {
   ReturnItemResult,
 } from './rentals.types.js'
 import type { RentalStatus, RentalOperationalStatus } from '../../db/schema/rentals.js'
+import type { PoolConnection } from 'mysql2/promise'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -94,6 +95,29 @@ function isoDateNotNull(d: Date | string): string {
 function calculateRentalAmount(hourlyRate: number, durationMinutes: number): number {
   const raw = (hourlyRate * durationMinutes) / 60
   return Math.round(raw)
+}
+
+// Call only after locking every affected skate. Locking reads see concurrent
+// reservation edits/creations committed before that skate lock was acquired.
+async function assertNoReservedWindowOverlap(
+  connection: PoolConnection,
+  skateIds: number[],
+  from: Date,
+  until: Date,
+  excludedReservationId: number | null = null,
+): Promise<void> {
+  const placeholders = skateIds.map(() => '?').join(',')
+  const [conflicts] = await connection.execute<any[]>(
+    `SELECT id FROM reservations
+     WHERE skate_id IN (${placeholders}) AND status IN ('pending', 'confirmed')
+       AND reserved_from < ? AND reserved_until > ?
+       AND (? IS NULL OR id != ?)
+     ORDER BY id FOR UPDATE`,
+    [...skateIds, until, from, excludedReservationId, excludedReservationId],
+  )
+  if (conflicts.length > 0) {
+    throw new BusinessRuleError('الاسكيت محجوزة خلال مدة الإيجار المطلوبة ولا يمكن استئجارها', 'SKATE_RESERVED')
+  }
 }
 
 /**
@@ -215,6 +239,7 @@ interface RawRentalRow {
   id: number
   rentalCode: string
   invoiceNumber: string | null
+  reservationId: number | null
   customerId: number
   cashierId: number
   shiftId: number | null
@@ -299,6 +324,7 @@ function rawToDTO(row: RawRentalRow, items: RentalItemDTO[]): RentalDTO {
     id: row.id,
     rentalCode: row.rentalCode,
     invoiceNumber: row.invoiceNumber ?? null,
+    reservationId: row.reservationId ?? null,
     customer: {
       id: row.customerId,
       name: row.customerName ?? '',
@@ -334,6 +360,7 @@ async function fetchRentalsByCondition(
       id: rentals.id,
       rentalCode: rentals.rentalCode,
       invoiceNumber: rentals.invoiceNumber,
+      reservationId: rentals.reservationId,
       customerId: rentals.customerId,
       cashierId: rentals.cashierId,
       shiftId: rentals.shiftId,
@@ -512,6 +539,9 @@ export async function startRental(
   if (data.skateIds.length > 20) {
     throw new ValidationError('لا يمكن تأجير أكثر من 20 اسكيت في طلب واحد')
   }
+  if (data.skateIds.some(id => !Number.isInteger(id) || id <= 0)) {
+    throw new ValidationError('معرفات الاسكيت يجب أن تكون أعداداً صحيحة أكبر من صفر')
+  }
   // Deduplicate check
   const uniqueSkateIds = new Set(data.skateIds)
   if (uniqueSkateIds.size !== data.skateIds.length) {
@@ -520,7 +550,11 @@ export async function startRental(
   if (!data.customerId || !Number.isInteger(data.customerId) || data.customerId <= 0) {
     throw new ValidationError('معرف العميل مطلوب')
   }
-  if (!data.durationMinutes || !Number.isInteger(data.durationMinutes) || data.durationMinutes <= 0) {
+  const hasReservation = data.reservationId !== undefined
+  if (hasReservation && (!Number.isInteger(data.reservationId) || data.reservationId! <= 0)) {
+    throw new ValidationError('معرف الحجز غير صالح')
+  }
+  if (!hasReservation && (!Number.isInteger(data.durationMinutes) || (data.durationMinutes ?? 0) <= 0)) {
     throw new ValidationError('مدة الإيجار غير صالحة', {
       durationMinutes: 'يجب أن تكون مدة الإيجار عدداً صحيحاً أكبر من صفر',
     })
@@ -550,7 +584,7 @@ export async function startRental(
     const sortedSkateIds = [...data.skateIds].sort((a, b) => a - b)
     const skateIdPlaceholders = sortedSkateIds.map(() => '?').join(',')
     const [skateRowsLocked] = await connection.execute<any[]>(
-      `SELECT id, status, skate_code FROM skates WHERE id IN (${skateIdPlaceholders}) FOR UPDATE`,
+      `SELECT id, status, skate_code FROM skates WHERE id IN (${skateIdPlaceholders}) ORDER BY id FOR UPDATE`,
       sortedSkateIds,
     )
 
@@ -570,16 +604,55 @@ export async function startRental(
       }
     }
 
-    // Server-authoritative start time (§12, §13)
-    const startedAt = new Date()
-    const expectedEndAt = new Date(startedAt.getTime() + data.durationMinutes * 60000)
+    // Revalidate the customer in the transaction, after the shared skate lock.
+    const [lockedCustomers] = await connection.execute<any[]>(
+      'SELECT id, is_active FROM customers WHERE id = ? FOR UPDATE',
+      [data.customerId],
+    )
+    if (!lockedCustomers[0]) throw new NotFoundError('العميل غير موجود')
+    if (!lockedCustomers[0].is_active) {
+      throw new BusinessRuleError('لا يمكن إنشاء إيجار لعميل معطل', 'CUSTOMER_INACTIVE')
+    }
+
+    let durationMinutes = data.durationMinutes!
+    let reservationWindow: { reservedFrom: string; reservedUntil: string } | null = null
+    if (hasReservation) {
+      const [reservationRows] = await connection.execute<any[]>(
+        'SELECT id, status, customer_id, skate_id, reserved_from, reserved_until FROM reservations WHERE id = ? FOR UPDATE',
+        [data.reservationId!],
+      )
+      const reservation = reservationRows[0]
+      if (!reservation) throw new NotFoundError('الحجز غير موجود')
+      if (reservation.status !== 'pending' && reservation.status !== 'confirmed') {
+        throw new BusinessRuleError('لا يمكن تنفيذ حجز غير نشط', 'RESERVATION_NOT_ACTIVE')
+      }
+      if (reservation.customer_id !== data.customerId || !uniqueSkateIds.has(reservation.skate_id)) {
+        throw new BusinessRuleError('بيانات الحجز لا تتطابق مع طلب الإيجار', 'RESERVATION_MISMATCH')
+      }
+      const reservedFrom = new Date(reservation.reserved_from)
+      const reservedUntil = new Date(reservation.reserved_until)
+      durationMinutes = (reservedUntil.getTime() - reservedFrom.getTime()) / 60000
+      if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
+        throw new BusinessRuleError('مدة الحجز يجب أن تكون عدداً صحيحاً من الدقائق أكبر من صفر؛ يرجى تصحيح مواعيد الحجز', 'RESERVATION_DURATION_INVALID')
+      }
+      if (reservedUntil.getTime() <= Date.now()) {
+        throw new BusinessRuleError('انتهى وقت الحجز ولا يمكن تنفيذه', 'RESERVATION_EXPIRED')
+      }
+      reservationWindow = { reservedFrom: reservedFrom.toISOString(), reservedUntil: reservedUntil.toISOString() }
+    }
+
+    // Match DATETIME's whole-second precision for both occupancy checks and
+    // persistence; a subsecond difference must not turn touching windows into overlaps.
+    const startedAt = new Date(Math.floor(Date.now() / 1000) * 1000)
+    const expectedEndAt = new Date(startedAt.getTime() + durationMinutes * 60000)
+    await assertNoReservedWindowOverlap(connection, sortedSkateIds, startedAt, expectedEndAt, data.reservationId ?? null)
 
     // INSERT Rental with temporary placeholder code (DEC-062, DEC-070)
     const tempCode = `TEMP-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const [insertResult] = await connection.execute<any>(
       `INSERT INTO rentals
-        (rental_code, customer_id, cashier_id, shift_id, started_at, status, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
+        (rental_code, customer_id, cashier_id, shift_id, started_at, status, notes, reservation_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'active', ?, ?, NOW(), NOW())`,
       [
         tempCode,
         data.customerId,
@@ -587,6 +660,7 @@ export async function startRental(
         activeShift.id,
         startedAt,
         data.notes ?? null,
+        data.reservationId ?? null,
       ],
     )
 
@@ -600,7 +674,7 @@ export async function startRental(
     )
 
     // Create one Rental Item per skate
-    const rentalAmount = calculateRentalAmount(hourlyRate, data.durationMinutes)
+    const rentalAmount = calculateRentalAmount(hourlyRate, durationMinutes)
     for (const skateId of data.skateIds) {
       await connection.execute(
         `INSERT INTO rental_items
@@ -611,10 +685,17 @@ export async function startRental(
           newRentalId,
           skateId,
           startedAt,
-          data.durationMinutes,
+          durationMinutes,
           expectedEndAt,
           hourlyRate.toFixed(2),
         ],
+      )
+    }
+
+    if (hasReservation) {
+      await connection.execute(
+        "UPDATE reservations SET status = 'fulfilled', updated_at = NOW() WHERE id = ?",
+        [data.reservationId!],
       )
     }
 
@@ -636,8 +717,9 @@ export async function startRental(
           status: 'active',
           rentalCode,
           skateIds: data.skateIds,
-          durationMinutes: data.durationMinutes,
+          durationMinutes,
           expectedAmount: rentalAmount,
+          ...(hasReservation ? { reservationId: data.reservationId, ...reservationWindow } : {}),
         }),
       ],
     )
@@ -1003,7 +1085,7 @@ export async function extendRentalItem(
 
     // Lock the rental item
     const [itemRows] = await connection.execute<any[]>(
-      'SELECT id, status, expected_end_at, rental_id FROM rental_items WHERE id = ? FOR UPDATE',
+      'SELECT id, status, skate_id, expected_end_at, rental_id FROM rental_items WHERE id = ? FOR UPDATE',
       [itemId],
     )
     const item = itemRows[0]
@@ -1015,6 +1097,9 @@ export async function extendRentalItem(
       await connection.rollback()
       throw new BusinessRuleError('لا يمكن تمديد بند إيجار غير نشط', 'ITEM_NOT_ACTIVE')
     }
+
+    // Shared with reservation create/edit so an extension cannot race a booking.
+    await connection.execute('SELECT id FROM skates WHERE id = ? FOR UPDATE', [item.skate_id])
 
     // Verify parent rental is still active
     const [rentalRows] = await connection.execute<any[]>(
@@ -1030,6 +1115,7 @@ export async function extendRentalItem(
     const newExpectedEndAt = new Date(
       previousExpectedEndAt.getTime() + data.extendByMinutes * 60000
     )
+    await assertNoReservedWindowOverlap(connection, [item.skate_id], previousExpectedEndAt, newExpectedEndAt)
 
     // Update expected_end_at and expected_duration_minutes on the item
     const [currentDurRow] = await connection.execute<any[]>(

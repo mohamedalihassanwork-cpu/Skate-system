@@ -1,5 +1,11 @@
 # API Architecture — KOSHK SKATE ERP
 
+## Reservation execution contract — 2026-10-24
+
+The existing `POST /api/v1/rentals` retains `rentals.create` authorization. Walk-ins send `customerId`, `skateIds`, and required positive integer `durationMinutes`. Reservation execution sends `reservationId`, matching `customerId` and `skateIds` containing its skate; duration may be omitted and cannot override the persisted full booking interval. Notes remain optional. Success retains the rental response envelope and adds nullable `data.reservationId`; reservation list/detail keep their existing response shapes and add nullable `rentalId` derived from the unique relationship. No endpoint or permission was added.
+
+The server revalidates booking eligibility and all occupancy inside the rental start transaction. Errors include `RESERVATION_MISMATCH`, `RESERVATION_NOT_ACTIVE`, `RESERVATION_EXPIRED`, `RESERVATION_DURATION_INVALID` and `SKATE_RESERVED`. Reservation edits can return `RESERVATION_CHANGED` (reload/retry after concurrent skate move); create/edit can return `RESERVATION_RENTAL_CONFLICT` for active rental-item occupancy. These errors never create a partial rental/payment. See [approved decision](../decisions/RESERVATION_RENTAL_WORKFLOW_CR.md) and [verification](../quality/RESERVATION_RENTAL_VERIFICATION.md).
+
 **Version:** 1.1
 **Status:** APIs are implemented. The original endpoint catalog is a historical target; current Treasury/Shift contracts are reconciled in the 2026-10-16 addendum.
 **Last updated:** 2026-10-16 (approved sub-treasury API)

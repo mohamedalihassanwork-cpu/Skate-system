@@ -79,6 +79,7 @@ export interface RentalDTO {
   id:            number
   rentalCode:    string
   invoiceNumber: string | null   // NULL until finalized
+  reservationId: number | null   // durable originating booking; NULL for walk-ins/history
   customer:      RentalCustomerInfo
   cashier:       RentalCashierInfo
   shiftId:       number | null
@@ -112,7 +113,7 @@ export interface ActiveRentalDTO extends RentalDTO {
 export interface StartRentalRequest {
   skateIds:        number[]  // 1..N skate IDs (unique, all must be available)
   customerId:      number    // required integer > 0
-  durationMinutes: number    // expected duration (same for all items per session)
+  durationMinutes?: number  // required for walk-ins; reservation execution derives the full booked interval
   notes?:          string    // optional, max 1000 chars
   reservationId?:  number    // Phase 10 Atomic Fulfillment (single-skate reservations)
 }

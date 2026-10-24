@@ -93,6 +93,10 @@ settings
 
 ## Tables (Target)
 
+> **Current rental model (2026-10-24):** The single-skate `rentals` description below is historical. Migration 0020 introduced independent `rental_items` holding skate, actual start/return, expected duration/end, snapshotted rate and actual charge. `rentals` is the commercial container finalized after item returns. Migration 0022 adds only `rentals.reservation_id INT NULL`, UNIQUE and FK to `reservations.id` (`NO ACTION`). Existing/historical rows remain null; the reverse reservation DTO link is a join, not a second stored FK. See [current rental contract](../modules/RENTALS.md).
+
+Reserved windows stay in `reservations`; actual and expected operational timestamps stay on the rental/items. Both use UTC DATETIME values. Driver conversion does not change the MySQL session clock, so reservation expiry explicitly uses `UTC_TIMESTAMP()`. Rental activation uses whole-second precision for both persisted timestamps and overlap checks. The additive link migration requires no data backfill. App rollback may leave the nullable column in place; dropping it after linked data exists would lose relationship history and is not an automatic rollback step.
+
 ### Core System
 
 #### `users`

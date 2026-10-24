@@ -1,12 +1,14 @@
 # Project State — KOSHK SKATE ERP
 
 **Version:** 5.7
-**Last updated:** 2026-10-16 — approved independent Sub-Treasury/Daily Closing CR implementation; actual verification below.
+**Last updated:** 2026-10-24 — approved reservation execution repair; actual verification linked below.
 **Updated by:** AI Agent — Change Request Implementation
 
 ---
 
 ## CURRENT STATUS
+
+**Reservation repair — 2026-10-24:** Owner approved full booked duration from actual execution time. IMPLEMENTED: direct reservation review, server-derived duration, atomic validation/link/fulfillment, restored occupancy checks and UTC lazy expiry. Current verification is in the [workflow report](quality/RESERVATION_RENTAL_VERIFICATION.md); historical counts below are not current results for this workflow. Development migration/live cashier verification remain outstanding.
 
 | Field | Value |
 |---|---|

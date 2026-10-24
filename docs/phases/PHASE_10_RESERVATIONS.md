@@ -4,6 +4,8 @@
 **Last updated:** 2026-10-03 (Gate 5.2 — Documentation Reconciliation)
 **Reconciled by:** AI Agent (Gate 5.2)
 
+> **2026-10-24 superseding repair:** The multi-skate rewrite removed the fulfillment and rental-conflict checks described below; the old six-test suite used an obsolete request shape. Those historical TESTED labels do not verify that rewrite. The [owner-approved full-duration repair](../decisions/RESERVATION_RENTAL_WORKFLOW_CR.md) is now implemented with a durable rental link, atomic validation/fulfillment and refreshed tests. [Reservations current contract](../modules/RESERVATIONS.md) and [verification report](../quality/RESERVATION_RENTAL_VERIFICATION.md) govern current behavior. Active statuses include `pending` and `confirmed`; lazy expiry uses `reserved_until <= UTC_TIMESTAMP()` on both list and detail reads. No new background job is introduced.
+
 ---
 
 > [!IMPORTANT]

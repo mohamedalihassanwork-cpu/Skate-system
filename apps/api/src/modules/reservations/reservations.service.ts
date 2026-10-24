@@ -1,6 +1,7 @@
 import { eq, and, sql, gte, lte, count, asc, desc, inArray, or } from 'drizzle-orm'
 import { db, pool } from '../../db/connection.js'
 import { reservations } from '../../db/schema/reservations.js'
+import { rentals } from '../../db/schema/rentals.js'
 import { skates } from '../../db/schema/skates.js'
 import { customers } from '../../db/schema/customers.js'
 import { auditService } from '../audit/audit.service.js'
@@ -15,6 +16,7 @@ import type {
   PaginatedReservations,
 } from './reservations.types.js'
 import type { ReservationStatus } from '../../db/schema/reservations.js'
+import type { PoolConnection } from 'mysql2/promise'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,6 +34,7 @@ function isoDateNotNull(d: Date | string): string {
 
 interface RawReservationRow {
   id: number
+  rentalId: number | null
   customerId: number
   skateId: number
   skateSize: string | null
@@ -55,6 +58,7 @@ interface RawReservationRow {
 function rawToDTO(row: RawReservationRow): ReservationDTO {
   return {
     id: row.id,
+    rentalId: row.rentalId ?? null,
     customer: {
       id: row.customerId,
       name: row.customerName ?? '',
@@ -85,6 +89,7 @@ async function fetchReservationsJoined(whereClause?: ReturnType<typeof and>): Pr
   const rows = await db
     .select({
       id: reservations.id,
+      rentalId: rentals.id,
       customerId: reservations.customerId,
       skateId: reservations.skateId,
       skateSize: reservations.skateSize,
@@ -105,6 +110,7 @@ async function fetchReservationsJoined(whereClause?: ReturnType<typeof and>): Pr
       createdByName: users.name,
     })
     .from(reservations)
+    .leftJoin(rentals, eq(rentals.reservationId, reservations.id))
     .leftJoin(customers, eq(reservations.customerId, customers.id))
     .leftJoin(skates, eq(reservations.skateId, skates.id))
     .leftJoin(users, eq(reservations.createdBy, users.id))
@@ -114,10 +120,44 @@ async function fetchReservationsJoined(whereClause?: ReturnType<typeof and>): Pr
   return rows as RawReservationRow[]
 }
 
+// Create/edit hold the skate lock before checking occupancy. Their first
+// consistent read is this item query, after that lock; return/finalization rows
+// need not be locked in reverse order (returns lock the item before the skate).
+async function assertReservationWindowAvailable(
+  connection: PoolConnection,
+  skateId: number,
+  from: Date,
+  until: Date,
+  excludedReservationId: number | null = null,
+): Promise<void> {
+  const [overlaps] = await connection.execute<any[]>(
+    `SELECT id FROM reservations
+     WHERE skate_id = ? AND status IN ('pending', 'confirmed')
+       AND reserved_from < ? AND reserved_until > ?
+       AND (? IS NULL OR id != ?)
+     ORDER BY id FOR UPDATE`,
+    [skateId, until, from, excludedReservationId, excludedReservationId],
+  )
+  if (overlaps.length > 0) {
+    throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الاسكيت', 'RESERVATION_CONFLICT')
+  }
+  const [rentalOverlaps] = await connection.execute<any[]>(
+    `SELECT id FROM rental_items
+     WHERE skate_id = ? AND status = 'active'
+       AND started_at < ? AND expected_end_at > ? LIMIT 1`,
+    [skateId, until, from],
+  )
+  if (rentalOverlaps.length > 0) {
+    throw new BusinessRuleError('يوجد إيجار نشط يتعارض مع مواعيد الحجز لهذه الاسكيت', 'RESERVATION_RENTAL_CONFLICT')
+  }
+}
+
 /**
  * Lazy Expiration (BR-2):
- * Any reservation where reservedUntil <= NOW and status is 'pending' or 'confirmed'
+ * Any reservation where reservedUntil <= UTC_TIMESTAMP and status is 'pending' or 'confirmed'
  * should be updated to 'cancelled'.
+ * Booked DATETIME values are UTC. mysql2's timezone option converts driver values
+ * but does not change the SQL session zone, so NOW() can expire future bookings.
  */
 export async function lazyExpireReservations(): Promise<void> {
   const candidates = await db
@@ -126,7 +166,7 @@ export async function lazyExpireReservations(): Promise<void> {
     .where(
       and(
         inArray(reservations.status, ['pending', 'confirmed']),
-        lte(reservations.reservedUntil, sql`NOW()`)
+        lte(reservations.reservedUntil, sql`UTC_TIMESTAMP()`)
       )
     )
 
@@ -150,7 +190,7 @@ export async function lazyExpireReservations(): Promise<void> {
           and(
             eq(reservations.id, candidate.id),
             inArray(reservations.status, ['pending', 'confirmed']),
-            lte(reservations.reservedUntil, sql`NOW()`)
+            lte(reservations.reservedUntil, sql`UTC_TIMESTAMP()`)
           )
         )
 
@@ -199,6 +239,9 @@ export async function createReservation(userId: number, data: CreateReservationR
   try {
     await connection.beginTransaction()
 
+    // Match rental execution's actor → skate → customer → reservation order.
+    await connection.execute('SELECT id FROM users WHERE id = ? FOR UPDATE', [userId])
+
     // 1. Lock the skate
     const [skateRows] = await connection.execute<any[]>(
       'SELECT id, status FROM skates WHERE id = ? FOR UPDATE',
@@ -223,21 +266,8 @@ export async function createReservation(userId: number, data: CreateReservationR
       throw new BusinessRuleError('لا يمكن حجز اسكيت لعميل معطل', 'CUSTOMER_INACTIVE')
     }
 
-    // 3. Prevent Overlaps (BR-5)
-    // Overlap condition: existing.reservedFrom < new.reservedUntil AND existing.reservedUntil > new.reservedFrom
-    const [overlapRows] = await connection.execute<any[]>(
-      `SELECT id FROM reservations 
-       WHERE skate_id = ? 
-       AND status IN ('pending', 'confirmed') 
-       AND reserved_from < ? 
-       AND reserved_until > ?`,
-      [data.skateId, until, from]
-    )
-
-    if (overlapRows.length > 0) {
-      await connection.rollback()
-      throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الاسكيت', 'RESERVATION_CONFLICT')
-    }
+    // Half-open windows allow one booking to begin exactly when another ends.
+    await assertReservationWindowAvailable(connection, data.skateId, from, until)
 
     // 4. Insert Reservation
     const [insertResult] = await connection.execute<any>(
@@ -289,6 +319,7 @@ export async function listReservations(query: ListReservationsQuery): Promise<Pa
   const rows = await db
     .select({
       id: reservations.id,
+      rentalId: rentals.id,
       customerId: reservations.customerId,
       skateId: reservations.skateId,
       skateSize: reservations.skateSize,
@@ -309,6 +340,7 @@ export async function listReservations(query: ListReservationsQuery): Promise<Pa
       createdByName: users.name,
     })
     .from(reservations)
+    .leftJoin(rentals, eq(rentals.reservationId, reservations.id))
     .leftJoin(customers, eq(reservations.customerId, customers.id))
     .leftJoin(skates, eq(reservations.skateId, skates.id))
     .leftJoin(users, eq(reservations.createdBy, users.id))
@@ -336,61 +368,50 @@ export async function getReservation(id: number): Promise<ReservationDTO> {
 }
 
 export async function updateReservation(id: number, data: UpdateReservationRequest): Promise<ReservationDTO> {
-  const current = await getReservation(id)
-
-  if (current.status !== 'pending' && current.status !== 'confirmed') {
-    throw new BusinessRuleError('لا يمكن تعديل حجز ملغي أو منتهي', 'RESERVATION_NOT_ACTIVE')
+  if (data.skateId !== undefined && (!Number.isInteger(data.skateId) || data.skateId <= 0)) {
+    throw new ValidationError('معرف الاسكيت غير صالح')
   }
-
-  const skateId = data.skateId ?? current.skate.id
-  const from = data.reservedFrom ? new Date(data.reservedFrom) : new Date(current.reservedFrom)
-  const until = data.reservedUntil ? new Date(data.reservedUntil) : new Date(current.reservedUntil)
-
-  if (isNaN(from.getTime())) throw new ValidationError('تاريخ بداية الحجز غير صالح')
-  if (isNaN(until.getTime())) throw new ValidationError('تاريخ نهاية الحجز غير صالح')
-  if (from >= until) throw new ValidationError('تاريخ بداية الحجز يجب أن يكون قبل تاريخ النهاية')
+  // This read only discovers the locks needed. Business values are re-read
+  // under those locks, so a concurrent time edit cannot be overwritten by stale data.
+  const [snapshot] = await db.select({ skateId: reservations.skateId })
+    .from(reservations).where(eq(reservations.id, id)).limit(1)
+  if (!snapshot) throw new NotFoundError('الحجز غير موجود')
+  const lockedSkateIds = [...new Set([snapshot.skateId, data.skateId ?? snapshot.skateId])].sort((a, b) => a - b)
 
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
 
-    // Lock the reservation
+    // All reservation writers and rental start lock skates before reservations.
+    const [skateRows] = await connection.execute<any[]>(
+      `SELECT id FROM skates WHERE id IN (${lockedSkateIds.map(() => '?').join(',')}) ORDER BY id FOR UPDATE`,
+      lockedSkateIds,
+    )
+    if (skateRows.length !== lockedSkateIds.length) throw new NotFoundError('الاسكيت غير موجودة')
+
     const [resRows] = await connection.execute<any[]>(
-      'SELECT id, status FROM reservations WHERE id = ? FOR UPDATE',
+      'SELECT id, status, skate_id, reserved_from, reserved_until, notes FROM reservations WHERE id = ? FOR UPDATE',
       [id]
     )
-    if (!resRows[0]) {
-      await connection.rollback()
-      throw new NotFoundError('الحجز غير موجود')
+    const current = resRows[0]
+    if (!current) throw new NotFoundError('الحجز غير موجود')
+    if (current.status !== 'pending' && current.status !== 'confirmed') {
+      throw new BusinessRuleError('لا يمكن تعديل حجز ملغي أو منتهي', 'RESERVATION_NOT_ACTIVE')
     }
-
-    if (data.skateId && data.skateId !== current.skate.id) {
-      // Lock new skate
-      const [skateRows] = await connection.execute<any[]>(
-        'SELECT id, status FROM skates WHERE id = ? FOR UPDATE',
-        [data.skateId]
-      )
-      if (!skateRows[0]) {
-        await connection.rollback()
-        throw new NotFoundError('الاسكيت غير موجودة')
-      }
+    if (new Date(current.reserved_until).getTime() <= Date.now()) {
+      throw new BusinessRuleError('انتهى وقت الحجز ولا يمكن تعديله', 'RESERVATION_EXPIRED')
     }
-
-    // Check overlaps excluding self
-    const [overlapRows] = await connection.execute<any[]>(
-      `SELECT id FROM reservations 
-       WHERE skate_id = ? 
-       AND id != ?
-       AND status IN ('pending', 'confirmed') 
-       AND reserved_from < ? 
-       AND reserved_until > ?`,
-      [skateId, id, until, from]
-    )
-
-    if (overlapRows.length > 0) {
-      await connection.rollback()
-      throw new BusinessRuleError('يوجد تعارض في مواعيد الحجز لهذه الاسكيت', 'RESERVATION_CONFLICT')
+    if (!lockedSkateIds.includes(current.skate_id)) {
+      throw new BusinessRuleError('تم تغيير الاسكيت في هذا الحجز؛ يرجى إعادة تحميله والمحاولة مجدداً', 'RESERVATION_CHANGED')
     }
+    const skateId = data.skateId ?? current.skate_id
+    const from = data.reservedFrom !== undefined ? new Date(data.reservedFrom) : new Date(current.reserved_from)
+    const until = data.reservedUntil !== undefined ? new Date(data.reservedUntil) : new Date(current.reserved_until)
+    if (isNaN(from.getTime())) throw new ValidationError('تاريخ بداية الحجز غير صالح')
+    if (isNaN(until.getTime())) throw new ValidationError('تاريخ نهاية الحجز غير صالح')
+    if (from >= until) throw new ValidationError('تاريخ بداية الحجز يجب أن يكون قبل تاريخ النهاية')
+
+    await assertReservationWindowAvailable(connection, skateId, from, until, id)
 
     await connection.execute(
       `UPDATE reservations 
@@ -422,6 +443,9 @@ export async function cancelReservation(id: number, userId: number): Promise<Res
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
+
+    // Prevent an audit FK lock from reversing rental execution's actor/booking order.
+    await connection.execute('SELECT id FROM users WHERE id = ? FOR UPDATE', [userId])
 
     // 1. Lock reservation row — concurrent callers block here until commit/rollback
     const [resRows] = await connection.execute<any[]>(

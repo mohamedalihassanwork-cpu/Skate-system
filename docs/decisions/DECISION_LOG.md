@@ -30,6 +30,26 @@ Every decision recorded here is part of the project's institutional memory. Futu
 
 ## Decisions
 
+## CR-RESERVATION-RENTAL-2026-10-24
+
+**Date:** 2026-10-24
+**Type:** CHANGE REQUEST
+**Status:** IMPLEMENTED — owner timing decision received 2026-10-24; verification linked below
+**Title:** Restore reservation fulfillment and derive execution duration from booking data.
+
+The owner authorized investigation and repair while preserving actual-duration billing, item-level returns, financial integrity and ordinary rental behavior. The review found missing frontend duration prefill, removed backend reservation checks/fulfillment, no durable rental link, and obsolete reservation integration tests.
+
+**Owner decision:** "Full booked duration: 60 minutes, expected return 17:15 (recommended)" for a 16:00–17:00 booking executed at 16:15. Derive the full booked duration, preserve actual server start and per-item return timestamps, and reject conflicting occupancy. Historical Phase 10 fulfillment/conflict rules remain authoritative. See [scope, evidence and verification plan](RESERVATION_RENTAL_WORKFLOW_CR.md).
+
+**Affected modules:** Reservations, Rentals, their tests/documentation.
+**Database:** One nullable unique rental-to-reservation FK; no guessed historical backfill.
+**API/UI:** Reservation-aware validation/derived duration and direct review; retained walk-in duration entry.
+**Permissions/financial impact:** Preserved current permissions, shift checks, return billing and final payment transactions.
+**Audit impact:** Includes reservation context in the atomic rental start audit.
+**Risk:** HIGH — concurrency and expected-return timing.
+**Approved by:** Project owner — repair request and explicit full-duration answer on 2026-10-24.
+**Verification/implementation commit:** See [actual delivery record](../quality/RESERVATION_RENTAL_VERIFICATION.md).
+
 ---
 
 ### DEC-001

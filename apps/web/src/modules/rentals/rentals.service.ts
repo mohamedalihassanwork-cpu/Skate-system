@@ -78,6 +78,7 @@ export interface RentalItemDTO {
 export interface RentalDTO {
   id:            number
   rentalCode:    string
+  reservationId: number | null
   invoiceNumber: string | null
   customer:      RentalCustomerInfo
   cashier:       RentalCashierInfo
@@ -105,7 +106,7 @@ export interface ActiveRentalDTO extends RentalDTO {
 export interface StartRentalBody {
   skateIds:        number[]   // 1..N, all must be available
   customerId:      number
-  durationMinutes: number
+  durationMinutes?: number   // required for walk-ins; derived by server for reservations
   notes?:          string
   reservationId?:  number
 }

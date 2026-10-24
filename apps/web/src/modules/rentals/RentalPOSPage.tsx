@@ -18,7 +18,7 @@
  *   - RTL-first design, Arabic UI, no emoji
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Ticket, ChevronRight, ChevronLeft, Clock, User, Search, Plus, CheckCircle, X } from 'lucide-react'
 import {
@@ -34,7 +34,7 @@ import { PermissionGate } from '../../components/PermissionGate'
 import { rentalsService } from './rentals.service'
 import { customersService, type CustomerListItemDTO, type CreateCustomerBody } from '../customers/customers.service'
 import { skatesService, type SkateDTO } from '../skates/skates.service'
-import { reservationsService } from '../reservations/reservations.service'
+import { reservationsService, type Reservation } from '../reservations/reservations.service'
 import { formatCurrency } from '../../utils/currency'
 
 // ---------------------------------------------------------------------------
@@ -495,8 +495,9 @@ function DurationPicker({ skateCount, onSelect, onBack }: DurationPickerProps) {
 // ---------------------------------------------------------------------------
 
 interface ReviewStepProps {
-  customer: CustomerListItemDTO
-  skates: SkateDTO[]
+  customer: Pick<CustomerListItemDTO, 'id' | 'name' | 'phone'>
+  skates: Pick<SkateDTO, 'id' | 'skateCode' | 'size' | 'type'>[]
+  reservation?: Reservation
   durationMinutes: number
   pricePerHour: number
   rentalAmountPerSkate: number
@@ -504,13 +505,14 @@ interface ReviewStepProps {
   onNotesChange: (n: string) => void
   onBack: () => void
   onConfirm: () => void
+  onReloadReservation?: () => void
   loading: boolean
   error: string | null
 }
 
 function ReviewStep({
   customer, skates, durationMinutes, pricePerHour, rentalAmountPerSkate,
-  notes, onNotesChange, onBack, onConfirm, loading, error,
+  reservation, notes, onNotesChange, onBack, onConfirm, onReloadReservation, loading, error,
 }: ReviewStepProps) {
   const totalEstimate = rentalAmountPerSkate * skates.length
 
@@ -522,8 +524,33 @@ function ReviewStep({
       </div>
 
       {error && <Alert variant="danger" style={{ marginBottom: 16 }}>{error}</Alert>}
+      {error && reservation && (
+        <Button id="reservation-review-retry" variant="secondary" className="reservation-review-retry" onClick={onReloadReservation} disabled={loading}>
+          تحديث بيانات الحجز
+        </Button>
+      )}
 
       <div className="review-card">
+        {reservation && (
+          <div className="review-section reservation-review">
+            <h3 className="review-section-title">موعد الحجز رقم {reservation.id}</h3>
+            <div className="review-row">
+              <span className="review-label">بداية الحجز</span>
+              <time className="review-value" dateTime={reservation.reservedFrom} dir="ltr">
+                {new Date(reservation.reservedFrom).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}
+              </time>
+            </div>
+            <div className="review-row">
+              <span className="review-label">نهاية الحجز</span>
+              <time className="review-value" dateTime={reservation.reservedUntil} dir="ltr">
+                {new Date(reservation.reservedUntil).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}
+              </time>
+            </div>
+            <p className="rental-pos-step-subtitle">
+              يبدأ الإيجار فعلياً عند تأكيد البدء، وتكون الإعادة المتوقعة بعد مدة الحجز كاملة ({durationMinutes} دقيقة) من وقت البدء الفعلي.
+            </p>
+          </div>
+        )}
         <div className="review-section">
           <h3 className="review-section-title">بيانات العميل</h3>
           <div className="review-row"><span className="review-label">الاسم</span><span className="review-value">{customer.name}</span></div>
@@ -572,8 +599,8 @@ function ReviewStep({
       </div>
 
       <div className="rental-pos-actions">
-        <Button id="back-to-duration" variant="ghost" onClick={onBack} disabled={loading}>
-          <ChevronLeft size={16} /> رجوع
+        <Button id={reservation ? 'back-to-reservations' : 'back-to-duration'} variant="ghost" onClick={onBack} disabled={loading}>
+          <ChevronLeft size={16} aria-hidden="true" /> {reservation ? 'العودة للحجوزات' : 'رجوع'}
         </Button>
         <Button
           id="start-rental-btn"
@@ -612,41 +639,92 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 // ---------------------------------------------------------------------------
 
 export default function RentalPOSPage() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const reservationQuery = searchParams.get('reservationId')
+
+  // A different booking (or a walk-in) must never inherit a previous draft.
+  return <RentalPOSFlow key={reservationQuery === null ? 'walk-in' : `reservation:${reservationQuery}`} reservationQuery={reservationQuery} />
+}
+
+type ReservationLoadState =
+  | { status: 'loading' }
+  | { status: 'ready'; reservation: Reservation }
+  | { status: 'error'; message: string }
+
+function RentalPOSFlow({ reservationQuery }: { reservationQuery: string | null }) {
+  const navigate = useNavigate()
   const { showToast } = useToast()
 
-  const [reservationId, setReservationId] = useState<number | null>(null)
+  const isReservation = reservationQuery !== null
+  const [reservationState, setReservationState] = useState<ReservationLoadState>({ status: 'loading' })
+  const [reservationReload, setReservationReload] = useState(0)
+  const reservation = reservationState.status === 'ready' ? reservationState.reservation : undefined
   const [step, setStep] = useState(1)
 
   // State per step
-  const [selectedCustomer, setCustomer] = useState<CustomerListItemDTO | null>(null)
-  const [selectedSkates, setSelectedSkates] = useState<SkateDTO[]>([])
+  const [selectedCustomer, setCustomer] = useState<ReviewStepProps['customer'] | null>(null)
+  const [selectedSkates, setSelectedSkates] = useState<ReviewStepProps['skates']>([])
   const [durationMinutes, setDuration] = useState(0)
   const [pricePerHour, setPricePerHour] = useState(0)
   const [rentalAmountPerSkate, setRentalAmountPerSkate] = useState(0)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const activeFlow = useRef(true)
 
-  // Handle reservation prefill
   useEffect(() => {
-    const resId = searchParams.get('reservationId')
-    if (resId) {
-      setReservationId(Number(resId))
-      reservationsService.getReservation(Number(resId))
-        .then(res => {
-          setSelectedSkates([res.skate as unknown as SkateDTO])
-          setCustomer(res.customer as unknown as CustomerListItemDTO)
-          setStep(3) // skip to duration when reservation prefills customer + skate
-        })
-        .catch(() => {
-          showToast({ type: 'error', title: 'فشل تحميل بيانات الحجز' })
-        })
-    }
-  }, [searchParams])
+    activeFlow.current = true
+    return () => { activeFlow.current = false }
+  }, [])
 
-  const toggleSkate = (skate: SkateDTO) => {
+  // Booking times provide the estimate; execution revalidates and derives the
+  // duration on the server. No browser time becomes an actual rental timestamp.
+  useEffect(() => {
+    if (reservationQuery === null) return
+    const reservationId = Number(reservationQuery)
+    if (!/^[1-9]\d*$/.test(reservationQuery) || !Number.isSafeInteger(reservationId)) {
+      setReservationState({ status: 'error', message: 'معرف الحجز غير صالح. يرجى العودة للحجوزات واختيار الحجز المطلوب.' })
+      return
+    }
+
+    let cancelled = false
+    setReservationState({ status: 'loading' })
+    setSubmitError(null)
+
+    async function loadReservation() {
+      try {
+        const booking = await reservationsService.getReservation(reservationId)
+        if (cancelled) return
+        if (booking.status !== 'pending' && booking.status !== 'confirmed') {
+          throw new Error('لا يمكن تنفيذ حجز ملغي أو منتهي أو منفذ. يرجى العودة للحجوزات.')
+        }
+        const duration = (Date.parse(booking.reservedUntil) - Date.parse(booking.reservedFrom)) / 60000
+        if (!Number.isSafeInteger(duration) || duration <= 0) {
+          throw new Error('مدة الحجز يجب أن تكون عدداً صحيحاً من الدقائق أكبر من صفر. يرجى تصحيح موعد الحجز أولاً.')
+        }
+        const preview = await rentalsService.calculatePrice(duration)
+        if (cancelled) return
+        setSelectedSkates([booking.skate])
+        setCustomer(booking.customer)
+        setDuration(duration)
+        setPricePerHour(preview.data.pricePerHour)
+        setRentalAmountPerSkate(preview.data.rentalAmount)
+        setReservationState({ status: 'ready', reservation: booking })
+        setStep(4)
+      } catch (err: unknown) {
+        if (cancelled) return
+        setReservationState({
+          status: 'error',
+          message: (err as { message?: string })?.message || 'تعذر تحميل بيانات الحجز وتقدير السعر. يرجى إعادة المحاولة.',
+        })
+      }
+    }
+
+    void loadReservation()
+    return () => { cancelled = true }
+  }, [reservationQuery, reservationReload])
+
+  const toggleSkate = (skate: ReviewStepProps['skates'][number]) => {
     setSelectedSkates(prev => {
       const exists = prev.find(s => s.id === skate.id)
       if (exists) return prev.filter(s => s.id !== skate.id)
@@ -655,24 +733,26 @@ export default function RentalPOSPage() {
   }
 
   const handleConfirm = async () => {
-    if (!selectedCustomer || selectedSkates.length === 0) return
+    if (submitting || !selectedCustomer || selectedSkates.length === 0) return
+    if (isReservation && !reservation) return
     setSubmitting(true); setSubmitError(null)
     try {
       const res = await rentalsService.create({
         skateIds: selectedSkates.map(s => s.id),
         customerId: selectedCustomer.id,
-        durationMinutes,
+        ...(reservation ? { reservationId: reservation.id } : { durationMinutes }),
         notes: notes.trim() || undefined,
-        reservationId: reservationId || undefined,
       })
+      if (!activeFlow.current) return
       showToast({ type: 'success', title: `تم بدء الإيجار: ${res.data.rentalCode}` })
       navigate('/rentals/active')
     } catch (err: unknown) {
+      if (!activeFlow.current) return
       const errObj = err as { response?: { data?: { error?: { message?: string } } }; message?: string }
       const msg = errObj?.response?.data?.error?.message ?? errObj?.message ?? 'تعذر بدء الإيجار'
       setSubmitError(msg)
     } finally {
-      setSubmitting(false)
+      if (activeFlow.current) setSubmitting(false)
     }
   }
 
@@ -684,20 +764,30 @@ export default function RentalPOSPage() {
             <Ticket size={24} aria-hidden="true" className="text-muted" />
             نقطة إيجار الاسكيتات
           </h1>
-          <p className="page-header-subtitle">إنشاء إيجار جديد</p>
+          <p className="page-header-subtitle">{isReservation ? 'تنفيذ حجز' : 'إنشاء إيجار جديد'}</p>
         </div>
       </div>
 
-      <StepIndicator current={step} total={4} />
+      {!isReservation && <StepIndicator current={step} total={4} />}
 
       <div className="rental-pos-container">
-        {step === 1 && (
+        {isReservation && reservationState.status === 'loading' && <PageLoader label="جارٍ تحميل الحجز وتقدير السعر" />}
+        {isReservation && reservationState.status === 'error' && (
+          <div className="rental-pos-step">
+            <Alert variant="danger">{reservationState.message}</Alert>
+            <div className="rental-pos-actions">
+              <Button variant="ghost" onClick={() => navigate('/reservations')}>العودة للحجوزات</Button>
+              <Button id="reservation-retry" variant="secondary" onClick={() => setReservationReload(value => value + 1)}>إعادة المحاولة</Button>
+            </div>
+          </div>
+        )}
+        {!isReservation && step === 1 && (
           <CustomerPicker
             onSelect={customer => { setCustomer(customer); setStep(2) }}
           />
         )}
 
-        {step === 2 && (
+        {!isReservation && step === 2 && (
           <div className="rental-pos-step">
             <SkatePicker
               selectedIds={selectedSkates.map(s => s.id)}
@@ -733,7 +823,7 @@ export default function RentalPOSPage() {
           </div>
         )}
 
-        {step === 3 && (
+        {!isReservation && step === 3 && (
           <DurationPicker
             skateCount={selectedSkates.length}
             onBack={() => setStep(2)}
@@ -744,17 +834,19 @@ export default function RentalPOSPage() {
           />
         )}
 
-        {step === 4 && selectedCustomer && (
+        {step === 4 && selectedCustomer && (!isReservation || reservation) && (
           <ReviewStep
             customer={selectedCustomer}
             skates={selectedSkates}
+            reservation={reservation}
             durationMinutes={durationMinutes}
             pricePerHour={pricePerHour}
             rentalAmountPerSkate={rentalAmountPerSkate}
             notes={notes}
             onNotesChange={setNotes}
-            onBack={() => setStep(3)}
+            onBack={() => reservation ? navigate('/reservations') : setStep(3)}
             onConfirm={handleConfirm}
+            onReloadReservation={() => setReservationReload(value => value + 1)}
             loading={submitting}
             error={submitError}
           />
@@ -806,6 +898,10 @@ export default function RentalPOSPage() {
         .review-value { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
         .review-row--highlight .review-label, .review-row--highlight .review-value { font-weight: var(--font-weight-bold); }
         .review-amount { font-size: var(--font-size-base); color: var(--color-primary); }
+        .reservation-review .review-row { align-items: flex-start; gap: var(--space-3); }
+        .reservation-review-retry { margin-block-end: var(--space-4); }
+        .reservation-review .review-label { flex-shrink: 0; }
+        .reservation-review .review-value { min-width: 0; overflow-wrap: anywhere; }
         .create-customer-form { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
         .step-indicator { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: var(--space-6); padding: 0 var(--space-4); overflow-x: auto; }
         .step-indicator-item { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; flex: 1; min-width: 0; }
