@@ -1,5 +1,12 @@
 # Project Map — KOSHK SKATE ERP
 
+## Reports audit — 2026-10-26
+
+- apps/api/src/modules/reports/: current read-only 11-route reporting, normalized item/legacy data, ledger totals, filters/rankings and snapshot-consistent summaries.
+- apps/web/src/modules/reports/: page, API, explicit reportSchemas, useReportData, exportUtils and existing/new report components; all changes scoped to Reports.
+- apps/api/src/tests/reports-regression.test.ts: current seeded data/RBAC regressions; reports-frontend.test.ts: pure formatting/export checks; existing reports/expense tests retained.
+- [Current Reports contract](modules/REPORTS.md), [audit outcomes/file inventory/manual checklist](quality/REPORTS_AUDIT.md), CR-REPORTS-AUDIT-2026-10-26 in DECISION_LOG. No browser verification in this audit.
+
 ## Reservation execution repair — 2026-10-24
 
 Current navigation superseding historical rental/reservation rows below:

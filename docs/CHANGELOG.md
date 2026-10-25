@@ -1,5 +1,13 @@
 # Changelog — KOSHK SKATE ERP
 
+## [2026-10-26] — Reports correctness and Arabic RTL audit
+
+- Repaired current multi-item and historical rental reporting, overdue counts, customer/skate analytics, net refund timelines, expense ledger/category/user/account reconciliation and cashier attribution.
+- Completed relevant existing report filters/rankings, late/damage/maintenance summaries and actual return fields. Fee settlements and actual rounded treasury receipts are distinct; no source financial rules changed.
+- Replaced column-name heuristics with shared Arabic schemas, fixed stale response/filter/pagination handling and signed/empty financial states. Added exact chart tables and scoped RTL/mobile card presentation.
+- Existing exports now include all matching pages and summary/breakdown data with Arabic typed CSV/Excel and native RTL Print/Save as PDF. Reconciled stale Reports governance records before implementation.
+- Focused Reports 84/84 PASS; API/frontend builds and Reports lint PASS. Full suite 478 passed/35 failed/7 skipped in unrelated legacy fixtures/permission-count assertions. Browser/download/print testing remains with owner. [Full evidence and remaining decisions](quality/REPORTS_AUDIT.md).
+
 ## [2026-10-24] — Approved reservation execution repair
 
 - Owner selected full booked duration from actual start. Reservation execution now opens review with the original booked window and server price estimate, without repeated duration selection. Walk-in duration entry remains.

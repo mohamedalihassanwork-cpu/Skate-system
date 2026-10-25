@@ -1934,3 +1934,21 @@ Owner approved ST-01–06 with independent cash/electronic accounts and cashier-
 ### ST implementation reconciliation — 2026-10-16
 
 The approved workflow extends existing independent accounts, with no parent rollup or automatic opening movement. Reports separate latest pending/rejected declarations from recorded receipts and signed adjustments. Read-only Treasury snapshots keep related figures consistent; new Treasury writes require persistent operation keys even before activation. These implement approved integrity/reporting requirements without adding financial policy. 0020 schema-only repair and corrected0021 plus guarded partial recovery preserve old values/nulls. MySQL identifier-limit failure, recovery evidence and actual tests are recorded in the migration/verification reports. Account reassignment, arbitrary initial-money import, historical repairs and production cutover remain outside this delivered scope.
+
+## CR-REPORTS-AUDIT-2026-10-26
+
+**Date:** 2026-10-26
+**Type:** CHANGE REQUEST
+**Status:** IMPLEMENTED / TESTED / DOCUMENTED — owner browser verification pending.
+**Title:** Repair and complete existing Reports against current data and Arabic RTL requirements.
+**Description:** Legacy rental/item compatibility, ledger/chart reconciliation, relevant filters/insights, field formatting, pagination and exports. See [contract](../modules/REPORTS.md) and [audit record](../quality/REPORTS_AUDIT.md).
+**Business Rule Impact:** Reporting corrections; preserve source financial/lifecycle rules, F-014 inclusion policy and fixed UTC+03:00. No invented accounting/ROI/utilization policy.
+**Affected Modules:** Reports, its documentation and tests only.
+**Database Impact:** No migration/write/history repair; consistent read snapshots.
+**API Impact:** Preserve 11 protected routes; additive fields/summaries/relevant filters and bounded deterministic pagination.
+**UI Impact:** Existing shared components/tokens, Arabic RTL, coherent filters, signed values, accessible charts/tables and complete CSV/Excel/Print-to-PDF output.
+**Permission Impact:** Preserve reports.view; no grants/policy change.
+**Audit Log Impact:** None; read-only.
+**Risk:** MEDIUM — seeded reporting regressions and code checks required.
+**Approved by:** Owner's explicit comprehensive Reports audit/fix request on 2026-10-26; browser verification reserved for the owner.
+**Implementation commit:** Logical local fix(reports) commit containing this record; exact hash and push status reported at delivery. Actual checks: 84 focused Reports tests, API/frontend builds, scoped lint and diff checks PASS; full suite has unrelated failures. No browser verification or deployment.

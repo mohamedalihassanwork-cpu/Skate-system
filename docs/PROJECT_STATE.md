@@ -1,12 +1,14 @@
 # Project State — KOSHK SKATE ERP
 
-**Version:** 5.7
-**Last updated:** 2026-10-24 — approved reservation execution repair; actual verification linked below.
+**Version:** 5.8
+**Last updated:** 2026-10-26 — Reports audit; scoped actual verification linked below.
 **Updated by:** AI Agent — Change Request Implementation
 
 ---
 
 ## CURRENT STATUS
+
+**Reports audit — 2026-10-26:** IMPLEMENTED / TESTED / DOCUMENTED. Current item/legacy and ledger reporting, relevant filters/rankings, explicit Arabic fields, fee settlement/cash distinction, responsive components and complete existing exports are implemented. Focused Reports checks 84/84; API/frontend builds and Reports lint PASS. Full suite: 478 passed, 35 failed, 7 skipped (legacy/unrelated tests; not green). Browser verification is reserved for the owner; none performed for this audit. [Contract](modules/REPORTS.md), [actual evidence/file inventory/decisions](quality/REPORTS_AUDIT.md). F-014 and source rounding/taxonomy decisions remain pending; no source financial changes or migration.
 
 **Reservation repair — 2026-10-24:** Owner approved full booked duration from actual execution time. IMPLEMENTED: direct reservation review, server-derived duration, atomic validation/link/fulfillment, restored occupancy checks and UTC lazy expiry. Current verification is in the [workflow report](quality/RESERVATION_RENTAL_VERIFICATION.md); historical counts below are not current results for this workflow. Development migration/live cashier verification remain outstanding.
 
@@ -19,10 +21,10 @@
 | **Environment** | Node.js (ESM), Vite, React 19, Drizzle ORM, MySQL 8 |
 | **Databases** | `koshk_skate` (Development/Demo), `koshk_skate_test` (Automated Tests Only — **WARNING: Tests must never run against development DB.**) |
 | **Project Goal** | End-to-end POS and ERP for a roller skating rink |
-| **Active Work** | Approved ST-01–06 implemented; final verification/documentation/Git delivery in progress. |
+| **Active Work** | Reports audit implemented/tested/documented; owner browser verification pending. See current audit record above. |
 | **Blocked Work** | Browser verification (Playwright driver failure — 404 from Azure edge node) affects P05.5, P13, P14, P15, P16, P17 |
-| **Last Verification** | 2026-10-11 — Desktop UI: frontend build/lint PASS; 147 route/width browser cases, 63 below-desktop preservation comparisons. See desktop audit for limits. Prior backend test results remain historical. |
-| **Last Git Commit** | `fix(ui): improve desktop ERP layouts and accessibility` — this documented change; hash available from `git log -1`. |
+| **Last Verification** | 2026-10-26 — Reports automated checks: 84/84 focused tests, API/frontend builds and Reports lint PASS; full suite not green. No Reports browser verification. Desktop browser results from 2026-10-11 remain historical; see their audit for limits. |
+| **Last Git Commit** | Local `fix(reports)` commit containing this audit record; exact hash and push status reported at delivery. |
 | **Last Deployment** | NONE — no deployment exists; Hostinger plan not yet purchased |
 | **Recommended Next Action** | Resolve OWNER-001, OWNER-002, UNK-005 decisions; resolve browser verification block; address test coverage gaps |
 
@@ -37,10 +39,10 @@
 | Governance documentation | COMPLETED |
 | Architecture documentation | COMPLETED — updated with Phase 04 decisions |
 | Module documentation | AUTH.md ✅, USERS_PERMISSIONS.md ✅, SKATES.md ✅, CUSTOMERS.md ✅, RENTALS.md ✅, PHASE_06-12 PARTIALLY VERIFIED (Gate 5.2), PHASE_13-17 PARTIALLY VERIFIED (Gate 5.3), PHASE_18 PLANNED (accurate) |
-| Source code — Frontend | VERIFIED ✅ — Phase 12 completely implemented. Phase 13 frontend pending. Built ✅ zero TS errors. |
+| Source code — Frontend | Reports IMPLEMENTED / TESTED — frontend build and scoped lint PASS; owner browser verification pending. Historical Phase 12 verification is unchanged. |
 | Source code — Backend | VERIFIED ✅ — Phase 13 backend implemented. Built ✅ zero TS errors. |
 | Database | VERIFIED ✅ — Phase 13 schema active, verified via `db:verify`. |
-| Tests | VERIFIED ✅ — `npm test` 213/213 PASS (13 test files). |
+| Tests | 2026-10-26: focused Reports 84/84 PASS; full serial suite 478 passed, 35 failed, 7 skipped. Historical 213/213 result is superseded; see current audit evidence. |
 | Deployment | NONE |
 | Git repository | VERIFIED ✅ — local + GitHub remote |
 
@@ -64,7 +66,7 @@
 | Phase 10 | Reservations | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: 6 PASS. RBAC and update endpoint not isolated-tested. Phase doc reconciled Gate 5.2. |
 | Phase 11 | Sales POS | **PARTIALLY VERIFIED** | Implementation VERIFIED. Tests: sales.test.ts + batch3 PASS. Product RBAC not isolated-tested. Phase doc reconciled Gate 5.2. |
 | Phase 12 | Expenses & Cashier Shifts | **PARTIALLY VERIFIED** | Implementation VERIFIED. F-013 tested. No standalone shifts.test.ts or expenses.test.ts. OWNER-001 pending. Phase doc reconciled Gate 5.2. |
-| Phase 13 | Reports | **IN PROGRESS ⏳** | Depends on all data phases |
+| Phase 13 | Reports | **PARTIALLY VERIFIED** | Reports audit automated checks pass; owner browser verification and F-014 decision pending. See current audit record. |
 | Phase 14 | Invoices & Printing | PLANNED | Depends on Phases 05, 11 |
 | Phase 15 | Notifications | PLANNED | Depends on Phase 05 |
 | Phase 16 | Audit Log | PLANNED | Woven into all phases |

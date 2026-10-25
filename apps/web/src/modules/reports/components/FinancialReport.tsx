@@ -1,131 +1,40 @@
-import { useEffect, useState } from 'react'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts'
+import { useCallback } from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Card, PageLoader, EmptyState } from '../../../components/ui'
 import { formatCurrency } from '../../../utils/currency'
 import { reportsApi } from '../reports.api'
-import type { FinancialData } from '../reports.api'
-import { DollarSign, ArrowDownRight, ArrowUpRight } from 'lucide-react'
-import { PageLoader, Alert } from '../../../components/ui'
+import { useReportData } from '../useReportData'
+import { getReportColumns, chartTooltipStyle } from '../reportSchemas'
+import { ReportError, ReportTable } from './ReportElements'
 
-interface Props {
-  startDate: string
-  endDate: string
-}
-
-export default function FinancialReport({ startDate, endDate }: Props) {
-  const [data, setData] = useState<FinancialData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const res = await reportsApi.getOperatingFinancial({ startDate, endDate })
-        setData(res.data)
-        setError(null)
-      } catch (err: any) {
-        setError(err.message || 'حدث خطأ أثناء تحميل البيانات')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [startDate, endDate])
-
-  if (loading) {
-    return <PageLoader label="جارٍ تحميل البيانات المالية" />
-  }
-
-  if (error || !data) {
-    return <Alert variant="danger">{error || 'تعذر تحميل البيانات'}</Alert>
-  }
-
-  const isPositiveResult = data.operatingResult >= 0
-
-  const cardStyle: React.CSSProperties = {
-    padding: 'var(--space-6)',
-    borderRadius: 'var(--radius-lg)',
-    border: '1px solid var(--color-border)',
-    boxShadow: 'var(--shadow-card)',
-    backgroundColor: 'var(--color-white)',
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-      
-      {/* Operating Result Hero Card */}
-      <div className={`report-hero report-hero--financial report-hero--${isPositiveResult ? 'positive' : 'negative'}`} style={{
-        padding: 'var(--space-8)',
-        borderRadius: 'var(--radius-lg)',
-        backgroundColor: isPositiveResult ? 'var(--color-success-500)' : 'var(--color-danger-500)',
-        color: 'var(--color-white)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-          <div>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 'var(--font-weight-medium)' as any, marginBottom: 'var(--space-1)' }}>النتيجة التشغيلية (Operating Result)</p>
-            <h2 style={{ fontSize: 'var(--font-size-4xl)', fontWeight: 'var(--font-weight-bold)' as any, margin: 0, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              {formatCurrency(Math.abs(data.operatingResult))}
-              {isPositiveResult ? (
-                <ArrowUpRight size={32} style={{ color: 'rgba(255,255,255,0.7)' }} />
-              ) : (
-                <ArrowDownRight size={32} style={{ color: 'rgba(255,255,255,0.7)' }} />
-              )}
-            </h2>
-          </div>
-          <div className="report-hero-icon" style={{ padding: 'var(--space-4)', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 'var(--radius-full)' }}>
-            <DollarSign size={40} style={{ color: 'var(--color-white)' }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="report-charts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <ArrowUpRight size={20} style={{ color: 'var(--color-success-text)' }} />
-            تحليل الإيرادات
-          </h3>
-          <div style={{ height: '288px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.revenueByCategory} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
-                <XAxis type="number" tick={{ fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="type" type="category" width={100} tick={{ fill: 'var(--color-text-secondary)', fontSize: 13 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 'var(--radius-base)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }} />
-                <Bar dataKey="total" fill="var(--color-success-500)" radius={[0, 4, 4, 0]} barSize={24} name="الإيرادات" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)' as any, color: 'var(--color-navy-800)', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <ArrowDownRight size={20} style={{ color: 'var(--color-danger-text)' }} />
-            تحليل المصروفات
-          </h3>
-          <div style={{ height: '288px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.expensesByCategory} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
-                <XAxis type="number" tick={{ fill: 'var(--color-text-muted)' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="category" type="category" width={100} tick={{ fill: 'var(--color-text-secondary)', fontSize: 13 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 'var(--radius-base)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }} />
-                <Bar dataKey="total" fill="var(--color-danger-500)" radius={[0, 4, 4, 0]} barSize={24} name="المصروفات" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+export default function FinancialReport({ startDate, endDate }: { startDate: string; endDate: string }) {
+  const load = useCallback(() => reportsApi.getOperatingFinancial({ startDate, endDate }), [startDate, endDate])
+  const { data, loading, error, retry } = useReportData(load)
+  if (loading) return <PageLoader label="جارٍ تحميل النتيجة التشغيلية" />
+  if (error || !data) return <ReportError error={error || 'تعذر تحميل البيانات'} retry={retry} />
+  const breakdowns = [
+    { title: 'تحليل الإيرادات والاسترداد', rows: data.revenueByCategory.map(row => ({ label: row.type, total: row.total })), color: 'var(--color-navy-800)' },
+    { title: 'تحليل المصروفات المسجلة', rows: data.expensesByCategory.map(row => ({ label: row.category, total: row.total })), color: 'var(--color-gold-600)' },
+  ]
+  return <div className="report-stack">
+    <div className={'report-hero report-hero--financial report-hero--' + (data.operatingResult >= 0 ? 'positive' : 'negative')}>
+      <p>النتيجة التشغيلية — {data.operatingResult < 0 ? 'عجز تشغيلي' : data.operatingResult > 0 ? 'فائض تشغيلي' : 'تعادل'}</p>
+      <h2><bdi>{formatCurrency(data.operatingResult)}</bdi></h2>
+      <p className="report-note">صافي الإيرادات المحصلة بعد الاسترداد − المصروفات المسجلة. هذه نتيجة تشغيلية وليست صافي ربح محاسبي.</p>
     </div>
-  )
+    <ReportTable columns={getReportColumns('financial')} rows={[{ ...data }]} label="تسوية النتيجة التشغيلية" />
+    <div className="report-charts-grid">{breakdowns.map(section => <Card key={section.title}>
+      <h3 className="report-section-title">{section.title}</h3>
+      {section.rows.some(row => row.total !== 0) ? <><div className="report-chart" role="img" aria-label={section.title + '؛ القيم بالجنيه المصري في الجدول التالي'}>
+        <ResponsiveContainer width="100%" height="100%"><BarChart data={section.rows} layout="vertical" accessibilityLayer>
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
+          <XAxis type="number" tick={{ fill: 'var(--color-text-secondary)' }} />
+          <YAxis dataKey="label" type="category" width={105} tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }} />
+          <Tooltip formatter={value => formatCurrency(Number(value))} contentStyle={chartTooltipStyle} />
+          <Bar dataKey="total" name="القيمة (ج.م)" fill={section.color} isAnimationActive={false} />
+        </BarChart></ResponsiveContainer></div>
+        <ReportTable columns={[{ key: 'label', label: 'الفئة', kind: 'text' }, { key: 'total', label: 'القيمة', kind: 'currency' }]} rows={section.rows} label={section.title} />
+      </> : <EmptyState title="لا توجد حركات مالية في الفترة" description="اختر فترة أخرى لعرض التحليل" />}
+    </Card>)}</div>
+  </div>
 }

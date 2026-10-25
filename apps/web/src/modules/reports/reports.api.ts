@@ -9,6 +9,15 @@ export interface DateRange {
 export interface PaginatedParams extends DateRange {
   page: number
   limit: number
+  search?: string
+  customer?: string
+  cashier?: string
+  skate?: string
+  size?: string
+  status?: string
+  rentalStatus?: string
+  duration?: number
+  sort?: string
 }
 
 export interface PaginatedResult<T> {
@@ -19,6 +28,9 @@ export interface PaginatedResult<T> {
     limit: number
     totalPages: number
   }
+  summary: Record<string, number | null>
+  byType?: { type: string; count: number; chargeAmount: number; repairCost: number }[]
+  byCashier?: { name: string; calculatedFees: number; collectedFees: number; waivedFees: number; pendingFees: number }[]
 }
 
 export interface OverviewData {
@@ -33,15 +45,25 @@ export interface OverviewData {
 
 export interface FinancialData {
   rentalRevenue: number
-  rentalPayments: number
+  lateFees: number
   damageCharges: number
   salesRevenue: number
   refunds: number
+  grossRevenue: number
   totalRevenue: number
   totalExpenses: number
   operatingResult: number
   revenueByCategory: { type: string; total: number }[]
   expensesByCategory: { category: string; total: number }[]
+}
+
+export interface TimelineData {
+  totalRevenue?: number
+  totalExpenses?: number
+  chartData: { date: string; value: number }[]
+  byCategory: { type?: string; category?: string; total: number }[]
+  byUser?: { name: string; total: number }[]
+  byAccount?: { name: string; total: number }[]
 }
 
 function qs(params: any) {
@@ -62,7 +84,7 @@ export const reportsApi = {
     api.get<ApiResponse<FinancialData>>(`/api/v1/reports/operating-financial${qs(params)}`),
     
   getRevenue: (params: DateRange) => 
-    api.get<ApiResponse<any>>(`/api/v1/reports/revenue${qs(params)}`),
+    api.get<ApiResponse<TimelineData>>(`/api/v1/reports/revenue${qs(params)}`),
     
   getRentals: (params: PaginatedParams) => 
     api.get<ApiResponse<PaginatedResult<any>>>(`/api/v1/reports/rentals${qs(params)}`),
@@ -77,7 +99,7 @@ export const reportsApi = {
     api.get<ApiResponse<PaginatedResult<any>>>(`/api/v1/reports/maintenance${qs(params)}`),
     
   getExpenses: (params: DateRange) => 
-    api.get<ApiResponse<any>>(`/api/v1/reports/expenses${qs(params)}`),
+    api.get<ApiResponse<TimelineData>>(`/api/v1/reports/expenses${qs(params)}`),
     
   getCustomers: (params: PaginatedParams) => 
     api.get<ApiResponse<PaginatedResult<any>>>(`/api/v1/reports/customers${qs(params)}`),

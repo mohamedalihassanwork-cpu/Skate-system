@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { db } from '../db/connection'
+import { db, pool } from '../db/connection'
+import env from '../config/env'
 import { expenses, treasuryMovements, users, cashierShifts, treasuryAccounts } from '../db/schema'
 import * as reportsService from '../modules/reports/reports.service'
 import { eq } from 'drizzle-orm'
@@ -10,11 +11,15 @@ describe('Reports API - Expenses', () => {
   let accountId: number
   
   beforeAll(async () => {
+    expect(env.NODE_ENV).toBe('test')
+    expect(env.DB_NAME).toBe('koshk_skate_test')
+    const [database] = await pool.query<any[]>('SELECT DATABASE() AS name')
+    expect(database[0].name).toBe('koshk_skate_test')
     const ts = Date.now()
     const [u] = await db.insert(users).values({ name: 'Report Test', email: `rt.${ts}@koshk.com`, passwordHash: '1', isActive: true, createdAt: new Date(), updatedAt: new Date() })
     adminId = u.insertId
     
-    const [s] = await db.insert(cashierShifts).values({ cashierId: adminId, status: 'active', openingBalance: '0', expectedBalance: '0', createdAt: new Date(), updatedAt: new Date() })
+    const [s] = await db.insert(cashierShifts).values({ cashierId: adminId, status: 'active', openingBalance: '0', expectedBalance: '0' })
     shiftId = s.insertId
 
     const [acc] = await db.insert(treasuryAccounts).values({ name: 'Test Drawer', nameAr: 'خزينة', balance: '0', isActive: true })
@@ -34,10 +39,11 @@ describe('Reports API - Expenses', () => {
   })
 
   afterAll(async () => {
+    if (!adminId) return
     await db.delete(treasuryMovements).where(eq(treasuryMovements.cashierId, adminId))
     await db.delete(expenses).where(eq(expenses.cashierId, adminId))
-    await db.delete(treasuryAccounts).where(eq(treasuryAccounts.id, accountId))
-    await db.delete(cashierShifts).where(eq(cashierShifts.id, shiftId))
+    if (accountId) await db.delete(treasuryAccounts).where(eq(treasuryAccounts.id, accountId))
+    if (shiftId) await db.delete(cashierShifts).where(eq(cashierShifts.id, shiftId))
     await db.delete(users).where(eq(users.id, adminId))
   })
 
@@ -45,10 +51,10 @@ describe('Reports API - Expenses', () => {
     const sd = '2010-01-01'
     const ed = '2010-01-02'
     
-    const overview = await reportsService.getOverviewReport({ startDate: sd, endDate: ed })
+    const overview = await reportsService.getOverviewReport({ startDate: sd, endDate: ed, page: 1, limit: 10 })
     expect(overview.totalExpenses).toBe(430) // 100 + 330
     
-    const financial = await reportsService.getOperatingFinancialReport({ startDate: sd, endDate: ed })
+    const financial = await reportsService.getOperatingFinancialReport({ startDate: sd, endDate: ed, page: 1, limit: 10 })
     expect(financial.totalExpenses).toBe(430)
   })
 })

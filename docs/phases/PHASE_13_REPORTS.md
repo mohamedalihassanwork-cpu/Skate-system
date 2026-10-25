@@ -1,8 +1,10 @@
-﻿# Phase 13 — Reports & Analytics
+# Phase 13 — Reports & Analytics
 
 **Status:** PARTIALLY VERIFIED
-**Last updated:** 2026-10-03 (Gate 5.3 — Documentation Reconciliation)
+**Last updated:** 2026-10-26 (comprehensive Reports audit; manual browser checks pending)
 **Reconciled by:** AI Agent (Gate 5.3)
+
+> **Current contract — 2026-10-26:** The [Reports module](../modules/REPORTS.md) and [audit verification](../quality/REPORTS_AUDIT.md) supersede historical implementation/test statements below. All 11 routes now use current rental items with legacy fallback, coherent ledger-based figures, relevant filters/rankings and Arabic schemas/exports. Fixed UTC+03:00 applies to bounds, grouping and Reports display; end bounds use UTC next-day arithmetic. Impossible dates and unsafe pagination are rejected. Recorded fee settlements and actual rounded treasury collections are distinct. Reports checks: 84 passed; both builds and scoped lint passed. The full repository suite has 35 failures/7 skips outside Reports. CSV/Excel are implemented and utility-tested; Print/Save as PDF uses native Arabic browser printing. Browser layout/download/print checks are reserved for the owner. F-014 remains deferred. Status remains PARTIALLY VERIFIED.
 
 ---
 
